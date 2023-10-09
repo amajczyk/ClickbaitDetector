@@ -1,6 +1,6 @@
 # pracaInzynierska
 
-## Working with conda's environment
+## Working with conda's environments
 
 _Alek chcesz ogarnąć ten inny pakiet do zarządania pakietami/dependencjami?_
 
