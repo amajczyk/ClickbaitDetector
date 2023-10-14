@@ -1,10 +1,10 @@
-# import datetime
+import datetime
 
 from django.test import TestCase
-# from django.utils import timezone
-# from django.urls import reverse
+from django.utils import timezone
+from django.urls import reverse
 
-# from .models import Article
+from .models import Article
 
 
 
@@ -99,22 +99,22 @@ from django.test import TestCase
 
 
 
-# class ArticleModelTests(TestCase):
-#     def test_was_published_recently_with_old_article(self):
-#         """
-#         was_published_recently() returns False for articles whose pub_date
-#         is older than 1 day.
-#         """
-#         time = timezone.now() - datetime.timedelta(days=1, seconds=1)
-#         old_article = Article(pub_date=time)
-#         self.assertIs(old_article.was_published_recently(), False)
+class ArticleModelTests(TestCase):
+    def test_was_published_recently_with_old_article(self):
+        """
+        was_published_recently() returns False for articles whose pub_date
+        is older than 1 day.
+        """
+        time = timezone.now() - datetime.timedelta(days=1, seconds=1)
+        old_article = Article(pub_date=time)
+        self.assertIs(old_article.was_published_recently(), False)
 
 
-#     def test_was_published_recently_with_recent_article(self):
-#         """
-#         was_published_recently() returns True for articles whose pub_date
-#         is within the last day.
-#         """
-#         time = timezone.now() - datetime.timedelta(hours=23, minutes=59, seconds=59)
-#         recent_article = Article(pub_date=time)
-#         self.assertIs(recent_article.was_published_recently(), True)
+    def test_was_published_recently_with_recent_article(self):
+        """
+        was_published_recently() returns True for articles whose pub_date
+        is within the last day.
+        """
+        time = timezone.now() - datetime.timedelta(hours=23, minutes=59, seconds=59)
+        recent_article = Article(pub_date=time)
+        self.assertIs(recent_article.was_published_recently(), True)
