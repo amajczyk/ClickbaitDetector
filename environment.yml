@@ -10,7 +10,6 @@ dependencies:
   - bzip2=1.0.8=h7b6447c_0
   - ca-certificates=2023.7.22=hbcca054_0
   - django=4.2.6=pyhd8ed1ab_0
-  - ld_impl_linux-64=2.38=h1181459_1
   - libffi=3.4.4=h6a678d5_0
   - libgcc-ng=11.2.0=h1234567_1
   - libgomp=11.2.0=h1234567_1
