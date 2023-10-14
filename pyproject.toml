@@ -19,6 +19,7 @@ beautifulsoup4 = "^4.12.2"
 bs4 = "^0.0.1"
 soupsieve = "^2.5"
 black = "^23.9.1"
+coverage = "^7.3.2"
 
 [tool.poetry.group.dev.dependencies]
 Django = "^4.2.6"
