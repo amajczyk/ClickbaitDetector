@@ -32,7 +32,7 @@ class Article(models.Model):
                 # possibility for the article to be published one day in the future, but no more, because of timezone
                 check=(
                     Q(pub_date__isnull=True) |
-                    Q(pub_date__lte=timezone.now+datetime.timedelta(days=1))
+                    Q(pub_date__lte=timezone.now()+datetime.timedelta(days=1))
                 ),
                 name="published_date_not_later_than_tomorrow"  
             ),
