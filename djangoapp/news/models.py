@@ -2,7 +2,7 @@ import datetime
 
 from django.db import models
 from django.utils import timezone
-from django.db.models import F, ExpressionWrapper, fields, Q
+from django.db.models import Q
 from django.db.models.functions import Now
 
 
@@ -32,7 +32,7 @@ class Article(models.Model):
                 # possibility for the article to be published one day in the future, but no more, because of timezone
                 check=(
                     Q(pub_date__isnull=True) |
-                    Q(pub_date__lte=timezone.now()+datetime.timedelta(days=1))
+                    Q(pub_date__lte=timezone.now+datetime.timedelta(days=1))
                 ),
                 name="published_date_not_later_than_tomorrow"  
             ),
@@ -56,7 +56,7 @@ class Article(models.Model):
         return now - datetime.timedelta(days=1) <= self.scraped_date <= now
     
     
-    # def published_date(self):
-    #     if self.pub_date:
-    #         return self.pub_date.strftime('%Y-%m-%d')
-    #     return '-'
+    def published_date(self):
+        if self.pub_date:
+            return self.pub_date.strftime('%Y-%m-%d')
+        return '-'

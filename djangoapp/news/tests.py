@@ -3,7 +3,7 @@ import datetime
 from django.test import TestCase
 from django.utils import timezone
 from django.urls import reverse
-from django.db.models import F, ExpressionWrapper, fields
+from django.db import IntegrityError
 
 
 from .models import Article
@@ -12,43 +12,43 @@ from .models import Article
 # python manage.py test news
 # https://docs.djangoproject.com/en/4.2/intro/tutorial05/
 
-# class ArticleModelTests(TestCase):
+class ArticleModelTests(TestCase):
     
-    # def test_was_scraped_in_the_last_24h(self):
-    #     """
-    #     was_scraped_today() should return True for articles whose scraped_date
-    #     is within the last day.
-    #     """
-    #     time = timezone.now() - datetime.timedelta(hours=23, minutes=59)
-    #     recent_article = Article(pub_date=time)
-    #     self.assertIs(recent_article.was_scraped_today(), True)
+    def test_was_scraped_in_the_last_24h(self):
+        """
+        was_scraped_today() should return True for articles whose scraped_date
+        is within the last day.
+        """
+        time = timezone.now() - datetime.timedelta(hours=23, minutes=59)
+        recent_article = Article(pub_date=time)
+        self.assertIs(recent_article.was_scraped_today(), True)
 
 
     
     
-    # def test_was_scraped_later_than_the_last_24h(self):
-    #     """
-    #     was_scraped_today() should return False for articles whose scraped_date
-    #     is outside the last day.
-    #     """
-    #     time = timezone.now() - datetime.timedelta(days=1, minutes=1)
-    #     old_article = Article(pub_date=time)
-    #     self.assertIs(old_article.was_scraped_today(), False)
+    def test_was_scraped_later_than_the_last_24h(self):
+        """
+        was_scraped_today() should return False for articles whose scraped_date
+        is outside the last day.
+        """
+        time = timezone.now() - datetime.timedelta(days=1, minutes=1)
+        old_article = Article(scraped_date=time)
+        self.assertIs(old_article.was_scraped_today(), False)
 
     
     
-    # def test_integer_constraint(self):
-    #     # Attempt to save a record with an invalid value
-    #     with self.assertRaises(Article.IntegrityError):
-    #         Article.objects.create(your_integer_field=42)  # An invalid value
+    def test_decision_integer_constraint(self):
+        # Attempt to save a record with an invalid value
+        with self.assertRaises(IntegrityError):
+            Article.objects.create(clickbait_decision_NLP=42)  # An invalid value
 
-    # def test_datetime_constraint(self):
-    #     # Attempt to save a record with a scraped_date more than 1 day after published_date
-    #     with self.assertRaises(Article.IntegrityError):
-    #         Article.objects.create(
-    #             publ_date=timezone.now(),
-    #             scraped_date=timezone.now() + datetime.timedelta(days=1, minutes=1)
-    #         )
+
+    def test_published_date_constraint(self):
+        # Attempt to save a record with a scraped_date more than 1 day after published_date
+        with self.assertRaises(IntegrityError):
+            Article.objects.create(
+                pub_date=timezone.now() + datetime.timedelta(days=1, minutes=1),
+            )
 
 
 # def create_article(content, days):
