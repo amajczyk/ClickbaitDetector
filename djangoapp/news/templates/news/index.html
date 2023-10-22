@@ -1,15 +1,28 @@
+{% extends "news/base.html" %}
+
 {% block content %}
 
-{% if latest_article_list %}
-    <ul>
-    {% for article in latest_article_list %}
-        <li><a href="{% url 'news:detail' article.id %}">{{ article.title }}</a></li>
-    {% endfor %}
-    </ul>
-{% else %}
-    <p>No polls are available.</p>
-{% endif %}
+    {% if latest_article_list %}
+    <div class="accordion">
 
+        {% for article in latest_article_list %}
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="heading{{article.id}}">
+                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ article.id }}" aria-expanded="false" aria-controls="collapse{{ article.id }}">
+                  {{ article.title}}
+                </button>
+              </h2>
+              <div id="collapse{{ article.id }}" class="accordion-collapse collapse" aria-labelledby="heading{{ article.id }}">
+                <div class="accordion-body">
+                  <strong>This is the first item's accordion body.</strong> It is shown by default, until the collapse plugin adds the appropriate classes that we use to style each element. These classes control the overall appearance, as well as the showing and hiding via CSS transitions. You can modify any of this with custom CSS or overriding our default variables. It's also worth noting that just about any HTML can go within the <code>.accordion-body</code>, though the transition does limit overflow.
+                </div>
+              </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    {% else %}
+        <p>No polls are available.</p>
+    {% endif %}
 
 {% endblock %}
-
