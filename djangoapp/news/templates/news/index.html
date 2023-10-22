@@ -1,37 +1,28 @@
-<!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{% block title %}Clickbait detector{% endblock %}</title>
-    
-    <!-- Bootstrap -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js" integrity="sha384-BBtl+eGJRgqQAUMxJ7pMwbEyER4l1g+O15P+16Ep7Q9Q+zqX6gSbd85u4mG4QzX+" crossorigin="anonymous"></script>
-    
-    {% load static %}
-    <script src="{% static 'news/js/theme_toggle.js' %}"></script>
-</head>
-<body>
-    {% include 'news/navbar.html' %}
-    <div class="container">
+{% extends "news/base.html" %}
 
-        {% block content %}
+{% block content %}
 
-        {% if latest_article_list %}
-            <ul>
-            {% for article in latest_article_list %}
-                <li><a href="{% url 'news:detail' article.id %}">{{ article.title }}</a></li>
-            {% endfor %}
-            </ul>
-        {% else %}
-            <p>No polls are available.</p>
-        {% endif %}
-        
-        
-        {% endblock %}
+    {% if latest_article_list %}
+    <div class="accordion">
+
+        {% for article in latest_article_list %}
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="heading{{article.id}}">
+                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ article.id }}" aria-expanded="false" aria-controls="collapse{{ article.id }}">
+                  {{ article.title}}
+                </button>
+              </h2>
+              <div id="collapse{{ article.id }}" class="accordion-collapse collapse" aria-labelledby="heading{{ article.id }}">
+                <div class="accordion-body">
+                  <strong>This is the first item's accordion body.</strong> It is shown by default, until the collapse plugin adds the appropriate classes that we use to style each element. These classes control the overall appearance, as well as the showing and hiding via CSS transitions. You can modify any of this with custom CSS or overriding our default variables. It's also worth noting that just about any HTML can go within the <code>.accordion-body</code>, though the transition does limit overflow.
+                </div>
+              </div>
+            </div>
+        {% endfor %}
     </div>
 
-</body>
-</html>
+    {% else %}
+        <p>No polls are available.</p>
+    {% endif %}
+
+{% endblock %}
