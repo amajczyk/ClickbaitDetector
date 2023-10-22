@@ -3,20 +3,18 @@ import datetime
 from django.db import models
 from django.utils import timezone
 from django.db.models import Q
-from django.db.models.functions import Now
-from django.core.validators import MaxValueValidator
+from django.core.exceptions import ValidationError
 
 
-# Create your models here.
-
-def tomorrow():
-    return timezone.now() + datetime.timedelta(days=1)
+def validate_date_is_not_future(value):
+    if value is not None and value >  timezone.now() + datetime.timedelta(days=1):
+        raise ValidationError("The date cannot be more than 1 day in the future.")
 
 class Article(models.Model):
     title = models.CharField(max_length=256)
     content_summary = models.TextField()
-    pub_date = models.DateTimeField(null=True,blank=True, validators=[MaxValueValidator(tomorrow)])
-    scraped_date = models.DateTimeField(default=timezone.now, validators=[MaxValueValidator(tomorrow)])
+    pub_date = models.DateTimeField(null=True,blank=True, validators=[validate_date_is_not_future])
+    scraped_date = models.DateTimeField(default=timezone.now, validators=[validate_date_is_not_future])
     author = models.CharField(max_length=64)
     source_site = models.CharField(max_length=64, default='UNKNOWN') 
     url_from = models.CharField(max_length=256, null=True,blank=True)

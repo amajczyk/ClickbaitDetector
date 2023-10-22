@@ -4,6 +4,7 @@ from django.test import TestCase
 from django.utils import timezone
 from django.urls import reverse
 from django.db import IntegrityError
+from django.core.exceptions import ValidationError
 
 
 from .models import Article
@@ -11,6 +12,9 @@ from .models import Article
 
 # python manage.py test news
 # https://docs.djangoproject.com/en/4.2/intro/tutorial05/
+
+print('Testing news app...')
+print('Time now: ', timezone.now())
 
 class ArticleModelTests(TestCase):
     
@@ -45,10 +49,11 @@ class ArticleModelTests(TestCase):
 
     def test_published_date_constraint(self):
         # Attempt to save a record with a scraped_date more than 1 day after published_date
-        with self.assertRaises(IntegrityError):
-            Article.objects.create(
+        with self.assertRaises(ValidationError):
+            article = Article.objects.create(
                 pub_date=timezone.now() + datetime.timedelta(days=1, minutes=1),
             )
+            article.full_clean()
 
 
 # def create_article(content, days):
