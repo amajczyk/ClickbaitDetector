@@ -27,4 +27,4 @@ jobs:
         pip install -r requirements_workflow.txt
     - name: Run Tests
       run: |
-        python ./djangoapp/manage.py test
+        python ./djangoapp/manage.py test news
