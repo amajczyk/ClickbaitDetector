@@ -1,1 +1,1 @@
-https://www.kaggle.com/competitions/clickbait-news-detection/data
+https://www.kaggle.com/datasets/amananandrai/clickbait-dataset
