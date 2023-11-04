@@ -25,15 +25,15 @@ class DetailView(generic.DetailView):
         return Article.objects.filter(pub_date__lte=timezone.now())
     
     
-class BrowseView(generic.ListView):
+class BrowseView(generic.TemplateView):
     template_name = "news/browse.html"
-    context_object_name = "latest_article_list"
 
-    def get_queryset(self):
-        """Return the last five published articles."""
-        return Article.objects.filter(pub_date__lte=timezone.now()).order_by("-pub_date")[:5]
-
-
+    def get_context_data(self, **kwargs):
+        context = super(BrowseView, self).get_context_data(**kwargs)
+        context['latest_article_list'] = Article.objects.filter(pub_date__lte=timezone.now()).order_by("-pub_date")[:5]
+        context['date_today'] = timezone.now().date().strftime("%Y-%m-%d")
+        context['date_week_ago'] = (timezone.now() - timezone.timedelta(days=7)).date().strftime("%Y-%m-%d")
+        return context
 
 def vote(request, article_id):
     return HttpResponse("You're voting on article %s." % article_id)

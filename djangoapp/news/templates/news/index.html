@@ -2,38 +2,7 @@
 
 {% block content %}
 
-    {% if latest_article_list %}
-    <div class="accordion">
+{% include 'news/list_articles.html' %}
 
-        {% for article in latest_article_list %}
-            <div class="accordion-item">
-              <h2 class="accordion-header" id="heading{{article.id}}">
-                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ article.id }}" aria-controls="collapse{{ article.id }}">
-                  {{ article.title }}
-                </button>
-
-              </h2>
-              <div id="collapse{{ article.id }}" class="accordion-collapse collapse" aria-labelledby="heading{{ article.id }}">
-                <div class="accordion-body">
-                  <div class="row">
-                    <div class="col-md-10">
-                      {{ article.content_summary }}
-                    </div>
-                    <div class="col-md-2">
-                      <div class="btn-group-vertical btn-group-sm" role="group">
-                        <a class="btn btn-primary" href="{{ article.url }}" target="_blank" role="button">Read article</a>
-                        <a class="btn btn-secondary" href="{% url 'news:detail' article.id %}" role="button">Details</a>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-        {% endfor %}
-    </div>
-
-    {% else %}
-        <p>No polls are available.</p>
-    {% endif %}
 
 {% endblock %}

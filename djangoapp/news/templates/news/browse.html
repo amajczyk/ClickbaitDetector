@@ -3,188 +3,95 @@
 {% block content %}
 
 <div class="container">
-    <div class="row">
-        <!-- Main search form -->
-        <div class="col-md-6">
-            <form class="d-flex">
-                <input class="form-control" type="search" placeholder="Search" aria-label="Search">
-                <button class="btn btn-outline-success" type="submit">Search</button>
-            </form>
-        </div>
-        <!-- Filter form for category and days range -->
-        <div class="col-md-6">
-            <form>
-                <div class="row">
-                    <!-- Category filter -->
-                    <div class="col-md-4">
-                        <div class="dropdown">
-                            <button class="btn btn-outline-primary dropdown-toggle" type="button" id="categoryDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                Categories
-                            </button>
-                            <ul class="dropdown-menu" aria-labelledby="categoryDropdown">
-                                <li><input class="dropdown-item form-check-input" type="checkbox" id="category1" name="category" value="category1">Category 1</li>
-                                <li><input class="dropdown-item form-check-input" type="checkbox" id="category2" name="category" value="category2">Category 2</li>
-                                <li><input class="dropdown-item form-check-input" type="checkbox" id="category3" name="category" value="category3">Category 3</li>
-                            </ul>
-                        </div>
-                    </div>
-                    <!-- Days range filter -->
-                    <div class="col-md-5 position-relative">
-                        <label for="days-range" class="form-label form-label-sm text-center" id="selected-days">Published: 14 days ago</label>
-                        <input type="range" class="form-range" min="0" max="30" step="1" id="days-range" value="14">
-                    </div>
 
-                    <div class="col-md-3 text-end">
-                        <button class="btn btn-outline-primary" type="submit">Apply Filters</button>
-                    </div>
-                </div>
+  <form>
+    <div class="row mb-2">
 
-            </form>
-        </div>
+      <div class="form-floating col-md-5">
+        <input type="search" class="form-control mxb-3" id="floatingInput" placeholder="search">
+        <label class='ms-3' for="floatingInput">Search articles</label>
+      </div>
+
+      <div class="form-floating col-md-2">
+        <input type="date" name="date" id='date-to' class="form-control align-items-center" value="{{date_today}}""> 
+            <label class='ms-3' for=" date-to">Date to</label>
+      </div>
+
+      <div class="form-floating col-md-2">
+        <input type="date" name="date" id='date-from' class="form-control" value="{{date_week_ago}}""> 
+            <label class='ms-3' for=" date-from">Date from</label>
+
+      </div>
+      <div class="col-md-2 ps-3 mt-2">
+        <input type="checkbox" class="btn-check" id="btn-check-4" checked autocomplete="off">
+        <label class="btn" for="btn-check-4">Show clickbaits toggle</label>
+      </div>
+
+
+
+
+      <div class="col-md-1 mt-2">
+        <button class="btn btn-success " type="submit">Search</button>
+      </div>
+
+
     </div>
+
+
+  
+
+    <div class="card">
+      <div class="card-body">
+        <div class="row px-2">
+          <div class="col-md-2 form-check">
+            <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault">
+            <label class="form-check-label" for="flexCheckDefault">Longsitename</label>
+          </div>
+          <div class="col-md-2 form-check">
+            <input class="form-check-input" type="checkbox" value="" id="flexCheckChecked" checked>
+            <label class="form-check-label" for="flexCheckChecked">Site 2</label>
+          </div>
+          <div class="col-md-2 form-check">
+            <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault">
+            <label class="form-check-label" for="flexCheckDefault">Long site name</label>
+          </div>
+          <div class="col-md-2 form-check">
+            <input class="form-check-input" type="checkbox" value="" id="flexCheckChecked" checked>
+            <label class="form-check-label" for="flexCheckChecked">Site 2</label>
+          </div>
+          <div class="col-md-2 form-check">
+            <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault">
+            <label class="form-check-label" for="flexCheckDefault">Long site name</label>
+          </div>
+          <div class="col-md-2 form-check">
+            <input class="form-check-input" type="checkbox" value="" id="flexCheckChecked" checked>
+            <label class="form-check-label" for="flexCheckChecked">Site 2</label>
+          </div>
+          <div class="col-md-2 form-check">
+            <input class="form-check-input" type="checkbox" value="" id="flexCheckChecked" checked>
+            <label class="form-check-label" for="flexCheckChecked">Site 2</label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
 </div>
 
-<div class="form-group col-sm-8">
-    <label for="myMultiselect">BS custom multiselect</label>
-    <div id="myMultiselect" class="multiselect">
-      <div id="mySelectLabel" class="selectBox" onclick="toggleCheckboxArea()">
-        <select class="form-select">
-          <option>somevalue</option>
-        </select>
-        <div class="overSelect"></div>
-      </div>
-      <div id="mySelectOptions">
-        <label for="one"><input type="checkbox" id="one" onchange="checkboxStatusChange()" value="one" /> First checkbox</label>
-        <label for="two"><input type="checkbox" id="two" onchange="checkboxStatusChange()" value="two" /> Second checkbox</label>
-        <label for="three"><input type="checkbox" id="three" onchange="checkboxStatusChange()" value="three" /> Third checkbox</label>
-        <label for="four"><input type="checkbox" id="four" onchange="checkboxStatusChange()" value="four" /> Third checkbox</label>
-        <label for="five"><input type="checkbox" id="five" onchange="checkboxStatusChange()" value="five" /> First checkbox</label>
-        <label for="six"><input type="checkbox" id="six" onchange="checkboxStatusChange()" value="six" /> Second checkbox</label>
-        <label for="seven"><input type="checkbox" id="seven" onchange="checkboxStatusChange()" value="seven" /> Third checkbox</label>
-        <label for="eight"><input type="checkbox" id="eight" onchange="checkboxStatusChange()" value="eight" /> First checkbox</label>
-        <label for="nine"><input type="checkbox" id="nine" onchange="checkboxStatusChange()" value="nine" /> Second checkbox</label>
-        <label for="ten"><input type="checkbox" id="ten" onchange="checkboxStatusChange()" value="ten" /> Third checkbox</label>
-      </div>
-    </div>
-  </div>
-
-<style>
-
-    .multiselect {
-        width: 100%;
-      }
-      
-      .selectBox {
-        position: relative;
-      }
-      
-      .selectBox select {
-        width: 100%;
-      }
-      
-      .overSelect {
-        position: absolute;
-        left: 0;
-        right: 0;
-        top: 0;
-        bottom: 0;
-      }
-      
-      #mySelectOptions {
-        display: none;
-        border: 0.5px #7c7c7c solid;
-        background-color: #ffffff;
-        max-height: 150px;
-        overflow-y: scroll;
-      }
-      
-      #mySelectOptions label {
-        display: block;
-        font-weight: normal;
-        display: block;
-        white-space: nowrap;
-        min-height: 1.2em;
-        background-color: #ffffff00;
-        padding: 0 2.25rem 0 .75rem;
-        /* padding: .375rem 2.25rem .375rem .75rem; */
-      }
-      
-      #mySelectOptions label:hover {
-        background-color: #1e90ff;
-      }
-</style>
 
 
-<script>
-    window.onload = (event) => {
-        initMultiselect();
-      };
-      
-      function initMultiselect() {
-        checkboxStatusChange();
-      
-        document.addEventListener("click", function(evt) {
-          var flyoutElement = document.getElementById('myMultiselect'),
-            targetElement = evt.target; // clicked element
-      
-          do {
-            if (targetElement == flyoutElement) {
-              // This is a click inside. Do nothing, just return.
-              //console.log('click inside');
-              return;
-            }
-      
-            // Go up the DOM
-            targetElement = targetElement.parentNode;
-          } while (targetElement);
-      
-          // This is a click outside.
-          toggleCheckboxArea(true);
-          //console.log('click outside');
-        });
-      }
-      
-      function checkboxStatusChange() {
-        var multiselect = document.getElementById("mySelectLabel");
-        var multiselectOption = multiselect.getElementsByTagName('option')[0];
-      
-        var values = [];
-        var checkboxes = document.getElementById("mySelectOptions");
-        var checkedCheckboxes = checkboxes.querySelectorAll('input[type=checkbox]:checked');
-      
-        for (const item of checkedCheckboxes) {
-          var checkboxValue = item.getAttribute('value');
-          values.push(checkboxValue);
-        }
-      
-        var dropdownValue = "Nothing is selected";
-        if (values.length > 0) {
-          dropdownValue = values.join(', ');
-        }
-      
-        multiselectOption.innerText = dropdownValue;
-      }
-      
-      function toggleCheckboxArea(onlyHide = false) {
-        var checkboxes = document.getElementById("mySelectOptions");
-        var displayValue = checkboxes.style.display;
-      
-        if (displayValue != "block") {
-          if (onlyHide == false) {
-            checkboxes.style.display = "block";
-          }
-        } else {
-          checkboxes.style.display = "none";
-        }
-      }
 
-    // JavaScript to update the selected days value as the range input changes
-    const daysRange = document.getElementById('days-range');
-    const selectedDays = document.getElementById('selected-days');
 
-    daysRange.addEventListener('input', () => {
-        selectedDays.textContent = 'Published: ' + daysRange.value + ' days ago';
-    });
-</script>
+<div class="container mt-3">
+  <h2>Search results</h2>
+  
+  {% include 'news/list_articles.html' %}
+
+
+
+</div>
+
+
+
+
 
 {% endblock %}
