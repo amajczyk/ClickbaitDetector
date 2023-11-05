@@ -23,6 +23,15 @@ class DetailView(generic.DetailView):
         Excludes any articles that aren't published yet.
         """
         return Article.objects.filter(pub_date__lte=timezone.now())
+    
+    
+class BrowseView(generic.ListView):
+    template_name = "news/browse.html"
+    context_object_name = "latest_article_list"
+
+    def get_queryset(self):
+        """Return the last five published articles."""
+        return Article.objects.filter(pub_date__lte=timezone.now()).order_by("-pub_date")[:5]
 
 
 
