@@ -1,9 +1,11 @@
 {% extends "news/base.html" %}
 
 {% block content %}
-<h1>{{ article.title }}</h1>
-<h3>{{ article.author }}</h3>
-<p>{{ article.content_summary }}</p>
-<p>{{ article.pub_date }}</p>
+<div class="container"> 
+    <h1>{{ article.title }}</h1>
+    <p>{{ article.scraped_date}}</p>
+    <p>{{ article.content_summary }}</p>
+</div>
+
 {% endblock %}
 
