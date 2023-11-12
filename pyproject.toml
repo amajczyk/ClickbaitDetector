@@ -20,6 +20,11 @@ bs4 = "^0.0.1"
 soupsieve = "^2.5"
 black = "^23.9.1"
 coverage = "^7.3.2"
+google = "^3.0.0"
+google-cloud-aiplatform = "^1.36.2"
+google-auth = "^2.23.4"
+google-cloud = "^0.34.0"
+google-cloud-core = "^2.3.3"
 
 [tool.poetry.group.dev.dependencies]
 Django = "^4.2.6"
