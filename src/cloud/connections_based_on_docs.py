@@ -1,7 +1,10 @@
+import json
 from typing import Optional
 
 from google.auth import default
 from vertexai.language_models import TextGenerationModel
+from google.cloud import aiplatform
+import google.auth as auth
 
 
 def init_sample(
@@ -13,7 +16,7 @@ def init_sample(
         encryption_spec_key_name: Optional[str] = None,
         service_account: Optional[str] = None,
 ):
-    from google.cloud import aiplatform
+
     aiplatform.init(
         project=project,
         location=location,
@@ -26,7 +29,15 @@ def init_sample(
 
 
 if "__main__" == __name__:
-    credentials, project_id = default()
+    config = json.load(open("config.json"))
+    user_input_credentials = {
+        "type": "authorized_user",
+        "project_id": "planar-courage-319110",
+        "refresh_token": f"{config['refresh_token']}",
+        "client_id": f"{config['client_id']}",
+        "client_secret": f"{config['client_secret']}",
+    }
+    credentials, project_id = auth.load_credentials_from_dict(user_input_credentials)
     init_sample(
         project_id,
         experiment="clickbait",
