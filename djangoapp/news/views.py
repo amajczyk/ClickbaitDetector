@@ -1,10 +1,20 @@
-from django.http import HttpResponse
-from django.shortcuts import render, get_object_or_404
+import os
+
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import render, get_object_or_404, redirect
+from django.template.loader import render_to_string  
 from django.urls import reverse
 from django.views import generic
 from django.utils import timezone
 
 from .models import Article
+
+from .forms import URLForm
+
+from django.conf import settings
+
+from news.scripts.scraping import Scraper
+
 
 class IndexView(generic.ListView):
     template_name = "news/index.html"
@@ -40,3 +50,41 @@ class BrowseView(generic.TemplateView):
 
 def vote(request, article_id):
     return HttpResponse("You're voting on article %s." % article_id)
+
+
+
+
+
+
+
+
+def check_url(request):
+    if request.method == 'POST':
+        form = URLForm(request.POST)
+        if form.is_valid():
+            url = form.cleaned_data['url']
+
+            config_path = os.path.join(settings.BASE_DIR, 'news', 'config', 'site_variables_dict')
+            scraper = Scraper(config_path)
+            scraped_data = scraper.scrape(url)
+
+            try:
+                article = get_object_or_404(Article, title=scraped_data['title'], source_site=scraped_data['source_site'])
+            except:
+
+                    # Create a new article if no matching article exists
+                    article = Article(
+                        title=scraped_data['title'],
+                        content_summary=scraped_data['content'],
+                        url_from=url,
+                        source_site=scraped_data['source_site']
+                    )
+                    article.save()
+
+            # Render the details template with the scraped data and return as a JSON response
+            html_content = render_to_string('news/article_info.html', {'article': article})
+            return JsonResponse({'html': html_content})    
+    else:
+        form = URLForm()
+
+    return render(request, 'news/check_url.html', {'form': form})

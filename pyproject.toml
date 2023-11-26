@@ -20,6 +20,8 @@ bs4 = "^0.0.1"
 soupsieve = "^2.5"
 black = "^23.9.1"
 coverage = "^7.3.2"
+django-crispy-forms = "^2.1"
+crispy-bootstrap5 = "^2023.10"
 
 [tool.poetry.group.dev.dependencies]
 Django = "^4.2.6"
