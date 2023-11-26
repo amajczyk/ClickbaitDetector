@@ -12,4 +12,5 @@ urlpatterns = [
 
     path("detail/<int:pk>/", views.DetailView.as_view(), name="detail"),
     path("<int:article_id>/vote/", views.vote, name="vote"),
+    path('check_url/', views.check_url, name='check_url'),
 ]

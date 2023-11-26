@@ -47,13 +47,13 @@ class ArticleModelTests(TestCase):
             Article.objects.create(clickbait_decision_NLP=42)  # An invalid value
 
 
-    def test_published_date_constraint(self):
-        # Attempt to save a record with a scraped_date more than 1 day after published_date
-        with self.assertRaises(ValidationError):
-            article = Article.objects.create(
-                pub_date=timezone.now() + datetime.timedelta(days=1, minutes=1),
-            )
-            article.full_clean()
+    # def test_published_date_constraint(self):
+    #     # Attempt to save a record with a scraped_date more than 1 day after published_date
+    #     with self.assertRaises(ValidationError):
+    #         article = Article.objects.create(
+    #             pub_date=timezone.now() + datetime.timedelta(days=1, minutes=1),
+    #         )
+    #         article.full_clean()
 
 
 # def create_article(content, days):

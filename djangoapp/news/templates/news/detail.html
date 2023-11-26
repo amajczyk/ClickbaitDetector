@@ -1,9 +1,9 @@
 {% extends "news/base.html" %}
 
 {% block content %}
-<h1>{{ article.title }}</h1>
-<h3>{{ article.author }}</h3>
-<p>{{ article.content_summary }}</p>
-<p>{{ article.pub_date }}</p>
+
+
+{% include 'news/article_info.html' %}
+
 {% endblock %}
 
