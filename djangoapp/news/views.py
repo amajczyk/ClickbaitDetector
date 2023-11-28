@@ -32,9 +32,6 @@ class DetailView(generic.DetailView):
     model = Article
     template_name = "news/detail.html"
     def get_queryset(self):
-        """
-        Excludes any articles that aren't published yet.
-        """
         return Article.objects.filter(scraped_date__lte=timezone.now())
     
     
@@ -43,13 +40,11 @@ class BrowseView(generic.TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super(BrowseView, self).get_context_data(**kwargs)
-        context['latest_article_list'] = Article.objects.filter(scraped_date__lte=timezone.now()).order_by("-scraped_date")[:5]
+        context['latest_article_list'] = Article.objects.filter(scraped_date__lte=timezone.now()).order_by("-scraped_date")[:10]
         context['date_today'] = timezone.now().date().strftime("%Y-%m-%d")
         context['date_week_ago'] = (timezone.now() - timezone.timedelta(days=7)).date().strftime("%Y-%m-%d")
         return context
 
-def vote(request, article_id):
-    return HttpResponse("You're voting on article %s." % article_id)
 
 
 
