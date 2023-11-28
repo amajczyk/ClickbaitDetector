@@ -13,9 +13,9 @@ def validate_date_is_not_future(value):
 class Article(models.Model):
     title = models.CharField(max_length=256)
     content_summary = models.TextField()
-    pub_date = models.DateTimeField(null=True,blank=True, validators=[validate_date_is_not_future])
+    # pub_date = models.DateTimeField(null=True,blank=True, validators=[validate_date_is_not_future])
     scraped_date = models.DateTimeField(default=timezone.now, validators=[validate_date_is_not_future])
-    author = models.CharField(max_length=64)
+    # author = models.CharField(max_length=64)
     source_site = models.CharField(max_length=64, default='UNKNOWN') 
     url_from = models.CharField(max_length=256, null=True,blank=True)
     # clickbait = models.BooleanField(default=False)
@@ -53,9 +53,9 @@ class Article(models.Model):
         return now - datetime.timedelta(days=1) <= self.scraped_date <= now
     
     
-    def published_date(self):
-        if self.pub_date:
-            return self.pub_date.strftime('%Y-%m-%d')
-        return '-'
+    # def published_date(self):
+    #     if self.pub_date:
+    #         return self.pub_date.strftime('%Y-%m-%d')
+    #     return '-'
     
     

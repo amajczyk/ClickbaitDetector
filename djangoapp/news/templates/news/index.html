@@ -2,38 +2,89 @@
 
 {% block content %}
 
-    {% if latest_article_list %}
-    <div class="accordion">
 
-        {% for article in latest_article_list %}
-            <div class="accordion-item">
-              <h2 class="accordion-header" id="heading{{article.id}}">
-                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ article.id }}" aria-controls="collapse{{ article.id }}">
-                  {{ article.title }}
-                </button>
+<form>
 
-              </h2>
-              <div id="collapse{{ article.id }}" class="accordion-collapse collapse" aria-labelledby="heading{{ article.id }}">
-                <div class="accordion-body">
-                  <div class="row">
-                    <div class="col-md-10">
-                      {{ article.content_summary }}
-                    </div>
-                    <div class="col-md-2">
-                      <div class="btn-group-vertical btn-group-sm" role="group">
-                        <a class="btn btn-primary" href="{{ article.url }}" target="_blank" role="button">Read article</a>
-                        <a class="btn btn-secondary" href="{% url 'news:detail' article.id %}" role="button">Details</a>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+
+    <div class="container">
+
+        <div class="m-0 p-0 mb-1 d-flex justify-content-between align-items-center">
+
+
+            <h2>Choose sites:</h2>
+
+
+            <button class="btn btn-success " type="submit">Scrape</button>
+
+        </div>
+
+        <div class="row p-0 m-0">
+            <div class="col-md-2 form-check p-1 ">
+
+                <input type="checkbox" class="btn-check" id="site1toggle" autocomplete="off" checked>
+                <label class="btn btn-lg btn-secondary btn-block w-100" for="site1toggle">Site 1</label>
             </div>
-        {% endfor %}
+            <div class="col-md-2 form-check p-1 ">
+                <input type="checkbox" class="btn-check" id="site2toggle" autocomplete="off">
+                <label class="btn btn-lg btn-secondary btn-block w-100" for="site2toggle">Site 2</label>
+
+            </div>
+            <div class="col-md-2 form-check p-1 ">
+
+                <input type="checkbox" class="btn-check" id="site3toggle" autocomplete="off">
+                <label class="btn btn-lg btn-secondary btn-block w-100" for="site3toggle">Site 3</label>
+            </div>
+            <div class="col-md-2 form-check p-1 ">
+                <input type="checkbox" class="btn-check" id="site4toggle" autocomplete="off">
+                <label class="btn btn-lg btn-secondary btn-block w-100" for="site4toggle">Site 4</label>
+
+            </div>
+            <div class="col-md-2 form-check p-1 ">
+
+                <input type="checkbox" class="btn-check" id="site5toggle" autocomplete="off">
+                <label class="btn btn-lg btn-secondary btn-block w-100" for="site5toggle">Site 5</label>
+            </div>
+            <div class="col-md-2 form-check p-1 ">
+                <input type="checkbox" class="btn-check" id="site6toggle" autocomplete="off">
+                <label class="btn btn-lg btn-secondary btn-block w-100" for="site6toggle">Site 6</label>
+
+            </div>
+            <div class="col-md-2 form-check p-1 ">
+
+                <input type="checkbox" class="btn-check" id="site7toggle" autocomplete="off">
+                <label class="btn btn-lg btn-secondary btn-block w-100" for="site7toggle">Site 7</label>
+            </div>
+            <div class="col-md-2 form-check p-1 ">
+                <input type="checkbox" class="btn-check" id="site8toggle" autocomplete="off">
+                <label class="btn btn-lg btn-secondary btn-block w-100" for="site8toggle">Site 8</label>
+
+            </div>
+        </div>
+
     </div>
 
-    {% else %}
-        <p>No polls are available.</p>
-    {% endif %}
+
+</form>
+
+
+
+
+
+
+<div class="container mt-2-3">
+
+    <div class="m-0 p-0 mb-1 d-flex justify-content-between align-items-center">
+
+
+        <h2>Results:</h2>
+
+        <input type="checkbox" class="btn-check" id="btn-check-4" checked autocomplete="off">
+        <label class="btn" for="btn-check-4">Show clickbaits toggle</label>
+    </div>
+
+    {% include 'news/list_articles.html' %}
+
+</div>
+
 
 {% endblock %}

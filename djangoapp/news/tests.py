@@ -18,14 +18,14 @@ print('Time now: ', timezone.now())
 
 class ArticleModelTests(TestCase):
     
-    def test_was_scraped_in_the_last_24h(self):
-        """
-        was_scraped_today() should return True for articles whose scraped_date
-        is within the last day.
-        """
-        time = timezone.now() - datetime.timedelta(hours=23, minutes=59)
-        recent_article = Article(pub_date=time)
-        self.assertIs(recent_article.was_scraped_today(), True)
+ #   def test_was_scraped_in_the_last_24h(self):
+  #      """
+   #     was_scraped_today() should return True for articles whose scraped_date
+    #    is within the last day.
+     #   """
+      #  time = timezone.now() - datetime.timedelta(hours=23, minutes=59)
+      #  recent_article = Article(pub_date=time)
+      #  self.assertIs(recent_article.was_scraped_today(), True)
 
 
     
@@ -47,13 +47,13 @@ class ArticleModelTests(TestCase):
             Article.objects.create(clickbait_decision_NLP=42)  # An invalid value
 
 
-    def test_published_date_constraint(self):
-        # Attempt to save a record with a scraped_date more than 1 day after published_date
-        with self.assertRaises(ValidationError):
-            article = Article.objects.create(
-                pub_date=timezone.now() + datetime.timedelta(days=1, minutes=1),
-            )
-            article.full_clean()
+    # def test_published_date_constraint(self):
+    #     # Attempt to save a record with a scraped_date more than 1 day after published_date
+    #     with self.assertRaises(ValidationError):
+    #         article = Article.objects.create(
+    #             pub_date=timezone.now() + datetime.timedelta(days=1, minutes=1),
+    #         )
+    #         article.full_clean()
 
 
 # def create_article(content, days):
