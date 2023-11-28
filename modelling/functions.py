@@ -214,10 +214,10 @@ def preprocess_title(df, verbose = False):
     # print(df['title'])
     
     # remove words in words_to_remove.txt
-    if verbose:
-        print(df['title'])
-        print("Removing words in words_to_remove.txt...")
-    df['title'] = df['title'].apply(lambda x: remove_words_from_file(x, 'words_to_remove.txt'))
+    # if verbose:
+    #     print(df['title'])
+    #     print("Removing words in words_to_remove.txt...")
+    # df['title'] = df['title'].apply(lambda x: remove_words_from_file(x, 'words_to_remove.txt'))
     # print(df['title'])
 
     # stem words
