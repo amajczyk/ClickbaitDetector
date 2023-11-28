@@ -28,14 +28,14 @@ def init_sample(
     )
 
 
-if "__main__" == __name__:
-    config = config.load_config()
+def main():
+    configuration = config.load_config()
     user_input_credentials = {
         "type": "authorized_user",
         "project_id": "planar-courage-319110",
         "refresh_token": "",
-        "client_id": f"{config.client_id}",
-        "client_secret": f"{config.client_secret}",
+        "client_id": f"{configuration.client_id}",
+        "client_secret": f"{configuration.client_secret}",
     }
     credentials, project_id = auth.load_credentials_from_dict(user_input_credentials)
     init_sample(
@@ -51,3 +51,7 @@ if "__main__" == __name__:
     boolean_response = bool(prediction.text)
     print(prediction)
     print(boolean_response)
+
+
+if "__main__" == __name__:
+    main()
