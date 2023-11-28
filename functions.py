@@ -27,13 +27,25 @@ def get_word_vectors(w2v_model, title, aggregation=None):
 import string
 punct = string.punctuation
 punct = punct
-all_quoatation = ['“', '”', '‘', '’', '’', '‘']
+all_quoatation = ['“', '”', '‘', '’', '’', '‘', '’', '‘', u'\u2018', u'\u2019', u'\u201c', u'\u201d', u'\u2032', u'\u2033', '“',  '”',]
+
+from nltk.stem import PorterStemmer
+stemmer = PorterStemmer()
+
+
+def get_stem_of_word(text):
+    return stemmer.stem(text)
+
 
 def remove_punct(text, punct=punct):
     for p in punct:
         text = text.replace(p, '')
     text = text.replace('...', ' ')
     text = text.replace('…', ' ')
+    text = text.replace('—', ' ')
+    text = text.replace('–', ' ')
+    text = text.replace('–', ' ')
+    text = text.replace( '—', ' ')
     return text
 
 def remove_possesive_s(text):
@@ -50,7 +62,18 @@ def replace_short_version(text):
         text = text.replace(p+'m', ' am')
         text = text.replace(p+'d', ' would')
         text = text.replace('n'+p+'t', ' not')
-    return text    
+    return text 
+
+def remove_words_from_file(text_list, file_name):
+    # print(text)
+    with open(file_name) as f:
+        words = f.readlines()
+    words = [word.strip() for word in words]
+    # print(words)
+   
+    text = [word for word in text_list if word not in words]
+
+    return text   
 
 
 
@@ -79,12 +102,28 @@ def tokenize(text):
 def preprocess_title(df):
     # remove punctuation and other stuff
     df['title'] = df['title'].apply(replace_numbers_with_words)
+    # print(df['title'])
     df['title'] = df['title'].apply(remove_punct)
+    # print(df['title'])
     df['title'] = df['title'].apply(remove_possesive_s)
+
     df['title'] = df['title'].apply(replace_short_version)
+
 
     # tokenize
     df['title'] = df['title'].apply(tokenize)
+    # print(df['title'])
+    
+    # remove words in words_to_remove.txt
+    df['title'] = df['title'].apply(lambda x: remove_words_from_file(x, 'words_to_remove.txt'))
+    # print(df['title'])
+
+    # stem words
+    df['title'] = df['title'].apply(lambda x: [get_stem_of_word(word) for word in x])
+
+
+
+
     return df
 
 
