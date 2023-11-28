@@ -7,7 +7,6 @@ from src.cloud.connections_based_on_docs import init_sample
 
 @patch('src.cloud.connections_based_on_docs.aiplatform.init')
 def test_init_sample(mock_init):
-    print(os.getcwd())
     # Arrange
     project = 'test_project'
     location = 'test_location'
