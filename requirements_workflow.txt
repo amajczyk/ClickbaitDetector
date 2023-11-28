@@ -1,6 +1,8 @@
+numpy
+pandas
 Django
 requests
 bs4
-crispy_forms
-numpy
-pandas
+django-crispy-forms
+crispy-bootstrap5
+
