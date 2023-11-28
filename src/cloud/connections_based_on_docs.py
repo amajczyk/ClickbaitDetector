@@ -33,16 +33,16 @@ if "__main__" == __name__:
     user_input_credentials = {
         "type": "authorized_user",
         "project_id": "planar-courage-319110",
-        "refresh_token": f"{config['refresh_token']}",
-        "client_id": f"{config['client_id']}",
-        "client_secret": f"{config['client_secret']}",
+        "refresh_token": "",
+        "client_id": f"{config.client_id}",
+        "client_secret": f"{config.client_secret}",
     }
     credentials, project_id = auth.load_credentials_from_dict(user_input_credentials)
     init_sample(
         project_id,
         experiment="clickbait",
         staging_bucket="clickbait-detector-bucket",
-        credentials=credentials,
+        # credentials=credentials,
     )
     my_chat_model = TextGenerationModel.from_pretrained("text-bison@001")
     prediction = my_chat_model.predict(
