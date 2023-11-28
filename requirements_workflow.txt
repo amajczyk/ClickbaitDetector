@@ -1,2 +1,6 @@
 Django
 requests
+bs4
+crispy_forms
+numpy
+pandas
