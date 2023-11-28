@@ -27,7 +27,7 @@ def get_word_vectors(w2v_model, title, aggregation=None):
 import string
 punct = string.punctuation
 punct = punct
-all_quoatation = ['“', '”', '‘', '’']
+all_quoatation = ['“', '”', '‘', '’', '’', '‘']
 
 def remove_punct(text, punct=punct):
     for p in punct:
