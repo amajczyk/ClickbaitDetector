@@ -96,4 +96,4 @@ def predict_on_text(classifier, model_word2vec, text):
     text = preprocess_title(pd.DataFrame({'title': [text]}))
     text = get_word_vectors(model_word2vec, text['title'][0], aggregation='mean')
     # print(len(text))
-    return classifier.predict_proba(text)
+    return classifier.predict_proba(text.reshape(1, -1))
