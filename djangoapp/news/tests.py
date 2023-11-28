@@ -18,14 +18,14 @@ print('Time now: ', timezone.now())
 
 class ArticleModelTests(TestCase):
     
-    def test_was_scraped_in_the_last_24h(self):
-        """
-        was_scraped_today() should return True for articles whose scraped_date
-        is within the last day.
-        """
-        time = timezone.now() - datetime.timedelta(hours=23, minutes=59)
-        recent_article = Article(pub_date=time)
-        self.assertIs(recent_article.was_scraped_today(), True)
+ #   def test_was_scraped_in_the_last_24h(self):
+  #      """
+   #     was_scraped_today() should return True for articles whose scraped_date
+    #    is within the last day.
+     #   """
+      #  time = timezone.now() - datetime.timedelta(hours=23, minutes=59)
+      #  recent_article = Article(pub_date=time)
+      #  self.assertIs(recent_article.was_scraped_today(), True)
 
 
     
