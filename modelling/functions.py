@@ -39,6 +39,7 @@ nltk.download('punkt')
 nltk.download('wordnet')
 nltk.download('punkt')
 nltk.download('averaged_perceptron_tagger')
+nltk.download('words')
 stemmer = PorterStemmer()
 lemmatizer = WordNetLemmatizer()
 
@@ -72,7 +73,7 @@ def remove_punct(text, punct=punct):
 
     return text
 
-def remove_possesive_s(text):
+def remove_possessive(text):
     for p in all_quoatation:
         text = text.replace(p+'s', '')
         text = text.replace('s'+ p, '')
@@ -108,15 +109,16 @@ def expand_contractions_nltk(text):
 
 
 
+import re
 
 def replace_short_version(text):
     for p in all_quoatation:
-        text = text.replace(p+'re', ' are')
-        text = text.replace(p+'ve', ' have')
-        text = text.replace(p+'ll', ' will')
-        text = text.replace(p+'m', ' am')
-        text = text.replace(p+'d', ' would')
-        text = text.replace('n'+p+'t', ' not')
+        text = re.sub(r'\b' + p + 're\b', ' are', text)
+        text = re.sub(r'\b' + p + 've\b', ' have', text)
+        text = re.sub(r'\b' + p + 'll\b', ' will', text)
+        text = re.sub(r'\b' + p + 'm\b', ' am', text)
+        text = re.sub(r'\b' + p + 'd\b', ' would', text)
+        text = re.sub(r'\b' + 'n' + p + 't\b', ' not', text)
     return text 
 
 def remove_words_from_file(text_list, file_name):
@@ -167,34 +169,54 @@ def remove_non_eng_words(text_list, words = words):
     
 
 
-def preprocess_title(df):
+def preprocess_title(df, verbose = False):
 
     # df = cp.deepcopy(df)
     english_words = set(w.lower() for w in words.words())
 
     # remove punctuation and other stuff
-    print("Replacing numbers with words...")
+    if verbose:
+        print(df['title'])
+        print("Removing numbers and replacing with words...")   
     df['title'] = df['title'].apply(replace_numbers_with_words)
     
     # remove possesive s
-    print("Removing possesive s...")
-    df['title'] = df['title'].apply(remove_possessive_nltk)
+    if verbose:
+        print(df['title'])
+        print("Removing possesive s...")
+    df['title'] = df['title'].apply(remove_possessive)
 
     # replace short versions
-    print("Expanding short versions...")
-    df['title'] = df['title'].apply(expand_contractions_nltk)
+    if verbose:
+        print(df['title'])
+        print("Expanding short versions...")
+    df['title'] = df['title'].apply(replace_short_version)
 
     # remove punctuation
-    print("Removing punctuation...")
+    if verbose:
+        print(df['title'])
+        print("Removing punctuation...")   
     df['title'] = df['title'].apply(remove_punct)
 
+
+    # replace US with USA
+    if verbose:
+        print(df['title'])
+        print("Replacing US with USA...")
+    df['title'] = df['title'].apply(lambda x: x.replace('US', 'USA'))
+
     # tokenize
-    print("Tokenizing...")
+    if verbose:
+        print(df['title'])
+        print("Tokenizing...")
+        
     df['title'] = df['title'].apply(tokenize)
     # print(df['title'])
     
     # remove words in words_to_remove.txt
-    print("Removing words in words_to_remove.txt...")
+    if verbose:
+        print(df['title'])
+        print("Removing words in words_to_remove.txt...")
     df['title'] = df['title'].apply(lambda x: remove_words_from_file(x, 'words_to_remove.txt'))
     # print(df['title'])
 
@@ -202,24 +224,38 @@ def preprocess_title(df):
     # print("Stemming words...")
     # df['title'] = df['title'].apply(lambda x: [get_stem_of_word(word) for word in x])
 
+    
     # lemmalize words
-    print("Lemmalizing words...")
+    if verbose:
+        print(df['title'])
+        print("Lemmalizing words...")
     df['title'] = df['title'].apply(lambda x: [lemmalize_word(word) for word in x])
 
     # remove non ascii characters
-    print("Removing non ascii characters...")
+    if verbose:
+        print(df['title'])
+        print("Removing non ascii characters...")
+        
     df['title'] = df['title'].apply(remove_non_ascii_characters_from_list)
 
     # remove non english words
-    print("Removing non english words...")
-    df['title'] = df['title'].apply(remove_non_eng_words, words = english_words)
+    # if verbose:
+    #     print(df['title'])
+    #     print("Removing non english words...")
+    # df['title'] = df['title'].apply(remove_non_eng_words, words = english_words)
 
     # remove rows with empty titles
-    print("Removing empty titles...")
+    if verbose:
+        print(df['title'])
+        print("Removing empty titles...")
+        
     df = df[df['title'].apply(len) > 0]
 
     # remove stopwords one more time
-    print("Removing stopwords one more time...")
+    if verbose:
+        print(df['title'])
+        print("Removing stopwords one more time...")
+        
     df['title'] = df['title'].apply(lambda x: [word for word in x if word not in stop_words])
 
 
