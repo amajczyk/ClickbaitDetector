@@ -1,0 +1,5 @@
+#ignore data folder
+
+data/*
+*.csv
+*.pkl
