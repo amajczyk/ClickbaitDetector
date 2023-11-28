@@ -6,4 +6,5 @@ bs4
 django-crispy-forms
 crispy-bootstrap5
 pytest
+google
 
