@@ -3,3 +3,6 @@
 data/*
 *.csv
 *.pkl
+catboost_info/*
+
+
