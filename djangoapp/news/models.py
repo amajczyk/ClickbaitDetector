@@ -21,6 +21,7 @@ class Article(models.Model):
     # clickbait = models.BooleanField(default=False)
     clickbait_decision_NLP = models.SmallIntegerField(default=-1)  # classic mlp model decision
     clickbait_decision_LLM = models.SmallIntegerField(default=-1)  # LLM model decision
+    clickbait_decision_VERTEX = models.SmallIntegerField(default=-1)  # VERTEX AI model decision 
     clickbait_decision_final = models.SmallIntegerField(default=-1) # joined decision, maybe this could be on a confidence scale?
     def __str__(self):
         return self.title

@@ -28,6 +28,11 @@ google-auth = "^2.23.4"
 google-cloud = "^0.34.0"
 google-cloud-core = "^2.3.3"
 pytest = "^7.4.3"
+nltk = "^3.8.1"
+gensim = "^4.3.2"
+inflect = "^7.0.0"
+catboost = "^1.2.2"
+transformers = "^4.35.2"
 
 [tool.poetry.group.dev.dependencies]
 Django = "^4.2.6"

@@ -10,6 +10,18 @@
 
                 <div class="d-flex me-1">
 
+            {% if article.clickbait_decision_NLP == 0 %}
+            <i class="fa fa-check fa-2x" style="color: green;"></i>
+            {% else %}
+            <i class="fa fa-times fa-2x" style="color: red;"></i>
+            {% endif %}
+
+            {% if article.clickbait_decision_LLM == 0 %}
+            <i class="fa fa-check fa-2x" style="color: green;"></i>
+            {% else %}
+            <i class="fa fa-times fa-2x" style="color: red;"></i>
+            {% endif %}
+
             {% if article.clickbait_decision_final == 0 %}
             <i class="fa fa-check fa-2x" style="color: green;"></i>
             {% else %}

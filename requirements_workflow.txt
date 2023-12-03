@@ -11,4 +11,10 @@ google-cloud-aiplatform
 google-auth
 google-cloud
 google-cloud-core
+nltk
+inflect
+transformers
+gensim
+catboost
+
 
