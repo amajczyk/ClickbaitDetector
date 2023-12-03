@@ -15,5 +15,6 @@ nltk
 inflect
 transformers
 gensim
+catboost
 
 
