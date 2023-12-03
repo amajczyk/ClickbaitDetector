@@ -9,6 +9,8 @@ class Config:
     refresh_token: str
     client_id: str
     client_secret: str
+    quota_project_id: str
+    type: str
 
 
 # Create a function to load the configuration file
