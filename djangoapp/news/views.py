@@ -16,6 +16,7 @@ from django.conf import settings
 from news.scripts.scraping import Scraper
 from news.scripts.nlp import Word2VecModel, return_best_model, predict_on_text, load_predictive_model
 from news.scripts.llm import LocalLLM
+from news.vertex.cloud.connections_based_on_docs import VertexAI
 
 
 class IndexView(generic.ListView):
@@ -89,6 +90,8 @@ def check_url(request):
             
             llm = LocalLLM()
             clickbait_decision_LLM = llm.predict(scraped_data['title'])
+            
+            clickbait_decision_VERTEX = VertexAI().run(title=scraped_data['title'])
             # Create a new article if no matching article exists
             article = Article(
                 title=scraped_data['title'],
@@ -97,6 +100,7 @@ def check_url(request):
                 source_site=scraped_data['source_site'],
                 clickbait_decision_NLP = clickbait_decision_NLP,
                 clickbait_decision_LLM = int(clickbait_decision_LLM),
+                clickbait_decision_VERTEX = clickbait_decision_VERTEX,
                 clickbait_decision_final = clickbait_decision_NLP,
             )
             
