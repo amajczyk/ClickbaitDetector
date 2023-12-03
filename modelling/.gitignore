@@ -1,0 +1,8 @@
+#ignore data folder
+
+data/*
+*.csv
+*.pkl
+catboost_info/*
+
+
