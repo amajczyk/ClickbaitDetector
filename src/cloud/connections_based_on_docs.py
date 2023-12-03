@@ -1,12 +1,11 @@
 import threading
 from typing import Optional
 from enum import Enum
-from google.auth import default
+from google.auth import default, load_credentials_from_dict
 from src.configs import config
 from vertexai.language_models import TextGenerationModel
 from dataclasses import asdict
 from google.cloud import aiplatform
-import google.auth as auth
 
 
 class ModelName(Enum):
@@ -73,15 +72,16 @@ class VertexAI:
 
     def load_config(self):
         try:
-            configuration = config.load_config()
-            self.credentials, self.project_id = auth.load_credentials_from_dict(asdict(configuration))
+            self.credentials, self.project_id = load_credentials_from_dict(asdict(config.load_config()))
         except FileNotFoundError or KeyError:
             self.credentials, self.project_id = default()
 
     def load_model(self):
         self.my_chat_model = TextGenerationModel.from_pretrained(self.model_name.value)
 
-    def predict(self):
+    def predict(self, title: Optional[str] = None):
+        if title:
+            return self.my_chat_model.predict(self.prompt.replace(TITLE_PLACEHOLDER, title)).text
         return self.my_chat_model.predict(self.prompt.replace(TITLE_PLACEHOLDER, self.title)).text
 
     def run(self, *args, **kwargs):
@@ -89,7 +89,9 @@ class VertexAI:
         self.title = kwargs.get('title', self.title)
         self.load_config()
         self.load_model()
-        print(self.predict(), self.prompt.replace(TITLE_PLACEHOLDER, self.title))
+        prediction = self.predict()
+        print(f"Prediction: {prediction} for prompt: {self.prompt.replace(TITLE_PLACEHOLDER, self.title)}")
+        return False if prediction == '0' else True
 
 
 def runner(

@@ -1,69 +1,93 @@
-import os
-
 import pytest
 from unittest.mock import patch, MagicMock
-from src.cloud.connections_based_on_docs import init_sample
+from src.cloud.connections_based_on_docs import VertexAI, ModelName
+import google
+
+
+@pytest.fixture
+def vertex_ai():
+    return VertexAI()
+
+
+def test_init(vertex_ai):
+    assert vertex_ai.project_id is None
+    assert vertex_ai.location is None
+    assert vertex_ai.experiment is None
+    assert vertex_ai.staging_bucket is None
+    assert vertex_ai.credentials is None
+    assert vertex_ai.encryption_spec_key_name is None
+    assert vertex_ai.service_account is None
+    assert vertex_ai.model_name == ModelName.BISON_001
+    assert vertex_ai.title == "This is the Most Clickbait Title Ever!"
+    assert vertex_ai.prompt == "Is this title a clickbait: 'PLACE_FOR_TITLE'? Return 1 if yes, 0 if no."
+    assert vertex_ai.my_chat_model is None
 
 
 @patch('src.cloud.connections_based_on_docs.aiplatform.init')
-def test_init_sample(mock_init):
-    # Arrange
-    project = 'test_project'
-    location = 'test_location'
-    experiment = 'test_experiment'
-    staging_bucket = 'test_bucket'
-    credentials = 'test_credentials'
-    encryption_spec_key_name = 'test_key_name'
-    service_account = 'test_account'
-
-    # Act
-    init_sample(project, location, experiment, staging_bucket, credentials, encryption_spec_key_name, service_account)
-
-    # Assert
-    mock_init.assert_called_once_with(
-        project=project,
-        location=location,
-        experiment=experiment,
-        staging_bucket=staging_bucket,
-        credentials=credentials,
-        encryption_spec_key_name=encryption_spec_key_name,
-        service_account=service_account,
+def test_init_connection(mock_aiplatform_init, vertex_ai):
+    vertex_ai.init_connection()
+    mock_aiplatform_init.assert_called_once_with(
+        project=vertex_ai.project_id,
+        location=vertex_ai.location,
+        experiment=vertex_ai.experiment,
+        staging_bucket=vertex_ai.staging_bucket,
+        credentials=vertex_ai.credentials,
+        encryption_spec_key_name=vertex_ai.encryption_spec_key_name,
+        service_account=vertex_ai.service_account,
     )
 
 
-@patch('src.cloud.connections_based_on_docs.aiplatform.init')
+@patch('json.load')
+def test_load_config(mock_json_load, vertex_ai):
+    mock_json_load.return_value = {
+        'refresh_token': 'fake_token',
+        'project_id': 'fake_project_id',
+        'type': 'authorized_user',
+        'client_id': 'fake_client_id',
+        'client_secret': 'fake_client_secret'
+    }
+    with patch('google.auth.load_credentials_from_dict') as mock_auth_load_credentials_from_dict:
+        mock_auth_load_credentials_from_dict.return_value = (
+            {"client_id": "fake_client_id", "client_secret": "fake_client_secret"},
+            'fake_project_id'
+        )
+        vertex_ai.load_config()
+    mock_json_load.assert_called_once()
+    assert type(vertex_ai.credentials) == google.oauth2.credentials.Credentials
+    assert vertex_ai.project_id == 'planar-courage-319110'
+
+
 @patch('src.cloud.connections_based_on_docs.TextGenerationModel.from_pretrained')
-@patch('src.cloud.connections_based_on_docs.auth.load_credentials_from_dict')
-@patch('src.cloud.connections_based_on_docs.config.load_config')
-def test_main(mock_load_config, mock_load_credentials, mock_from_pretrained, mock_init):
-    # Arrange
-    mock_load_config.return_value = MagicMock(client_id='test_id', client_secret='test_secret')
-    mock_load_credentials.return_value = ('test_credentials', 'test_project_id')
-    mock_from_pretrained.return_value = MagicMock(predict=MagicMock(return_value=MagicMock(text='1')))
-    mock_init.return_value = MagicMock()
-    # Act
-    with patch('src.cloud.connections_based_on_docs.__name__', "__main__"):
-        with patch('src.cloud.connections_based_on_docs.print') as mock_print:
-            import src.cloud.connections_based_on_docs as main
-            main.main()
+def test_load_model(mock_from_pretrained, vertex_ai):
+    vertex_ai.load_model()
+    mock_from_pretrained.assert_called_once_with(vertex_ai.model_name.value)
+    assert vertex_ai.my_chat_model is not None
 
-    # Assert
-    mock_load_config.assert_called_once()
-    mock_load_credentials.assert_called_once_with({
-        "type": "authorized_user",
-        "project_id": "planar-courage-319110",
-        "refresh_token": "",
-        "client_id": "test_id",
-        "client_secret": "test_secret",
-    })
-    mock_init.assert_called_once_with(
-        project='test_project_id',
-        location=None,
-        experiment="clickbait",
-        staging_bucket="clickbait-detector-bucket",
-        credentials=None,
-        encryption_spec_key_name=None,
-        service_account=None,
-    )
-    mock_from_pretrained.assert_called_once_with("text-bison@001")
-    mock_print.assert_called()
+
+@patch('vertexai.language_models.TextGenerationModel')
+def test_predict(mock_predict, vertex_ai):
+    mock_predict.return_value = MagicMock(predict=mock_predict.predict)
+    mock_predict.predict.return_value = MagicMock(text='1')
+    vertex_ai.my_chat_model = mock_predict
+    result = vertex_ai.predict()
+    assert result == '1'
+
+
+def test_run(vertex_ai):
+    with patch('src.cloud.connections_based_on_docs.VertexAI.predict') as mock_predict:
+        mock_predict.return_value = '1'
+        result = vertex_ai.run(title='My Clickbait Title')
+    assert result is True
+
+
+def test_run_not_clickbait(vertex_ai):
+    with patch('src.cloud.connections_based_on_docs.VertexAI.predict') as mock_predict:
+        mock_predict.return_value = '0'
+        titles = [
+            "A Comprehensive Review of the Latest Machine Learning Techniques",
+            "The Impact of Artificial Intelligence on Society",
+            "The Future of Work in the Age of Automation"
+        ]
+        for title in titles:
+            result = vertex_ai.run(title=title)
+            assert result is False
