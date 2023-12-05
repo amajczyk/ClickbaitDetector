@@ -1,10 +1,13 @@
 import datetime
+import os
 
 from django.test import TestCase
 from django.utils import timezone
 from django.urls import reverse
 from django.db import IntegrityError
 from django.core.exceptions import ValidationError
+
+from django.conf import settings
 
 
 from .models import Article
@@ -15,6 +18,94 @@ from .models import Article
 
 print('Testing news app...')
 print('Time now: ', timezone.now())
+
+
+
+
+import unittest
+from unittest.mock import patch
+from news.scripts.scraping import Scraper  # Replace with your actual module name
+
+
+ABCNEWS_NOT_CLICKBAIT = 'https://abcnews.go.com/Politics/joe-biden-apparent-winner-presidency/story?id=73981165'
+CBSNEWS_NOT_CLICKBAIT = 'https://www.cbsnews.com/news/joe-biden-wins-2020-election-46th-president-united-states/'
+THESUN_NOT_CLICKBAIT = 'https://www.thesun.co.uk/news/19747379/queen-elizabeth-dead-news/'
+
+
+class TestScraper(TestCase):
+    def setUp(self):
+        # Set up any necessary resources or configurations for tests
+        config_path = os.path.join(settings.BASE_DIR, 'news', 'config', 'site_variables_dict')
+        self.scraper = Scraper(config_path)
+
+
+    def test_get_site_variables_dict(self):
+        site_variables_dict = self.scraper.site_variables_dict
+        self.assertIsInstance(site_variables_dict, dict)
+        self.assertIn("cbsnews", site_variables_dict)
+        self.assertIn("thesun", site_variables_dict)
+        self.assertIn("abcnews", site_variables_dict)
+        
+        
+
+    # def test_scrape_article_urls(self):
+    #     # Mock the requests.get method to avoid making actual HTTP requests
+    #     with patch("requests.get") as mock_get:
+    #         mock_response = mock_get.return_value
+    #         mock_response.status_code = 200
+    #         mock_response.text = "<html><body><a href='https://example.com'>Test Article</a></body></html>"
+
+    #         # Call your scrape_article_urls method with a mocked response
+    #         result = self.scraper.scrape_article_urls("https://www.example-site.com")
+
+    #         # Assert that the method returns the expected result
+    #         self.assertEqual(result, ["https://example.com"])
+
+    def test_discern_website_from_url(self):
+        result = self.scraper.discern_website_from_url(ABCNEWS_NOT_CLICKBAIT)
+        self.assertEqual(result["source_site"], "ABC News")
+        
+        result = self.scraper.discern_website_from_url(CBSNEWS_NOT_CLICKBAIT)
+        self.assertEqual(result["source_site"], "CBS News")
+
+        result = self.scraper.discern_website_from_url(THESUN_NOT_CLICKBAIT)
+        self.assertEqual(result["source_site"], "The Sun UK")
+
+    # def test_check_href_match_condition(self):
+    #     # Test various conditions for the check_href_match_condition method
+    #     # ...
+
+    # def test_scrape_content(self):
+    #     # Mock the requests.get method and set up a mock response
+    #     # ...
+
+    #     # Call your scrape_content method with a mocked response
+    #     result = self.scraper.scrape_content("https://www.example.com", "p", "h1")
+
+    #     # Assert that the method returns the expected result
+    #     self.assertIsInstance(result, dict)
+    #     self.assertIn("title", result)
+    #     self.assertIn("content", result)
+    #     # Add more assertions based on your expected result
+
+    # def test_scrape(self):
+    #     # Mock the discern_website_from_url and scrape_content methods
+    #     # ...
+
+    #     # Call your scrape method with mocked methods
+    #     result = self.scraper.scrape("https://www.example.com")
+
+    #     # Assert that the method returns the expected result
+    #     self.assertIsInstance(result, dict)
+    #     self.assertIn("title", result)
+    #     self.assertIn("content", result)
+    #     # Add more assertions based on your expected result
+
+# if __name__ == "__main__":
+#     unittest.main()
+
+
+
 
 class ArticleModelTests(TestCase):
     

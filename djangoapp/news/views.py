@@ -91,7 +91,8 @@ def check_url(request):
             llm = LocalLLM()
             clickbait_decision_LLM = llm.predict(scraped_data['title'])
             
-            clickbait_decision_VERTEX = VertexAI().run(title=scraped_data['title'])
+            # clickbait_decision_VERTEX = VertexAI().run(title=scraped_data['title'])
+            clickbait_decision_VERTEX = 0
             # Create a new article if no matching article exists
             article = Article(
                 title=scraped_data['title'],
