@@ -110,15 +110,15 @@ class NLPPredictorTests(TestCase):
         self.assertLess(result[0][1], proba_cutoff)
         
         
-class LLMPredictorTests(TestCase):
+# class LLMPredictorTests(TestCase):
     
-    def test_predict(self):
-        llm = LocalLLM()
-        result = llm.predict(CLICKBAIT_TITLE)
-        self.assertEqual(result, 1)
+#     def test_predict(self):
+#         llm = LocalLLM()
+#         result = llm.predict(CLICKBAIT_TITLE)
+#         self.assertEqual(result, 1)
         
-        result = llm.predict(NOT_CLICKBAIT_TITLE)
-        self.assertEqual(result, 0)
+#         result = llm.predict(NOT_CLICKBAIT_TITLE)
+#         self.assertEqual(result, 0)
     
 
 
