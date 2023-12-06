@@ -25,11 +25,19 @@ print('Time now: ', timezone.now())
 import unittest
 from unittest.mock import patch
 from news.scripts.scraping import Scraper  # Replace with your actual module name
+from news.scripts.nlp import load_predictive_model, Word2VecModel, predict_on_text, return_best_model
+from news.scripts.llm import LocalLLM
+
 
 
 ABCNEWS_NOT_CLICKBAIT = 'https://abcnews.go.com/Politics/joe-biden-apparent-winner-presidency/story?id=73981165'
 CBSNEWS_NOT_CLICKBAIT = 'https://www.cbsnews.com/news/joe-biden-wins-2020-election-46th-president-united-states/'
 THESUN_NOT_CLICKBAIT = 'https://www.thesun.co.uk/news/19747379/queen-elizabeth-dead-news/'
+CBSSPORTS_NOT_CLICKBAIT = 'https://www.cbssports.com/nba/news/p-j-tucker-says-theres-not-enough-basketballs-on-the-planet-for-clippers/'
+CLICKBAIT_TITLE = "10 Signs Your Partner Is Cheating - Don't Ignore #7!"
+NOT_CLICKBAIT_TITLE = "Joe Biden projected to win presidency in deeply divided nation"
+
+
 
 
 class TestScraper(TestCase):
@@ -46,20 +54,18 @@ class TestScraper(TestCase):
         self.assertIn("thesun", site_variables_dict)
         self.assertIn("abcnews", site_variables_dict)
         
+
+    def test_scrape_article_urls(self):
+        # Test scraping urls from the main website
+        result= self.scraper.scrape_article_urls(self.scraper.site_variables_dict['thesun']['main'])
+        self.assertGreater(len(result), 0)
         
+        result= self.scraper.scrape_article_urls(self.scraper.site_variables_dict['cbsnews']['main'])
+        self.assertGreater(len(result), 0)
+        
+        result= self.scraper.scrape_article_urls(self.scraper.site_variables_dict['abcnews']['main'])
+        self.assertGreater(len(result), 0)
 
-    # def test_scrape_article_urls(self):
-    #     # Mock the requests.get method to avoid making actual HTTP requests
-    #     with patch("requests.get") as mock_get:
-    #         mock_response = mock_get.return_value
-    #         mock_response.status_code = 200
-    #         mock_response.text = "<html><body><a href='https://example.com'>Test Article</a></body></html>"
-
-    #         # Call your scrape_article_urls method with a mocked response
-    #         result = self.scraper.scrape_article_urls("https://www.example-site.com")
-
-    #         # Assert that the method returns the expected result
-    #         self.assertEqual(result, ["https://example.com"])
 
     def test_discern_website_from_url(self):
         result = self.scraper.discern_website_from_url(ABCNEWS_NOT_CLICKBAIT)
@@ -70,56 +76,72 @@ class TestScraper(TestCase):
 
         result = self.scraper.discern_website_from_url(THESUN_NOT_CLICKBAIT)
         self.assertEqual(result["source_site"], "The Sun UK")
+        
+        result = self.scraper.discern_website_from_url(CBSSPORTS_NOT_CLICKBAIT)
+        self.assertEqual(result["source_site"], "CBS News")
 
-    # def test_check_href_match_condition(self):
-    #     # Test various conditions for the check_href_match_condition method
-    #     # ...
+    def test_scrape(self):
+        result = self.scraper.scrape(THESUN_NOT_CLICKBAIT)
 
-    # def test_scrape_content(self):
-    #     # Mock the requests.get method and set up a mock response
-    #     # ...
-
-    #     # Call your scrape_content method with a mocked response
-    #     result = self.scraper.scrape_content("https://www.example.com", "p", "h1")
-
-    #     # Assert that the method returns the expected result
-    #     self.assertIsInstance(result, dict)
-    #     self.assertIn("title", result)
-    #     self.assertIn("content", result)
-    #     # Add more assertions based on your expected result
-
-    # def test_scrape(self):
-    #     # Mock the discern_website_from_url and scrape_content methods
-    #     # ...
-
-    #     # Call your scrape method with mocked methods
-    #     result = self.scraper.scrape("https://www.example.com")
-
-    #     # Assert that the method returns the expected result
-    #     self.assertIsInstance(result, dict)
-    #     self.assertIn("title", result)
-    #     self.assertIn("content", result)
-    #     # Add more assertions based on your expected result
-
-# if __name__ == "__main__":
-#     unittest.main()
+        self.assertIsInstance(result, dict)
+        self.assertIn("title", result)
+        self.assertIsNotNone(result["title"])
+        self.assertIn("content", result)
+        self.assertIsNotNone(result["content"])
+        self.assertIn("source_site", result)
+        self.assertIsNotNone(result["source_site"])
 
 
-
-
-class ArticleModelTests(TestCase):
+class NLPPredictorTests(TestCase):
+    def test_predict_on_text(self):
+        # Test the model on a non-clickbait title
+        predictive_model_path = os.path.join(settings.BASE_DIR, 'news', 'predictive_models', 'catboost_model.pkl')
+        predictive_model = load_predictive_model(predictive_model_path)
+        model_settings_path = os.path.join(settings.BASE_DIR, 'news', 'config', 'model_settings.json')
+        model_w2v_settings = return_best_model(path=model_settings_path)
+        model_path = os.path.join(settings.BASE_DIR, 'news', 'word2vec_models', model_w2v_settings['model_path'])
+        model_w2v = Word2VecModel(model_w2v_settings,model_path)
+        proba_cutoff = 0.5
+        result = predict_on_text(predictive_model, model_w2v, CLICKBAIT_TITLE)
+        self.assertGreater(result[0][1], proba_cutoff)
+        
+        # Test the model on a non-clickbait title
+        result = predict_on_text(predictive_model, model_w2v, NOT_CLICKBAIT_TITLE)
+        self.assertLess(result[0][1], proba_cutoff)
+        
+        
+class LLMPredictorTests(TestCase):
     
- #   def test_was_scraped_in_the_last_24h(self):
-  #      """
-   #     was_scraped_today() should return True for articles whose scraped_date
-    #    is within the last day.
-     #   """
-      #  time = timezone.now() - datetime.timedelta(hours=23, minutes=59)
-      #  recent_article = Article(pub_date=time)
-      #  self.assertIs(recent_article.was_scraped_today(), True)
-
-
+    def test_predict(self):
+        llm = LocalLLM()
+        result = llm.predict(CLICKBAIT_TITLE)
+        self.assertEqual(result, 1)
+        
+        result = llm.predict(NOT_CLICKBAIT_TITLE)
+        self.assertEqual(result, 0)
     
+
+
+class ArticleModelTests(TestCase):  
+    
+    def test_default_values(self):
+        """
+        Test that default values are set for clickbait_decision fields.
+        """
+        new_article = Article.objects.create(title="Test Article", content_summary="Summary")
+        self.assertEqual(new_article.clickbait_decision_NLP, -1)
+        self.assertEqual(new_article.clickbait_decision_LLM, -1)
+        self.assertEqual(new_article.clickbait_decision_VERTEX, -1)
+        self.assertEqual(new_article.clickbait_decision_final, -1)
+    
+    def test_was_scraped_within_the_last_24h(self):
+        """
+        was_scraped_today() should return True for articles whose scraped_date
+        is within the last day.
+        """
+        time = timezone.now() - datetime.timedelta(hours=23, minutes=59)
+        recent_article = Article(scraped_date=time)
+        self.assertIs(recent_article.was_scraped_today(), True)
     
     def test_was_scraped_later_than_the_last_24h(self):
         """
@@ -132,109 +154,35 @@ class ArticleModelTests(TestCase):
 
     
     
-    def test_decision_integer_constraint(self):
-        # Attempt to save a record with an invalid value
+    def test_valid_decision_values(self):
+        """
+        Test that the model allows valid decision values for NLP and LLM fields.
+        """
+        valid_decisions = [-1, 0, 1]
+        for decision in valid_decisions:
+            article = Article.objects.create(
+                title="Test Article",
+                content_summary="Summary",
+                clickbait_decision_NLP=decision,
+                clickbait_decision_LLM=decision,
+            )
+            self.assertEqual(article.clickbait_decision_NLP, decision)
+            self.assertEqual(article.clickbait_decision_LLM, decision)
+
+    def test_invalid_decision_values(self):
+        """
+        Test that the model raises IntegrityError for invalid decision values.
+        """
+
+        decision = -2
         with self.assertRaises(IntegrityError):
-            Article.objects.create(clickbait_decision_NLP=42)  # An invalid value
-
-
-    # def test_published_date_constraint(self):
-    #     # Attempt to save a record with a scraped_date more than 1 day after published_date
-    #     with self.assertRaises(ValidationError):
-    #         article = Article.objects.create(
-    #             pub_date=timezone.now() + datetime.timedelta(days=1, minutes=1),
-    #         )
-    #         article.full_clean()
-
-
-# def create_article(content, days):
-#     """
-#     Create a article with the given `content` and published the
-#     given number of `days` offset to now (negative for articles published
-#     in the past, positive for articles that have yet to be published).
-#     """
-#     time = timezone.now() + datetime.timedelta(days=days)
-#     return Article.objects.create(content=content, pub_date=time)
-
-
-# class ArticleIndexViewTests(TestCase):
-#     def test_no_articles(self):
-#         """
-#         If no articles exist, an appropriate message is displayed.
-#         """
-#         response = self.client.get(reverse("news:index"))
-#         self.assertEqual(response.status_code, 200)
-#         self.assertContains(response, "No articles are available.")
-#         self.assertQuerySetEqual(response.context["latest_article_list"], [])
-
-#     def test_past_article(self):
-#         """
-#         Articles with a pub_date in the past are displayed on the
-#         index page.
-#         """
-#         article = create_article(content="Past article.", days=-30)
-#         response = self.client.get(reverse("news:index"))
-#         self.assertQuerySetEqual(
-#             response.context["latest_article_list"],
-#             [article],
-#         )
-
-#     def test_future_article(self):
-#         """
-#         Articles with a pub_date in the future aren't displayed on
-#         the index page.
-#         """
-#         create_article(content="Future article.", days=30)
-#         response = self.client.get(reverse("news:index"))
-#         self.assertContains(response, "No articles are available.")
-#         self.assertQuerySetEqual(response.context["latest_article_list"], [])
-
-#     def test_future_article_and_past_article(self):
-#         """
-#         Even if both past and future articles exist, only past articles
-#         are displayed.
-#         """
-#         article = create_article(content="Past article.", days=-30)
-#         create_article(content="Future article.", days=30)
-#         response = self.client.get(reverse("news:index"))
-#         self.assertQuerySetEqual(
-#             response.context["latest_article_list"],
-#             [article],
-#         )
-
-#     def test_two_past_articles(self):
-#         """
-#         The articles index page may display multiple articles.
-#         """
-#         article1 = create_article(content="Past article 1.", days=-30)
-#         article2 = create_article(content="Past article 2.", days=-5)
-#         response = self.client.get(reverse("news:index"))
-#         self.assertQuerySetEqual(
-#             response.context["latest_article_list"],
-#             [article2, article1],
-#         )
-
-
-# class ArticleDetailViewTests(TestCase):
-#     def test_future_article(self):
-#         """
-#         The detail view of a article with a pub_date in the future
-#         returns a 404 not found.
-#         """
-#         future_article = create_article(content="Future article.", days=5)
-#         url = reverse("news:detail", args=(future_article.id,))
-#         response = self.client.get(url)
-#         self.assertEqual(response.status_code, 404)
-
-#     def test_past_article(self):
-#         """
-#         The detail view of a article with a pub_date in the past
-#         displays the article's text.
-#         """
-#         past_article = create_article(content="Past Article.", days=-5)
-#         url = reverse("news:detail", args=(past_article.id,))
-#         response = self.client.get(url)
-#         self.assertContains(response, past_article.content)
-
+            Article.objects.create(
+                title="Test Article",
+                content_summary="Summary",
+                clickbait_decision_NLP=decision,
+                clickbait_decision_LLM = decision,
+                clickbait_decision_VERTEX = decision,
+                clickbait_decision_final = decision
+            )
 
 
