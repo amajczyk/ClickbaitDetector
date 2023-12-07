@@ -1,6 +1,9 @@
 import datetime
 import os
+from dataclasses import asdict
+from typing import Optional
 
+from django.db import IntegrityError
 from django.test import TestCase
 from django.utils import timezone
 from django.urls import reverse
@@ -9,9 +12,13 @@ from django.core.exceptions import ValidationError
 
 from django.conf import settings
 
+from google.auth import default
 
 from .models import Article
 
+from unittest.mock import patch
+from news.vertex.cloud.connections_based_on_docs import VertexAI, ModelName
+from news.vertex.configs.config import Config
 
 # python manage.py test news
 # https://docs.djangoproject.com/en/4.2/intro/tutorial05/
@@ -20,11 +27,9 @@ print('Testing news app...')
 print('Time now: ', timezone.now())
 
 
-
-
 import unittest
 from unittest.mock import patch
-from news.scripts.scraping import Scraper  # Replace with your actual module name
+from news.scripts.scraping import Scraper 
 from news.scripts.nlp import load_predictive_model, Word2VecModel, predict_on_text, return_best_model
 from news.scripts.llm import LocalLLM
 
@@ -121,7 +126,6 @@ class NLPPredictorTests(TestCase):
 #         self.assertEqual(result, 0)
     
 
-
 class ArticleModelTests(TestCase):  
     
     def test_default_values(self):
@@ -152,8 +156,6 @@ class ArticleModelTests(TestCase):
         old_article = Article(scraped_date=time)
         self.assertIs(old_article.was_scraped_today(), False)
 
-    
-    
     def test_valid_decision_values(self):
         """
         Test that the model allows valid decision values for NLP and LLM fields.
@@ -186,3 +188,99 @@ class ArticleModelTests(TestCase):
             )
 
 
+    def test_decision_integer_constraint(self):
+        # Attempt to save a record with an invalid value
+        with self.assertRaises(IntegrityError):
+            Article.objects.create(clickbait_decision_NLP=42)  # An invalid value
+
+
+
+class VertexAIMock(VertexAI):
+    def init_connection(self):
+        pass
+
+    def load_model(self):
+        pass
+
+    def predict(self, title: Optional[str] = None):
+        if title:
+            return '1' if title.strip() == 'My Clickbait Title' else '0'
+        elif self.title:
+            return '1' if self.title.strip() == 'My Clickbait Title' else '0'
+        return '0'
+
+
+    @patch('google.auth.load_credentials_from_dict')
+    def load_config(self, mock_load_credentials_from_dict):
+
+        try:
+            return_value = Config(
+                refresh_token="test_refresh_token",
+                client_id="test_client_id",
+                client_secret="test_client_secret",
+                quota_project_id="test_quota_project_id",
+                type="test_type"
+            )
+            mock_load_credentials_from_dict.return_value = (return_value, return_value.quota_project_id)
+            self.credentials, self.project_id = mock_load_credentials_from_dict(asdict(return_value))
+        except FileNotFoundError or KeyError:
+            self.credentials, self.project_id = default()
+
+
+class TestVertexAI(TestCase):
+
+    def test_init(self):
+        self.vertex_ai = VertexAIMock()
+        """Test initializing VertexAI object."""
+        self.assertEqual(self.vertex_ai.project_id, None)
+        self.assertEqual(self.vertex_ai.location, None)
+        self.assertEqual(self.vertex_ai.experiment, None)
+        self.assertEqual(self.vertex_ai.staging_bucket, None)
+        self.assertIsNone(self.vertex_ai.credentials)
+        self.assertIsNone(self.vertex_ai.encryption_spec_key_name)
+        self.assertIsNone(self.vertex_ai.service_account)
+        self.assertEqual(self.vertex_ai.model_name, ModelName.BISON_001)
+        self.assertEqual(self.vertex_ai.title, "This is the Most Clickbait Title Ever!")
+        self.assertEqual(
+            self.vertex_ai.prompt, "Is this title a clickbait: 'PLACE_FOR_TITLE'? Return 1 if yes, 0 if no.")
+        self.assertIsNone(self.vertex_ai.my_chat_model)
+
+    @patch('google.auth.load_credentials_from_dict')
+    def test_load_config(self, mock_load_credentials_from_dict):
+        mock_load_credentials_from_dict.return_value = (None, None)
+        self.vertex_ai = VertexAIMock()
+        self.vertex_ai.load_config()
+        self.assertEqual(self.vertex_ai.credentials.refresh_token, "test_refresh_token")
+        self.assertEqual(self.vertex_ai.credentials.client_id, "test_client_id")
+        self.assertEqual(self.vertex_ai.credentials.client_secret, "test_client_secret")
+        self.assertEqual(self.vertex_ai.credentials.quota_project_id, "test_quota_project_id")
+        self.assertEqual(self.vertex_ai.credentials.type, "test_type")
+
+    def test_predict(self):
+        self.vertex_ai = VertexAIMock()
+        result = self.vertex_ai.predict("My Clickbait Title")
+        assert bool(result) is True
+
+    @patch('google.auth.load_credentials_from_dict')
+    def test_run_clickbait(self, mock_load_credentials_from_dict):
+        mock_load_credentials_from_dict.return_value = (None, None)
+        with patch('news.vertex.cloud.connections_based_on_docs.VertexAI.predict') as mock_predict:
+            mock_predict.return_value = '1'
+            self.vertex_ai = VertexAIMock()
+            result = self.vertex_ai.run(title='My Clickbait Title')
+            assert bool(result) is True
+
+    @patch('google.auth.load_credentials_from_dict')
+    def test_run_not_clickbait(self, mock_load_credentials_from_dict):
+        mock_load_credentials_from_dict.return_value = (None, None)
+        with patch('news.vertex.cloud.connections_based_on_docs.VertexAI.predict') as mock_predict:
+            self.vertex_ai = VertexAIMock()
+            mock_predict.return_value = '0'
+            titles = [
+                "A Comprehensive Review of the Latest Machine Learning Techniques",
+                "The Impact of Artificial Intelligence on Society",
+                "The Future of Work in the Age of Automation"
+            ]
+            for title in titles:
+                result = self.vertex_ai.run(title=title)
+                assert result is False

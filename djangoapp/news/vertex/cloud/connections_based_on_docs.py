@@ -2,7 +2,7 @@ import threading
 from typing import Optional
 from enum import Enum
 from google.auth import default, load_credentials_from_dict
-from news.vertex.configs import config
+from news.vertex.configs.config import load_config_from_file
 from vertexai.language_models import TextGenerationModel
 from dataclasses import asdict
 from google.cloud import aiplatform
@@ -72,7 +72,7 @@ class VertexAI:
 
     def load_config(self):
         try:
-            self.credentials, self.project_id = load_credentials_from_dict(asdict(config.load_config()))
+            self.credentials, self.project_id = load_credentials_from_dict(asdict(load_config_from_file()))
         except FileNotFoundError or KeyError:
             self.credentials, self.project_id = default()
 
@@ -91,7 +91,9 @@ class VertexAI:
         self.load_model()
         prediction = self.predict()
         print(f"Prediction: {prediction} for prompt: {self.prompt.replace(TITLE_PLACEHOLDER, self.title)}")
-        return False if prediction == '0' else True
+        return_value = False if prediction.strip() == '0' else True
+        print(f"Return value: {return_value}")
+        return return_value
 
 
 def runner(
