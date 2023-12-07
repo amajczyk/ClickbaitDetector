@@ -1,14 +1,17 @@
 import datetime
+from dataclasses import asdict
+from typing import Optional
 
+from django.db import IntegrityError
 from django.test import TestCase
 from django.utils import timezone
-from django.urls import reverse
-from django.db import IntegrityError
-from django.core.exceptions import ValidationError
-
+from google.auth import default
 
 from .models import Article
 
+from unittest.mock import patch
+from news.vertex.cloud.connections_based_on_docs import VertexAI, ModelName
+from news.vertex.configs.config import Config
 
 # python manage.py test news
 # https://docs.djangoproject.com/en/4.2/intro/tutorial05/
@@ -16,16 +19,17 @@ from .models import Article
 print('Testing news app...')
 print('Time now: ', timezone.now())
 
+
 class ArticleModelTests(TestCase):
-    
- #   def test_was_scraped_in_the_last_24h(self):
-  #      """
-   #     was_scraped_today() should return True for articles whose scraped_date
+
+    #   def test_was_scraped_in_the_last_24h(self):
+    #      """
+    #     was_scraped_today() should return True for articles whose scraped_date
     #    is within the last day.
-     #   """
-      #  time = timezone.now() - datetime.timedelta(hours=23, minutes=59)
-      #  recent_article = Article(pub_date=time)
-      #  self.assertIs(recent_article.was_scraped_today(), True)
+    #   """
+    #  time = timezone.now() - datetime.timedelta(hours=23, minutes=59)
+    #  recent_article = Article(pub_date=time)
+    #  self.assertIs(recent_article.was_scraped_today(), True)
 
 
     
