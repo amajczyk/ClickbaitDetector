@@ -1,3 +1,5 @@
 *.model
 *.model.wv.vectors.npy
 *.model.syn1neg.npy
+
+!word2vec_vs100_win7_sg0.model
