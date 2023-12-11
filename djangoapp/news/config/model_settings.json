@@ -1,0 +1,10 @@
+{
+    "best_word2vec":
+    {
+        "model_path": "word2vec_vs500_win4_sg0.model",
+        "vector_size": 500,
+        "window_size": 4,
+        "is_skipgram": false
+    }
+
+}
