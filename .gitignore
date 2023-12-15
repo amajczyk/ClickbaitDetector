@@ -169,3 +169,6 @@ modelling/catboost_info/catboost_training.json
 modelling/catboost_info/learn_error.tsv
 modelling/catboost_info/time_left.tsv
 modelling/catboost_info/learn/events.out.tfevents
+modelling/catboost_info/catboost_training.json
+modelling/catboost_info/learn_error.tsv
+modelling/catboost_info/time_left.tsv
