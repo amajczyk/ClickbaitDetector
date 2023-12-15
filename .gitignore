@@ -180,10 +180,10 @@ modelling/catboost_info/time_left.tsv
 
 
 
-<<<<<<< HEAD
 catboost_info
 
 word2vec_models/*
-=======
-catboost_info
->>>>>>> bda5bd6c42903d568d8fc85248a4760ac37f6af3
+modelling/catboost_info/catboost_training.json
+modelling/catboost_info/learn_error.tsv
+modelling/catboost_info/time_left.tsv
+modelling/catboost_info/learn/events.out.tfevents
