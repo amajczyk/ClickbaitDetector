@@ -177,3 +177,7 @@ modelling/results/backup/word2vec_results_not_100_250_500.json
 modelling/catboost_info/catboost_training.json
 modelling/catboost_info/learn_error.tsv
 modelling/catboost_info/time_left.tsv
+
+
+
+catboost_info
