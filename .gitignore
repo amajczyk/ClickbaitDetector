@@ -181,3 +181,5 @@ modelling/catboost_info/time_left.tsv
 
 
 catboost_info
+
+word2vec_models/*
