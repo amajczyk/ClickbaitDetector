@@ -179,8 +179,8 @@ modelling/catboost_info/learn_error.tsv
 modelling/catboost_info/time_left.tsv
 
 
-
-catboost_info
+catboost_info/learn
+catboost_info/*
 
 word2vec_models/*
 modelling/catboost_info/catboost_training.json
