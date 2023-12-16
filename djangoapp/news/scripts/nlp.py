@@ -42,13 +42,6 @@ def load_predictive_model(path:str):
 ####### PREPROCESSING FUNCTIONS ########
 # remove punctuation
 import nltk
-nltk.download('punkt')
-nltk.download('wordnet')
-nltk.download('punkt')
-nltk.download('averaged_perceptron_tagger')
-nltk.download('words')
-nltk.download('stopwords')
-
 import string
 from nltk.corpus import words
 import inflect
