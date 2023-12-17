@@ -4,7 +4,7 @@ from enum import Enum
 from google.auth import default, load_credentials_from_dict
 from news.vertex.configs.config import load_config_from_file
 from vertexai.language_models import TextGenerationModel
-from vertexai.preview.generative_models import GenerativeModel, Part
+from vertexai.preview.generative_models import GenerativeModel
 from dataclasses import asdict
 from google.cloud import aiplatform
 
@@ -85,58 +85,41 @@ class VertexAI:
             return
         self.my_chat_model = TextGenerationModel.from_pretrained(self.model_name.value)
 
-    def predict(self, title: Optional[str] = None, summary: Optional[str] = None):
-        if summary:
-            self.prompt = self.prompt.replace(SUMMARY_PLACEHOLDER, summary)
-        else:
-            self.prompt = self.prompt.replace(SUMMARY_PLACEHOLDER, "No summary available.")
+    def predict(self):
         if self.model_name == ModelName.GEMINI:
-            return self.predict_gemini(title)
-        if title:
-            return self.my_chat_model.predict(self.prompt.replace(TITLE_PLACEHOLDER, title)).text
-        return self.my_chat_model.predict(self.prompt.replace(TITLE_PLACEHOLDER, self.title)).text
+            return self.predict_gemini()
+        return self.my_chat_model.predict(self.prompt).text
 
-    def predict_gemini(self, title: Optional[str] = None):
-        if title:
-            return self.my_chat_model.generate_content(
-                self.prompt.replace(TITLE_PLACEHOLDER, title),
-                generation_config={
-                    "temperature": 0.3
-                }
-            ).text
+    def predict_gemini(self):
         return self.my_chat_model.generate_content(
-            self.prompt.replace(TITLE_PLACEHOLDER, self.title),
+            self.prompt,
             generation_config={
                 "temperature": 0.3
             }
         ).text
 
-    def run(self, *args, **kwargs):
-        self.prompt = kwargs.get('prompt', self.prompt)
-        self.title = kwargs.get('title', self.title)
-        summary = kwargs.get('summary', None)
+    def run(self, title, summary=None):
+        if summary:
+            self.title = title
+            self.prompt = f"Is this title a clickbait: '{title}'? Summary of the article: '{summary}'. Return 1 if yes, 0 if no."
+        else:
+            self.title = title
+            self.prompt = f"Is this title a clickbait: '{title}'? Return 1 if yes, 0 if no."
         self.load_config()
         self.load_model()
-        prediction = self.predict(summary=summary)
-        print(f"Prediction: {prediction} for prompt: {self.prompt.replace(TITLE_PLACEHOLDER, self.title)}")
+        prediction = self.predict()
+        print(f"Prediction: {prediction} for prompt: {self.prompt}")
         return_value = False if prediction.strip() == '0' else True
         print(f"Return value: {return_value}")
-        if summary:
-            self.prompt = self.prompt.replace(summary, SUMMARY_PLACEHOLDER)
-        else:
-            self.prompt = self.prompt.replace("No summary available.", SUMMARY_PLACEHOLDER)
-        print(f"Prompt after predicting (should be default): {self.prompt}")
         return return_value
 
 
 def runner(
         vertex_ai: VertexAI,
-        title: str,
-        prompt: str = f"Is this title a clickbait: 'PLACE_FOR_TITLE'? Return 1 if yes, 0 if no."
+        title: str
 ):
     vertex_ai.run(
-        title=title,
-        prompt=prompt
+        title=title
     )
 
 
