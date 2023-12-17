@@ -1,12 +1,13 @@
-from transformers import AutoTokenizer, AutoTokenizer, AutoModelForSequenceClassification
+from transformers import AutoTokenizer, AutoTokenizer, AutoModelForSequenceClassification, pipeline
 import json
 
 class LocalLLM:
     def __init__(self) -> None:
 
         # self.model_config_json = json.load(open("config.json"))
-        self.tokenizer = AutoTokenizer.from_pretrained("elozano/bert-base-cased-clickbait-news")
-        self.model = AutoModelForSequenceClassification.from_pretrained("elozano/bert-base-cased-clickbait-news")
+        model = 'christinacdl/clickbait_binary_detection'
+        self.tokenizer = AutoTokenizer.from_pretrained(model)
+        self.model = AutoModelForSequenceClassification.from_pretrained(model)
 
     def predict(self, text):
     
@@ -16,3 +17,6 @@ class LocalLLM:
 
 
         return predicted_class
+    
+
+

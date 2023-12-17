@@ -10,29 +10,32 @@
 
                 <div class="d-flex me-1">
 
-            {% if article.clickbait_decision_NLP == 0 %}
-            <i class="fa fa-check fa-2x" style="color: green;"></i>
-            {% else %}
-            <i class="fa fa-times fa-2x" style="color: red;"></i>
-            {% endif %}
+                    {% if article.clickbait_decision_NLP == 0 %}
+                    <i class="fa fa-check fa-2x" style="color: green;" title="NLP Decision: No Clickbait"></i>
+                {% else %}
+                    <i class="fa fa-times fa-2x" style="color: red;" title="NLP Decision: Clickbait"></i>
+                {% endif %}
+                
+                {% if article.clickbait_decision_LLM == 0 %}
+                    <i class="fa fa-check fa-2x" style="color: green;" title="LLM Decision: No Clickbait"></i>
+                {% else %}
+                    <i class="fa fa-times fa-2x" style="color: red;" title="LLM Decision: Clickbait"></i>
+                {% endif %}
+                
+                {% if article.clickbait_decision_VERTEX == 0 %}
+                    <i class="fa fa-check fa-2x" style="color: green;" title="VERTEX Decision: No Clickbait"></i>
+                {% else %}
+                    <i class="fa fa-times fa-2x" style="color: red;" title="VERTEX Decision: Clickbait"></i>
+                {% endif %}
+                
+                <div style="border-left: 1px solid #000; height: 20px; margin: 0 10px;"></div>
 
-            {% if article.clickbait_decision_LLM == 0 %}
-            <i class="fa fa-check fa-2x" style="color: green;"></i>
-            {% else %}
-            <i class="fa fa-times fa-2x" style="color: red;"></i>
-            {% endif %}
 
-            {% if article.clickbait_decision_VERTEX == 0 %}
-            <i class="fa fa-check fa-2x" style="color: green;"></i>
-            {% else %}
-            <i class="fa fa-times fa-2x" style="color: red;"></i>
-            {% endif %}
-
-            {% if article.clickbait_decision_final == 0 %}
-            <i class="fa fa-check fa-2x" style="color: green;"></i>
-            {% else %}
-            <i class="fa fa-times fa-2x" style="color: red;"></i>
-            {% endif %}
+                {% if article.clickbait_decision_final == 0 %}
+                    <i class="fa fa-check fa-2x" style="color: green;" title="Final Decision: No Clickbait"></i>
+                {% else %}
+                    <i class="fa fa-times fa-2x" style="color: red;" title="Final Decision: Clickbait"></i>
+                {% endif %}
             </div>
             </div>
             <hr>  
