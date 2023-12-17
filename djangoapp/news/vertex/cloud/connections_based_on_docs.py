@@ -4,6 +4,7 @@ from enum import Enum
 from google.auth import default, load_credentials_from_dict
 from news.vertex.configs.config import load_config_from_file
 from vertexai.language_models import TextGenerationModel
+from vertexai.preview.generative_models import GenerativeModel, Part
 from dataclasses import asdict
 from google.cloud import aiplatform
 
@@ -13,6 +14,7 @@ class ModelName(Enum):
     UNICORN_001 = "text-unicorn@001"
     BISON = "text-bison"
     BISON_32 = "text-bison-32k"
+    GEMINI = "gemini-pro"
 
 
 TITLE_PLACEHOLDER = "PLACE_FOR_TITLE"
@@ -42,7 +44,7 @@ class VertexAI:
             credentials=None,
             encryption_spec_key_name: Optional[str] = None,
             service_account: Optional[str] = None,
-            model_name: ModelName = ModelName.BISON_001,
+            model_name: ModelName = ModelName.GEMINI,
             title: str = "This is the Most Clickbait Title Ever!",
             prompt: str = f"Is this title a clickbait: 'PLACE_FOR_TITLE'? Return 1 if yes, 0 if no."
     ):
@@ -77,19 +79,29 @@ class VertexAI:
             self.credentials, self.project_id = default()
 
     def load_model(self):
+        if self.model_name == ModelName.GEMINI:
+            self.my_chat_model = GenerativeModel(self.model_name.value)
+            return
         self.my_chat_model = TextGenerationModel.from_pretrained(self.model_name.value)
 
     def predict(self, title: Optional[str] = None):
+        if self.model_name == ModelName.GEMINI:
+            return self.predict_gemini(title)
         if title:
             return self.my_chat_model.predict(self.prompt.replace(TITLE_PLACEHOLDER, title)).text
         return self.my_chat_model.predict(self.prompt.replace(TITLE_PLACEHOLDER, self.title)).text
+
+    def predict_gemini(self, title: Optional[str] = None):
+        if title:
+            return self.my_chat_model.generate_content(self.prompt.replace(TITLE_PLACEHOLDER, title)).text
+        return self.my_chat_model.generate_content(self.prompt.replace(TITLE_PLACEHOLDER, self.title)).text
 
     def run(self, *args, **kwargs):
         self.prompt = kwargs.get('prompt', self.prompt)
         self.title = kwargs.get('title', self.title)
         self.load_config()
         self.load_model()
-        prediction = self.predict()
+        prediction = self.predict_gemini()
         print(f"Prediction: {prediction} for prompt: {self.prompt.replace(TITLE_PLACEHOLDER, self.title)}")
         return_value = False if prediction.strip() == '0' else True
         print(f"Return value: {return_value}")
