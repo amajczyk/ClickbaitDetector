@@ -11,23 +11,25 @@ from django.utils import timezone
 
 from .models import Article
 
-from .forms import URLForm, SiteSelectionForm
+from .forms import URLForm, SiteSelectionForm, SearchArticlesForm
 
 from news.scripts.nlp import predict_on_text
 from news.scripts.model_loader import ModelLoader
+from django.db.models import Q
 
 
 
-class IndexView(generic.ListView):
-    template_name = "news/index.html"
-    context_object_name = "latest_article_list"
 
-    def get_queryset(self):
-        """Return the last five published articles."""
-        article_list = (
-            Article.objects.filter(source_site='Site 1').filter(scraped_date__lte=timezone.now()).order_by("-scraped_date")[:5]   
-        )
-        return article_list
+# class IndexView(generic.ListView):
+#     template_name = "news/index.html"
+#     context_object_name = "latest_article_list"
+
+#     def get_queryset(self):
+#         """Return the last five published articles."""
+#         article_list = (
+#             Article.objects.filter(source_site='Site 1').filter(scraped_date__lte=timezone.now()).order_by("-scraped_date")[:5]   
+#         )
+#         return article_list
 
 
 class DetailView(generic.DetailView):
@@ -37,15 +39,15 @@ class DetailView(generic.DetailView):
         return Article.objects.filter(scraped_date__lte=timezone.now())
     
     
-class BrowseView(generic.TemplateView):
-    template_name = "news/browse.html"
+# class BrowseView(generic.TemplateView):
+#     template_name = "news/browse.html"
 
-    def get_context_data(self, **kwargs):
-        context = super(BrowseView, self).get_context_data(**kwargs)
-        context['latest_article_list'] = Article.objects.filter(scraped_date__lte=timezone.now()).order_by("-scraped_date")[:10]
-        context['date_today'] = timezone.now().date().strftime("%Y-%m-%d")
-        context['date_week_ago'] = (timezone.now() - timezone.timedelta(days=7)).date().strftime("%Y-%m-%d")
-        return context
+#     def get_context_data(self, **kwargs):
+#         context = super(BrowseView, self).get_context_data(**kwargs)
+#         context['latest_article_list'] = Article.objects.filter(scraped_date__lte=timezone.now()).order_by("-scraped_date")[:10]
+#         context['date_today'] = timezone.now().date().strftime("%Y-%m-%d")
+#         context['date_week_ago'] = (timezone.now() - timezone.timedelta(days=7)).date().strftime("%Y-%m-%d")
+#         return context
 
 
 
@@ -129,7 +131,7 @@ def classify_LLM(data, llm):
     return llm.predict(data)
 
 def classify_VERTEX(data, vertex):
-    return 0
+    # return 0
     clickbait_decision_VERTEX = vertex.run(title=data)
     return clickbait_decision_VERTEX
 
@@ -194,3 +196,59 @@ def scrape_articles(request):
         form = SiteSelectionForm()
 
     return render(request, 'news/index.html', {'form': form})
+
+
+
+def browse_articles(request):
+    if request.method == 'POST':
+        form = SearchArticlesForm(request.POST)
+        if form.is_valid():
+            # Process the form data
+            search_query = form.cleaned_data['search_query']
+            date_from = form.cleaned_data['date_from']
+            date_to = form.cleaned_data['date_to']
+            show_clickbaits = form.cleaned_data['show_clickbaits']
+            thesun = form.cleaned_data['thesun']
+            cbsnews = form.cleaned_data['cbsnews']
+            abcnews = form.cleaned_data['abcnews']
+            # Use the form data as needed to filter the articles from the database
+            
+            query = Q()
+
+            # Add conditions based on form fields
+            if search_query:
+                # Using __icontains for case-insensitive substring match
+                query &= Q(title__icontains=search_query) | Q(content_summary__icontains=search_query)
+
+            # if date_from:
+            #     query &= Q(scraped_date__gte=date_from)
+
+            # if date_to:
+            #     query &= Q(scraped_date__lte=date_to)
+
+            if not show_clickbaits:
+                query &= ~Q(clickbait_decision_final=1)
+
+            source_sites = []
+            if thesun:
+                source_sites.append('The Sun UK')
+            if cbsnews:
+                source_sites.append('CBS News')
+            if abcnews:
+                source_sites.append('ABC News')
+
+            if source_sites:
+                query &= Q(source_site__in=source_sites)
+
+            # Apply the final query to filter articles
+            articles = Article.objects.filter(query)
+            context = {'form': form}
+            context['latest_article_list'] = articles
+            return render(request, 'news/browse.html', context=context)
+
+
+    else:
+        form = SearchArticlesForm()
+
+    return render(request, 'news/browse.html', {'form': form})
+
