@@ -187,7 +187,7 @@ class TestVertexAI(TestCase):
         self.assertIsNone(self.vertex_ai.credentials)
         self.assertIsNone(self.vertex_ai.encryption_spec_key_name)
         self.assertIsNone(self.vertex_ai.service_account)
-        self.assertEqual(self.vertex_ai.model_name, ModelName.BISON_001)
+        self.assertEqual(self.vertex_ai.model_name, ModelName.GEMINI)
         self.assertEqual(self.vertex_ai.title, "This is the Most Clickbait Title Ever!")
         self.assertEqual(
             self.vertex_ai.prompt, "Is this title a clickbait: 'PLACE_FOR_TITLE'? Return 1 if yes, 0 if no.")
@@ -213,22 +213,26 @@ class TestVertexAI(TestCase):
     def test_run_clickbait(self, mock_load_credentials_from_dict):
         mock_load_credentials_from_dict.return_value = (None, None)
         with patch('news.vertex.cloud.connections_based_on_docs.VertexAI.predict') as mock_predict:
-            mock_predict.return_value = '1'
-            self.vertex_ai = VertexAIMock()
-            result = self.vertex_ai.run(title='My Clickbait Title')
-            assert bool(result) is True
+            with patch('news.vertex.cloud.connections_based_on_docs.VertexAI.predict_gemini') as mock_predict_gemini:
+                mock_predict_gemini.return_value = '1'
+                mock_predict.return_value = '1'
+                self.vertex_ai = VertexAIMock()
+                result = self.vertex_ai.run(title='My Clickbait Title')
+                assert bool(result) is True
 
     @patch('google.auth.load_credentials_from_dict')
     def test_run_not_clickbait(self, mock_load_credentials_from_dict):
         mock_load_credentials_from_dict.return_value = (None, None)
         with patch('news.vertex.cloud.connections_based_on_docs.VertexAI.predict') as mock_predict:
-            self.vertex_ai = VertexAIMock()
-            mock_predict.return_value = '0'
-            titles = [
-                "A Comprehensive Review of the Latest Machine Learning Techniques",
-                "The Impact of Artificial Intelligence on Society",
-                "The Future of Work in the Age of Automation"
-            ]
-            for title in titles:
-                result = self.vertex_ai.run(title=title)
-                assert result is False
+            with patch('news.vertex.cloud.connections_based_on_docs.VertexAI.predict_gemini') as mock_predict_gemini:
+                mock_predict_gemini.return_value = '0'
+                self.vertex_ai = VertexAIMock()
+                mock_predict.return_value = '0'
+                titles = [
+                    "A Comprehensive Review of the Latest Machine Learning Techniques",
+                    "The Impact of Artificial Intelligence on Society",
+                    "The Future of Work in the Age of Automation"
+                ]
+                for title in titles:
+                    result = self.vertex_ai.run(title=title)
+                    assert result is False
