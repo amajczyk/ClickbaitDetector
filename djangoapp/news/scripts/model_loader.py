@@ -1,6 +1,7 @@
 import os
 from django.conf import settings
 from news.scripts.scraping import Scraper
+from transformers import pipeline
 from news.scripts.nlp import Word2VecModel, return_best_model, load_predictive_model
 from news.scripts.llm import LocalLLM
 from news.vertex.cloud.connections_based_on_docs import VertexAI
@@ -30,6 +31,9 @@ class ModelLoader(metaclass=Singleton):
         
         # load LocalLLM
         self.llm = LocalLLM()
+
+        # load summarizer
+        self.summarizer = pipeline("summarization", model="Falconsai/text_summarization")
         
         # load VertexAI
         self.vertex = VertexAI()
