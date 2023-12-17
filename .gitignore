@@ -156,42 +156,15 @@ cython_debug/
 # vscode
 .vscode/
 
-
-# PyCharm
-#  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
-#  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
-#  and can be added to the global gitignore or merged into this file.  For a more nuclear
-#  option (not recommended) you can uncomment the following to ignore the entire idea folder.
+# .idea
 .idea/
-src/config.json
-config.json
-modelling/catboost_info/catboost_training.json
-modelling/catboost_info/learn_error.tsv
-modelling/catboost_info/time_left.tsv
-modelling/catboost_info/learn/events.out.tfevents
-modelling/catboost_info/catboost_training.json
-modelling/catboost_info/learn_error.tsv
-modelling/catboost_info/time_left.tsv
-modelling/results/backup/word2vec_results_100_250_500.json
-modelling/results/backup/word2vec_results_not_100_250_500.json
-modelling/catboost_info/catboost_training.json
-modelling/catboost_info/learn_error.tsv
-modelling/catboost_info/time_left.tsv
 
-
-catboost_info/learn
-catboost_info/*
-
-word2vec_models/*
-modelling/catboost_info/catboost_training.json
-modelling/catboost_info/learn_error.tsv
-modelling/catboost_info/time_left.tsv
-modelling/catboost_info/learn/events.out.tfevents
-modelling/word2vec_selection/results/backup/not_trained_yet.json
-modelling/word2vec_selection/results/backup/word2vec_results_100_250_500.json
-modelling/word2vec_selection/results/backup/word2vec_results_not_100_250_500.json
-modelling/word2vec_selection/results/backup/word2vec_results_others.json
-modelling/word2vec_selection/results/backup/word2vec_results_top25.json
-
-
+# modelling
+modelling/word2vec_models/*
+!modelling/word2vec_models/word2vec_vs100_win7_sg0.model
+modelling/catboost_info/*
 modelling/word2vec_selection/results/backup/*
+modelling/results/backup/*
+modelling/data/*
+
+
