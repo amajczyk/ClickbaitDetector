@@ -187,3 +187,11 @@ modelling/catboost_info/catboost_training.json
 modelling/catboost_info/learn_error.tsv
 modelling/catboost_info/time_left.tsv
 modelling/catboost_info/learn/events.out.tfevents
+modelling/word2vec_selection/results/backup/not_trained_yet.json
+modelling/word2vec_selection/results/backup/word2vec_results_100_250_500.json
+modelling/word2vec_selection/results/backup/word2vec_results_not_100_250_500.json
+modelling/word2vec_selection/results/backup/word2vec_results_others.json
+modelling/word2vec_selection/results/backup/word2vec_results_top25.json
+
+
+modelling/word2vec_selection/results/backup/*
