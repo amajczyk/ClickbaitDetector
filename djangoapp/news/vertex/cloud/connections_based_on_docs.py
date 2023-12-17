@@ -88,6 +88,8 @@ class VertexAI:
     def predict(self, title: Optional[str] = None, summary: Optional[str] = None):
         if summary:
             self.prompt = self.prompt.replace(SUMMARY_PLACEHOLDER, summary)
+        else:
+            self.prompt = self.prompt.replace(SUMMARY_PLACEHOLDER, "No summary available.")
         if self.model_name == ModelName.GEMINI:
             return self.predict_gemini(title)
         if title:
@@ -119,6 +121,11 @@ class VertexAI:
         print(f"Prediction: {prediction} for prompt: {self.prompt.replace(TITLE_PLACEHOLDER, self.title)}")
         return_value = False if prediction.strip() == '0' else True
         print(f"Return value: {return_value}")
+        if summary:
+            self.prompt = self.prompt.replace(summary, SUMMARY_PLACEHOLDER)
+        else:
+            self.prompt = self.prompt.replace("No summary available.", SUMMARY_PLACEHOLDER)
+        print(f"Prompt after predicting (should be default): {self.prompt}")
         return return_value
 
 
