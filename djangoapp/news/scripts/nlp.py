@@ -161,9 +161,9 @@ def replace_numbers_with_words(text):
     return text
 
 
-stop_words = set(stopwords.words('english'))
 
 def tokenize(text):
+    stop_words = set(stopwords.words('english'))
     return [word for word in word_tokenize(text.lower()) if word not in stop_words]
 
 
@@ -268,7 +268,7 @@ def preprocess_title(df, verbose = False):
     if verbose:
         print(df['title'])
         print("Removing stopwords one more time...")
-        
+    stop_words = set(stopwords.words('english'))
     df['title'] = df['title'].apply(lambda x: [word for word in x if word not in stop_words])
 
 
