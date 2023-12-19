@@ -16,5 +16,6 @@ inflect
 transformers
 gensim
 catboost
+torch
 
 
