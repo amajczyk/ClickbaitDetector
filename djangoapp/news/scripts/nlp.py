@@ -281,9 +281,10 @@ def preprocess_title(df, verbose = False):
 
 ####### MODEL FUNCTIONS ########
 import pandas as pd
-def predict_on_text(classifier, model_word2vec, text):
+def predict_on_text(classifier, model_word2vec,scaler, text):
     # print(text)
     text = preprocess_title(pd.DataFrame({'title': [text]}))
     text = get_word_vectors(model_word2vec, text['title'][0], aggregation='mean')
+    text = scaler.transform([text])
     # print(len(text))
     return classifier.predict_proba(text.reshape(1, -1))

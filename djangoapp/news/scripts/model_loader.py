@@ -1,4 +1,5 @@
 import os
+import pickle
 from django.conf import settings
 from news.scripts.scraping import Scraper
 from transformers import pipeline
@@ -25,9 +26,13 @@ class ModelLoader(metaclass=Singleton):
         model_path = os.path.join(settings.BASE_DIR, 'news', 'word2vec_models', model_w2v_settings['model_path'])
         self.model_w2v = Word2VecModel(model_w2v_settings, model_path)
 
+        # Load scaler
+        scaler_path = os.path.join(settings.BASE_DIR, 'news', 'predictive_models', 'scaler.pkl')
+        self.scaler = pickle.load(open(scaler_path, 'rb'))
+
         # Load predictive model
-        predictive_model_path = os.path.join(settings.BASE_DIR, 'news', 'predictive_models', 'catboost_model.pkl')
-        self.predictive_model = load_predictive_model(predictive_model_path)
+        predictive_model_path = os.path.join(settings.BASE_DIR, 'news', 'predictive_models', 'lightgbm.pkl')
+        self.predictive_model = pickle.load(open(predictive_model_path, 'rb'))
         
         # load LocalLLM
         self.llm = LocalLLM()
