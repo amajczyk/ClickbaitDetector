@@ -2,10 +2,9 @@ import os
 from multiprocessing import Pool
 from random import shuffle
 
-from django.http import HttpResponse, JsonResponse
+from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.template.loader import render_to_string  
-from django.urls import reverse
 from django.views import generic
 from django.utils import timezone
 
@@ -54,6 +53,8 @@ def check_url(request):
                 clickbait_decision_NLP = classify_NLP(title, predictive_model, model_w2v)
                 clickbait_decision_LLM = classify_LLM(title, llm)
                 clickbait_decision_VERTEX = classify_VERTEX(title, vertex)
+                clickbait_decision_final = make_final_decision(clickbait_decision_NLP, clickbait_decision_LLM, clickbait_decision_VERTEX)
+                
                 
 
                 article = Article(
@@ -64,7 +65,7 @@ def check_url(request):
                     clickbait_decision_NLP = clickbait_decision_NLP,
                     clickbait_decision_LLM = int(clickbait_decision_LLM),
                     clickbait_decision_VERTEX = clickbait_decision_VERTEX,
-                    clickbait_decision_final = clickbait_decision_NLP,
+                    clickbait_decision_final = clickbait_decision_final,
                 )
                 
             
@@ -79,7 +80,7 @@ def check_url(request):
 
 
 def classify_NLP(data, predictive_model, model_w2v):
-    proba_cutoff = 0.3
+    proba_cutoff = 0.4
     clickbait_decision_NLP_proba = predict_on_text(predictive_model, model_w2v, data)
     clickbait_decision_NLP_proba = clickbait_decision_NLP_proba[0][1]
     return int(clickbait_decision_NLP_proba > proba_cutoff)
@@ -88,9 +89,12 @@ def classify_LLM(data, llm):
     return llm.predict(data)
 
 def classify_VERTEX(data, vertex):
-    # return 0
-    clickbait_decision_VERTEX = vertex.run(title=data)
-    return clickbait_decision_VERTEX
+    try:
+        clickbait_decision_VERTEX = vertex.run(title=data)
+        return clickbait_decision_VERTEX
+    except:
+        return -1
+
 
 
 
@@ -116,7 +120,7 @@ def scrape_articles(request):
             for site in selected_sites:
                 urls += scraper.scrape_article_urls(scraper.site_variables_dict[site]['main'])
             shuffle(urls) # shuffle in place
-            urls_to_scrape = urls[:5]
+            urls_to_scrape = urls[:10]
             scraped_datas = []
             contents = []
             for url in urls_to_scrape:
@@ -128,10 +132,10 @@ def scrape_articles(request):
             for scraped_data, summary in zip(scraped_datas, summaries):
                 title = scraped_data['title']
                 content_summary = summary["summary_text"].replace(' .', '.')    
-                clickbait_decision_NLP = classify_NLP(title, predictive_model, model_w2v)
-                clickbait_decision_LLM = classify_LLM(title, llm)
-                clickbait_decision_VERTEX = classify_VERTEX(title, vertex)
-                clickbait_decision_final = int((clickbait_decision_NLP + clickbait_decision_LLM + clickbait_decision_VERTEX) / 3)
+                clickbait_decision_NLP = int(classify_NLP(title, predictive_model, model_w2v))
+                clickbait_decision_LLM = int(classify_LLM(title, llm))
+                clickbait_decision_VERTEX = int(classify_VERTEX(title, vertex))
+                clickbait_decision_final = make_final_decision(clickbait_decision_NLP, clickbait_decision_LLM, clickbait_decision_VERTEX)
                 
 
                 article = Article(
@@ -140,7 +144,7 @@ def scrape_articles(request):
                     url_from=url,
                     source_site=scraped_data['source_site'],
                     clickbait_decision_NLP = clickbait_decision_NLP,
-                    clickbait_decision_LLM = int(clickbait_decision_LLM),
+                    clickbait_decision_LLM = clickbait_decision_LLM,
                     clickbait_decision_VERTEX = clickbait_decision_VERTEX,
                     clickbait_decision_final = clickbait_decision_final,
                 )
@@ -154,6 +158,21 @@ def scrape_articles(request):
 
     return render(request, 'news/index.html', {'form': form})
 
+
+
+def make_final_decision(clickbait_decision_NLP, clickbait_decision_LLM, clickbait_decision_VERTEX):
+    if clickbait_decision_VERTEX != -1:
+        return int(clickbait_decision_NLP + clickbait_decision_LLM + clickbait_decision_VERTEX)
+    
+    decisions = [clickbait_decision_NLP, clickbait_decision_LLM]
+    sum_ = sum(decisions)
+    if sum_ == 0:
+        return 0
+    elif sum_ == 1:
+        return 2
+    elif sum_ == 2:
+        return 3
+    return -1
 
 
 def browse_articles(request):

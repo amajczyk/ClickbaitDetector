@@ -10,7 +10,7 @@
 
                 <div class="d-flex me-1">
 
-                    {% if article.clickbait_decision_NLP == 0 %}
+                {% if article.clickbait_decision_NLP == 0 %}
                     <i class="fa fa-check fa-2x" style="color: green;" title="NLP Decision: No Clickbait"></i>
                 {% else %}
                     <i class="fa fa-times fa-2x" style="color: red;" title="NLP Decision: Clickbait"></i>
@@ -24,17 +24,23 @@
                 
                 {% if article.clickbait_decision_VERTEX == 0 %}
                     <i class="fa fa-check fa-2x" style="color: green;" title="VERTEX Decision: No Clickbait"></i>
-                {% else %}
+                {% elif article.clickbait_decision_VERTEX == 1 %}
                     <i class="fa fa-times fa-2x" style="color: red;" title="VERTEX Decision: Clickbait"></i>
+                {% else %}
+                    <i class="fa fa-question fa-2x" style="color: gray;" title="VERTEX Unavailable"></i>
                 {% endif %}
                 
                 <div style="border-left: 1px solid #000; height: 20px; margin: 0 10px;"></div>
 
 
-                {% if article.clickbait_decision_final == 0 %}
-                    <i class="fa fa-check fa-2x" style="color: green;" title="Final Decision: No Clickbait"></i>
-                {% else %}
+                {% if article.clickbait_decision_final == 3 %}
                     <i class="fa fa-times fa-2x" style="color: red;" title="Final Decision: Clickbait"></i>
+                {% elif article.clickbait_decision_final == 2 %}
+                    <i class="fa fa-times fa-2x" style="color: yellow;" title="Final Decision: Likely Clickbait"></i>
+                {% elif article.clickbait_decision_final == 1 %}
+                    <i class="fa fa-check fa-2x" style="color: yellow;" title="Final Decision: Potentially Clickbait"></i>
+                {% else %}
+                    <i class="fa fa-check fa-2x" style="color: green;" title="Final Decision: No Clickbait"></i>
                 {% endif %}
             </div>
             </div>
