@@ -19,42 +19,12 @@ from django.db.models import Q
 
 
 
-
-# class IndexView(generic.ListView):
-#     template_name = "news/index.html"
-#     context_object_name = "latest_article_list"
-
-#     def get_queryset(self):
-#         """Return the last five published articles."""
-#         article_list = (
-#             Article.objects.filter(source_site='Site 1').filter(scraped_date__lte=timezone.now()).order_by("-scraped_date")[:5]   
-#         )
-#         return article_list
-
-
 class DetailView(generic.DetailView):
     model = Article
     template_name = "news/detail.html"
     def get_queryset(self):
         return Article.objects.filter(scraped_date__lte=timezone.now())
     
-    
-# class BrowseView(generic.TemplateView):
-#     template_name = "news/browse.html"
-
-#     def get_context_data(self, **kwargs):
-#         context = super(BrowseView, self).get_context_data(**kwargs)
-#         context['latest_article_list'] = Article.objects.filter(scraped_date__lte=timezone.now()).order_by("-scraped_date")[:10]
-#         context['date_today'] = timezone.now().date().strftime("%Y-%m-%d")
-#         context['date_week_ago'] = (timezone.now() - timezone.timedelta(days=7)).date().strftime("%Y-%m-%d")
-#         return context
-
-
-
-
-
-
-
 
 
 def check_url(request):
@@ -78,21 +48,8 @@ def check_url(request):
             title = scraped_data['title']
      
             try:
-                raise Exception
                 article = get_object_or_404(Article, title=scraped_data['title'], source_site=scraped_data['source_site'])
             except:
-                #Create a new article if no matching article exists
-                # with Pool(processes=3) as pool:
-                #     clickbait_decision_NLP = pool.apply_async(classify_NLP, (title, predictive_model, model_w2v))
-                #     clickbait_decision_LLM = pool.apply_async(classify_LLM, (title, llm))
-                #     clickbait_decision_VERTEX = pool.apply_async(classify_VERTEX, (title, vertex))
-
-
-                # #     # Get the results
-                #     results = [res.get() for res in [clickbait_decision_NLP, clickbait_decision_LLM, clickbait_decision_VERTEX]]
-
-                # # Assign the results    
-                # clickbait_decision_NLP, clickbait_decision_LLM, clickbait_decision_VERTEX = results
                 content_summary = summarizer(scraped_data['content'], max_length=200, min_length=40, do_sample=False)[0]["summary_text"]
                 clickbait_decision_NLP = classify_NLP(title, predictive_model, model_w2v)
                 clickbait_decision_LLM = classify_LLM(title, llm)
@@ -203,7 +160,7 @@ def browse_articles(request):
     if request.method == 'POST':
         form = SearchArticlesForm(request.POST)
         if form.is_valid():
-            # Process the form data
+
             search_query = form.cleaned_data['search_query']
             date_from = form.cleaned_data['date_from']
             date_to = form.cleaned_data['date_to']
@@ -217,14 +174,7 @@ def browse_articles(request):
 
             # Add conditions based on form fields
             if search_query:
-                # Using __icontains for case-insensitive substring match
                 query &= Q(title__icontains=search_query) | Q(content_summary__icontains=search_query)
-
-            # if date_from:
-            #     query &= Q(scraped_date__gte=date_from)
-
-            # if date_to:
-            #     query &= Q(scraped_date__lte=date_to)
 
             if not show_clickbaits:
                 query &= ~Q(clickbait_decision_final=1)
@@ -240,7 +190,6 @@ def browse_articles(request):
             if source_sites:
                 query &= Q(source_site__in=source_sites)
 
-            # Apply the final query to filter articles
             articles = Article.objects.filter(query)
             context = {'form': form}
             context['latest_article_list'] = articles
