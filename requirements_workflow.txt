@@ -18,7 +18,7 @@ gensim
 catboost
 lightgbm
 torch
-sklearn
+scikit-learn
 
 
 
