@@ -1,7 +1,0 @@
-#ignore data folder
-
-data/*
-*.csv
-catboost_info/*
-*.pkl
-
