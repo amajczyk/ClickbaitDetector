@@ -7,7 +7,7 @@ from . import views
 app_name = "news"
 urlpatterns = [
     path("", views.scrape_articles, name="scrape_articles"),
-    path("browse/", views.BrowseView.as_view(), name="browse"),
+    path("browse/", views.browse_articles, name="browse"),
 
 
     path("detail/<int:pk>/", views.DetailView.as_view(), name="detail"),
