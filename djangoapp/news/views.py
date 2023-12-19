@@ -80,13 +80,18 @@ def check_url(request):
 
 
 def classify_NLP(data, predictive_model, model_w2v):
+    return 0
     proba_cutoff = 0.4
     clickbait_decision_NLP_proba = predict_on_text(predictive_model, model_w2v, data)
     clickbait_decision_NLP_proba = clickbait_decision_NLP_proba[0][1]
     return int(clickbait_decision_NLP_proba > proba_cutoff)
 
 def classify_LLM(data, llm):
-    return llm.predict(data)
+    proba_cutoff = 0.5
+    probability = llm.predict(data)
+    print(probability)
+    return int(probability > proba_cutoff)
+    
 
 def classify_VERTEX(data, vertex):
     try:
@@ -120,7 +125,7 @@ def scrape_articles(request):
             for site in selected_sites:
                 urls += scraper.scrape_article_urls(scraper.site_variables_dict[site]['main'])
             shuffle(urls) # shuffle in place
-            urls_to_scrape = urls[:10]
+            urls_to_scrape = urls[:5]
             scraped_datas = []
             contents = []
             for url in urls_to_scrape:

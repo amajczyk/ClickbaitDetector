@@ -1,10 +1,9 @@
 from transformers import AutoTokenizer, AutoTokenizer, AutoModelForSequenceClassification, pipeline
-import json
+from torch.nn.functional import softmax
 
 class LocalLLM:
     def __init__(self) -> None:
 
-        # self.model_config_json = json.load(open("config.json"))
         model = 'christinacdl/clickbait_binary_detection'
         self.tokenizer = AutoTokenizer.from_pretrained(model)
         self.model = AutoModelForSequenceClassification.from_pretrained(model)
@@ -13,10 +12,8 @@ class LocalLLM:
     
         inputs = self.tokenizer(text, return_tensors="pt")
         outputs = self.model(**inputs)
-        predicted_class = outputs.logits.argmax().item()
-
-
-        return predicted_class
+        probabilities = softmax(outputs.logits, dim=-1)
+        return probabilities[0][1].item()
     
 
 
