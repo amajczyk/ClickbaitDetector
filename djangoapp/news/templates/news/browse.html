@@ -1,97 +1,66 @@
-{% extends "news/base.html" %}
+{% extends 'news/base.html' %}
 
 {% block content %}
+  {% load crispy_forms_tags %}
 
-<div class="container">
+  <div class="container">
+    <form method="post" action="{% url 'news:browse' %}">
+      {% csrf_token %}
 
-  <form>
-    <div class="row mb-2">
-
-      <div class="form-floating col-md-5">
-        <input type="search" class="form-control mxb-3" id="floatingInput" placeholder="search">
-        <label class='ms-3' for="floatingInput">Search articles</label>
+      <div class="row mb-2">
+        <div class="col-md-5">
+          <div class="form-floating">
+            {{ form.search_query|as_crispy_field }}
+            <!-- <label class="ms-3" for="{{ form.search_query.id_for_label }}">Search articles</label> -->
+          </div>
+        </div>
+        <div class="col-md-2">
+          <div class="form-floating">
+            {{ form.date_to|as_crispy_field }}
+            <!-- <label class="ms-3" for="{{ form.date_to.id_for_label }}">Date to</label> -->
+          </div>
+        </div>
+        <div class="col-md-2">
+          <div class="form-floating">
+            {{ form.date_from|as_crispy_field }}
+            <!-- <label class="ms-3" for="{{ form.date_from.id_for_label }}">Date from</label> -->
+          </div>
+        </div>
+        <div class="col-md-2 ps-3 mt-2">
+          <div class="form-check">
+            {{ form.show_clickbaits|as_crispy_field }}
+            <!-- <label class="btn form-check-label" for="{{ form.show_clickbaits.id_for_label }}">Show clickbaits toggle</label> -->
+          </div>
+        </div>
+        <div class="col-md-1 mt-2">
+          <button class="btn btn-success" type="submit">Search</button>
+        </div>
       </div>
 
-      <div class="form-floating col-md-2">
-        <input type="date" name="date" id='date-to' class="form-control align-items-center" value="{{date_today}}""> 
-            <label class='ms-3' for=" date-to">Date to</label>
-      </div>
-
-      <div class="form-floating col-md-2">
-        <input type="date" name="date" id='date-from' class="form-control" value="{{date_week_ago}}""> 
-            <label class='ms-3' for=" date-from">Date from</label>
-
-      </div>
-      <div class="col-md-2 ps-3 mt-2">
-        <input type="checkbox" class="btn-check" id="btn-check-4" checked autocomplete="off">
-        <label class="btn" for="btn-check-4">Show clickbaits toggle</label>
-      </div>
-
-
-
-
-      <div class="col-md-1 mt-2">
-        <button class="btn btn-success " type="submit">Search</button>
-      </div>
-
-
-    </div>
-
-
-
-
-    <div class="card">
-      <div class="card-body">
-        <div class="row px-2">
-          <div class="col-md-2 form-check">
-            <input class="form-check-input" type="checkbox" value="" id="site1Check" checked>
-            <label class="form-check-label" for="site1Check">Site 1</label>
-          </div>
-          <div class="col-md-2 form-check">
-            <input class="form-check-input" type="checkbox" value="" id="site2Check" checked>
-            <label class="form-check-label" for="site2Check">Site 2</label>
-          </div>
-          <div class="col-md-2 form-check">
-            <input class="form-check-input" type="checkbox" value="" id="site3Check" checked>
-            <label class="form-check-label" for="site3Check">Site 3</label>
-          </div>
-          <div class="col-md-2 form-check">
-            <input class="form-check-input" type="checkbox" value="" id="site4Check" checked>
-            <label class="form-check-label" for="site4Check">Site 4</label>
-          </div>
-          <div class="col-md-2 form-check">
-            <input class="form-check-input" type="checkbox" value="" id="site5Check" checked>
-            <label class="form-check-label" for="site5Check">Site 5</label>
-          </div>
-          <div class="col-md-2 form-check">
-            <input class="form-check-input" type="checkbox" value="" id="site6Check" checked>
-            <label class="form-check-label" for="site6Check">Site 6</label>
-          </div>
-          <div class="col-md-2 form-check">
-            <input class="form-check-input" type="checkbox" value="" id="site7Check" checked>
-            <label class="form-check-label" for="site7Check">Site 7</label>
+      <div class="card">
+        <div class="card-body">
+          <div class="row px-2">
+            <div class="col-md-2 form-check">
+              {{ form.thesun|as_crispy_field }}
+              <!-- <label class="form-check-label" for="{{ form.thesun.id_for_label }}">The Sun UK</label> -->
+            </div>
+            <div class="col-md-2 form-check">
+              {{ form.cbsnews|as_crispy_field }}
+              <!-- <label class="form-check-label" for="{{ form.cbsnews.id_for_label }}">CBS News</label> -->
+            </div>
+            <div class="col-md-2 form-check">
+              {{ form.abcnews|as_crispy_field }}
+              <!-- <label class="form-check-label" for="{{ form.abcnews.id_for_label }}">ABC News</label> -->
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  </form>
-</div>
-
-
-
-
+    </form>
+  </div>
 
 <div class="container mt-3">
   <h2>Search results</h2>
-
   {% include 'news/list_articles.html' %}
-
-
-
 </div>
-
-
-
-
 
 {% endblock %}

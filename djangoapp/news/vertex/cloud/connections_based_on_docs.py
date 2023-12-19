@@ -4,7 +4,7 @@ from enum import Enum
 from google.auth import default, load_credentials_from_dict
 from news.vertex.configs.config import load_config_from_file
 from vertexai.language_models import TextGenerationModel
-from vertexai.preview.generative_models import GenerativeModel, Part
+from vertexai.preview.generative_models import GenerativeModel
 from dataclasses import asdict
 from google.cloud import aiplatform
 
@@ -18,6 +18,7 @@ class ModelName(Enum):
 
 
 TITLE_PLACEHOLDER = "PLACE_FOR_TITLE"
+SUMMARY_PLACEHOLDER = "PLACE_FOR_SUMMARY"
 
 
 class VertexAI:
@@ -46,7 +47,7 @@ class VertexAI:
             service_account: Optional[str] = None,
             model_name: ModelName = ModelName.GEMINI,
             title: str = "This is the Most Clickbait Title Ever!",
-            prompt: str = f"Is this title a clickbait: 'PLACE_FOR_TITLE'? Return 1 if yes, 0 if no."
+            prompt: str = f"Is this title a clickbait: 'PLACE_FOR_TITLE'? Summary of the article: 'PLACE_FOR_SUMMARY'. Return 1 if yes, 0 if no."
     ):
         self.my_chat_model = None
         self.project_id = project_id
@@ -84,25 +85,30 @@ class VertexAI:
             return
         self.my_chat_model = TextGenerationModel.from_pretrained(self.model_name.value)
 
-    def predict(self, title: Optional[str] = None):
+    def predict(self):
         if self.model_name == ModelName.GEMINI:
-            return self.predict_gemini(title)
-        if title:
-            return self.my_chat_model.predict(self.prompt.replace(TITLE_PLACEHOLDER, title)).text
-        return self.my_chat_model.predict(self.prompt.replace(TITLE_PLACEHOLDER, self.title)).text
+            return self.predict_gemini()
+        return self.my_chat_model.predict(self.prompt).text
 
-    def predict_gemini(self, title: Optional[str] = None):
-        if title:
-            return self.my_chat_model.generate_content(self.prompt.replace(TITLE_PLACEHOLDER, title)).text
-        return self.my_chat_model.generate_content(self.prompt.replace(TITLE_PLACEHOLDER, self.title)).text
+    def predict_gemini(self):
+        return self.my_chat_model.generate_content(
+            self.prompt,
+            generation_config={
+                "temperature": 0.3
+            }
+        ).text
 
-    def run(self, *args, **kwargs):
-        self.prompt = kwargs.get('prompt', self.prompt)
-        self.title = kwargs.get('title', self.title)
+    def run(self, title, summary=None):
+        if summary:
+            self.title = title
+            self.prompt = f"Is this title a clickbait: '{title}'? Summary of the article: '{summary}'. Return 1 if yes, 0 if no."
+        else:
+            self.title = title
+            self.prompt = f"Is this title a clickbait: '{title}'? Return 1 if yes, 0 if no."
         self.load_config()
         self.load_model()
-        prediction = self.predict_gemini()
-        print(f"Prediction: {prediction} for prompt: {self.prompt.replace(TITLE_PLACEHOLDER, self.title)}")
+        prediction = self.predict()
+        print(f"Prediction: {prediction} for prompt: {self.prompt}")
         return_value = False if prediction.strip() == '0' else True
         print(f"Return value: {return_value}")
         return return_value
@@ -110,12 +116,10 @@ class VertexAI:
 
 def runner(
         vertex_ai: VertexAI,
-        title: str,
-        prompt: str = f"Is this title a clickbait: 'PLACE_FOR_TITLE'? Return 1 if yes, 0 if no."
+        title: str
 ):
     vertex_ai.run(
-        title=title,
-        prompt=prompt
+        title=title
     )
 
 

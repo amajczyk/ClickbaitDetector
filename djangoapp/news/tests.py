@@ -202,7 +202,7 @@ class VertexAIMock(VertexAI):
     def load_model(self):
         pass
 
-    def predict(self, title: Optional[str] = None):
+    def predict(self, title: Optional[str] = None, summary: Optional[str] = None):
         if title:
             return '1' if title.strip() == 'My Clickbait Title' else '0'
         elif self.title:
@@ -242,7 +242,9 @@ class TestVertexAI(TestCase):
         self.assertEqual(self.vertex_ai.model_name, ModelName.GEMINI)
         self.assertEqual(self.vertex_ai.title, "This is the Most Clickbait Title Ever!")
         self.assertEqual(
-            self.vertex_ai.prompt, "Is this title a clickbait: 'PLACE_FOR_TITLE'? Return 1 if yes, 0 if no.")
+            self.vertex_ai.prompt,
+            "Is this title a clickbait: 'PLACE_FOR_TITLE'? Summary of the article: 'PLACE_FOR_SUMMARY'. Return 1 if yes, 0 if no."
+        )
         self.assertIsNone(self.vertex_ai.my_chat_model)
 
     @patch('google.auth.load_credentials_from_dict')
