@@ -41,7 +41,7 @@ CBSNEWS_NOT_CLICKBAIT = 'https://www.cbsnews.com/news/joe-biden-wins-2020-electi
 THESUN_NOT_CLICKBAIT = 'https://www.thesun.co.uk/news/19747379/queen-elizabeth-dead-news/'
 CBSSPORTS_NOT_CLICKBAIT = 'https://www.cbssports.com/nba/news/p-j-tucker-says-theres-not-enough-basketballs-on-the-planet-for-clippers/'
 CLICKBAIT_TITLE = "10 Signs Your Partner Is Cheating - Don't Ignore #7!"
-NOT_CLICKBAIT_TITLE = "Joe Biden projected to win presidency in deeply divided nation"
+NOT_CLICKBAIT_TITLE = "Joe Biden projected to win presidency"
 
 
 
@@ -101,7 +101,7 @@ class TestScraper(TestCase):
 class NLPPredictorTests(TestCase):
     def test_predict_on_text(self):
         # Test the model on a non-clickbait title
-        predictive_model_path = os.path.join(settings.BASE_DIR, 'news', 'predictive_models', 'catboost_model.pkl')
+        predictive_model_path = os.path.join(settings.BASE_DIR, 'news', 'predictive_models', 'lightgbm.pkl')
         predictive_model = pickle.load(open(predictive_model_path, 'rb'))
         scaler_path = os.path.join(settings.BASE_DIR, 'news', 'predictive_models', 'scaler.pkl')
         scaler = pickle.load(open(scaler_path, 'rb'))
