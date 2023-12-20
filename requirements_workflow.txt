@@ -16,5 +16,9 @@ inflect
 transformers
 gensim
 catboost
+lightgbm
+torch
+scikit-learn
+
 
 

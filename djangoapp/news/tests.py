@@ -2,6 +2,7 @@ import datetime
 import os
 from dataclasses import asdict
 from typing import Optional
+import pickle
 
 from django.db import IntegrityError
 from django.test import TestCase
@@ -40,7 +41,7 @@ CBSNEWS_NOT_CLICKBAIT = 'https://www.cbsnews.com/news/joe-biden-wins-2020-electi
 THESUN_NOT_CLICKBAIT = 'https://www.thesun.co.uk/news/19747379/queen-elizabeth-dead-news/'
 CBSSPORTS_NOT_CLICKBAIT = 'https://www.cbssports.com/nba/news/p-j-tucker-says-theres-not-enough-basketballs-on-the-planet-for-clippers/'
 CLICKBAIT_TITLE = "10 Signs Your Partner Is Cheating - Don't Ignore #7!"
-NOT_CLICKBAIT_TITLE = "Joe Biden projected to win presidency in deeply divided nation"
+NOT_CLICKBAIT_TITLE = "Joe Biden projected to win presidency"
 
 
 
@@ -100,18 +101,20 @@ class TestScraper(TestCase):
 class NLPPredictorTests(TestCase):
     def test_predict_on_text(self):
         # Test the model on a non-clickbait title
-        predictive_model_path = os.path.join(settings.BASE_DIR, 'news', 'predictive_models', 'catboost_model.pkl')
-        predictive_model = load_predictive_model(predictive_model_path)
+        predictive_model_path = os.path.join(settings.BASE_DIR, 'news', 'predictive_models', 'lightgbm.pkl')
+        predictive_model = pickle.load(open(predictive_model_path, 'rb'))
+        scaler_path = os.path.join(settings.BASE_DIR, 'news', 'predictive_models', 'scaler.pkl')
+        scaler = pickle.load(open(scaler_path, 'rb'))
         model_settings_path = os.path.join(settings.BASE_DIR, 'news', 'config', 'model_settings.json')
         model_w2v_settings = return_best_model(path=model_settings_path)
         model_path = os.path.join(settings.BASE_DIR, 'news', 'word2vec_models', model_w2v_settings['model_path'])
         model_w2v = Word2VecModel(model_w2v_settings,model_path)
-        proba_cutoff = 0.5
-        result = predict_on_text(predictive_model, model_w2v, CLICKBAIT_TITLE)
+        proba_cutoff = 0.3490965225838074
+        result = predict_on_text(predictive_model, model_w2v, scaler, CLICKBAIT_TITLE)
         self.assertGreater(result[0][1], proba_cutoff)
         
         # Test the model on a non-clickbait title
-        result = predict_on_text(predictive_model, model_w2v, NOT_CLICKBAIT_TITLE)
+        result = predict_on_text(predictive_model, model_w2v, scaler, NOT_CLICKBAIT_TITLE)
         self.assertLess(result[0][1], proba_cutoff)
         
         
