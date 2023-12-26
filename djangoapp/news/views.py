@@ -183,9 +183,9 @@ def scrape_articles(request):
             for site in selected_sites:
                 urls += scraper.scrape_article_urls(scraper.site_variables_dict[site]['main'])
             shuffle(urls) # shuffle in place
-            urls_to_scrape = urls[:5]
+            urls_to_scrape = urls[:8]
             process_article_partial = partial(process_article, scraper=scraper, predictive_model=predictive_model, model_w2v=model_w2v, scaler=scaler, llm=llm, summarizer=summarizer,vertex=vertex)
-            with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
                 articles = list(executor.map(process_article_partial, urls_to_scrape))
 
             
