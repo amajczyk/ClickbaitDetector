@@ -16,6 +16,40 @@ from news.scripts.nlp import predict_on_text
 from news.scripts.model_loader import ModelLoader
 from django.db.models import Q
 
+import concurrent.futures
+
+from functools import partial
+
+
+from dataclasses import dataclass
+
+@dataclass
+class ArticleData:
+    title: str = ''
+    content: str = ''
+    content_summary: str = ''
+    url_from: str = ''
+    source_site: str = ''
+    clickbait_decision_NLP: int = -1
+    clickbait_decision_LLM: int = -1
+    clickbait_decision_VERTEX: int = -1
+    clickbait_decision_final: int = -1
+    
+    def to_model(self):
+        return Article(
+            title=self.title,
+            content_summary=self.content_summary,
+            url_from=self.url_from,
+            source_site=self.source_site,
+            clickbait_decision_NLP=self.clickbait_decision_NLP,
+            clickbait_decision_LLM=self.clickbait_decision_LLM,
+            clickbait_decision_VERTEX=self.clickbait_decision_VERTEX,
+            clickbait_decision_final=self.clickbait_decision_final,
+        )
+    
+    
+
+
 
 
 class DetailView(generic.DetailView):
@@ -102,6 +136,28 @@ def classify_VERTEX(data, vertex):
         return -1
 
 
+def process_article(url, scraper, predictive_model, model_w2v, scaler, llm, summarizer,vertex):
+    scraped_data = scraper.scrape(url)
+    scraped_data['url'] = url
+    title = scraped_data['title']
+    clickbait_decision_NLP = int(classify_NLP(title, predictive_model, model_w2v, scaler))
+    clickbait_decision_LLM = int(classify_LLM(title, llm))
+    content_summary = summarizer(scraped_data['content'], max_length=200, min_length=40, do_sample=False)[0]['summary_text'].replace(' .','.')
+    clickbait_decision_VERTEX = classify_VERTEX(title, vertex)
+    clickbait_decision_final = make_final_decision(clickbait_decision_NLP, clickbait_decision_LLM, clickbait_decision_VERTEX)
+    article = Article(
+        title=title,
+        url_from=url,
+        content_summary=content_summary,
+        source_site=scraped_data['source_site'],
+        clickbait_decision_NLP = clickbait_decision_NLP,
+        clickbait_decision_LLM = clickbait_decision_LLM,
+        clickbait_decision_VERTEX=clickbait_decision_VERTEX,
+        clickbait_decision_final=clickbait_decision_final,
+    )
+    article.save()
+    return article
+
 
 
 def scrape_articles(request):
@@ -128,36 +184,11 @@ def scrape_articles(request):
                 urls += scraper.scrape_article_urls(scraper.site_variables_dict[site]['main'])
             shuffle(urls) # shuffle in place
             urls_to_scrape = urls[:5]
-            scraped_datas = []
-            contents = []
-            for url in urls_to_scrape:
-                scraped_data = scraper.scrape(url)
-                scraped_data['url'] = url
-                scraped_datas.append(scraped_data)
-                contents.append(scraped_data['content'])
-            articles = []
-            summaries = summarizer(contents, max_length=200, min_length=40, do_sample=False)
-            for scraped_data, summary in zip(scraped_datas, summaries):
-                title = scraped_data['title']
-                content_summary = summary["summary_text"].replace(' .', '.')    
-                clickbait_decision_NLP = int(classify_NLP(title, predictive_model, model_w2v, scaler))
-                clickbait_decision_LLM = int(classify_LLM(title, llm))
-                clickbait_decision_VERTEX = int(classify_VERTEX(title, vertex))
-                clickbait_decision_final = make_final_decision(clickbait_decision_NLP, clickbait_decision_LLM, clickbait_decision_VERTEX)
-                
+            process_article_partial = partial(process_article, scraper=scraper, predictive_model=predictive_model, model_w2v=model_w2v, scaler=scaler, llm=llm, summarizer=summarizer,vertex=vertex)
+            with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+                articles = list(executor.map(process_article_partial, urls_to_scrape))
 
-                article = Article(
-                    title=scraped_data['title'],
-                    content_summary=content_summary,
-                    url_from=scraped_data['url'],
-                    source_site=scraped_data['source_site'],
-                    clickbait_decision_NLP = clickbait_decision_NLP,
-                    clickbait_decision_LLM = clickbait_decision_LLM,
-                    clickbait_decision_VERTEX = clickbait_decision_VERTEX,
-                    clickbait_decision_final = clickbait_decision_final,
-                )
-                article.save()
-                articles.append(article)
+            
             context = {'form': form}
             context['latest_article_list'] = articles
             return render(request, 'news/index.html', context)
