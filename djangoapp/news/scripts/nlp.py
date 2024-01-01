@@ -41,9 +41,8 @@ def load_predictive_model(path:str):
 
 ####### PREPROCESSING FUNCTIONS ########
 # remove punctuation
-import nltk
 import string
-from nltk.corpus import words
+from nltk.corpus import words as nltk_corpus_words
 import inflect
 import re 
 from nltk.tokenize import word_tokenize
@@ -177,7 +176,7 @@ def remove_non_ascii_characters_from_list(text_list):
 
 
 
-def remove_non_eng_words(text_list, words = words):
+def remove_non_eng_words(text_list, words = nltk_corpus_words):
     return [word for word in text_list if word.lower() in words]
     
 
@@ -185,7 +184,8 @@ def remove_non_eng_words(text_list, words = words):
 def preprocess_title(df, verbose = False):
 
     # df = cp.deepcopy(df)
-    english_words = set(w.lower() for w in words.words())
+    
+    english_words = set(w.lower() for w in nltk_corpus_words.words())
 
     # remove punctuation and other stuff
     if verbose:

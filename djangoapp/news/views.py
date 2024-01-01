@@ -1,6 +1,4 @@
-import os
-from multiprocessing import Pool
-from random import shuffle
+import datetime
 
 from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
@@ -19,36 +17,6 @@ from django.db.models import Q
 import concurrent.futures
 
 from functools import partial
-
-
-from dataclasses import dataclass
-
-@dataclass
-class ArticleData:
-    title: str = ''
-    content: str = ''
-    content_summary: str = ''
-    url_from: str = ''
-    source_site: str = ''
-    clickbait_decision_NLP: int = -1
-    clickbait_decision_LLM: int = -1
-    clickbait_decision_VERTEX: int = -1
-    clickbait_decision_final: int = -1
-    
-    def to_model(self):
-        return Article(
-            title=self.title,
-            content_summary=self.content_summary,
-            url_from=self.url_from,
-            source_site=self.source_site,
-            clickbait_decision_NLP=self.clickbait_decision_NLP,
-            clickbait_decision_LLM=self.clickbait_decision_LLM,
-            clickbait_decision_VERTEX=self.clickbait_decision_VERTEX,
-            clickbait_decision_final=self.clickbait_decision_final,
-        )
-    
-    
-
 
 
 
@@ -166,9 +134,9 @@ def scrape_articles(request):
         if form.is_valid():
             # Process the form data
             selected_sites = [
-                key for key, value in form.cleaned_data.items() if value
+                key for key, value in form.cleaned_data.items() if value and key != 'clickbait_tolerance'
             ]
-        
+
 
             model_loader = ModelLoader()
             scraper = model_loader.scraper
@@ -179,16 +147,15 @@ def scrape_articles(request):
             llm = model_loader.llm
             summarizer = model_loader.summarizer
 
-            urls = []
+
             for site in selected_sites:
-                urls += scraper.scrape_article_urls(scraper.site_variables_dict[site]['main'])
-            shuffle(urls) # shuffle in place
-            urls_to_scrape = urls[:8]
+                scrape_urls(request, site, scraper)
+            urls = get_next_urls(request, selected_sites)
             process_article_partial = partial(process_article, scraper=scraper, predictive_model=predictive_model, model_w2v=model_w2v, scaler=scaler, llm=llm, summarizer=summarizer,vertex=vertex)
             with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
-                articles = list(executor.map(process_article_partial, urls_to_scrape))
+                articles = list(executor.map(process_article_partial, urls))
 
-            
+
             context = {'form': form}
             context['latest_article_list'] = articles
             return render(request, 'news/index.html', context)
@@ -221,11 +188,13 @@ def browse_articles(request):
 
             search_query = form.cleaned_data['search_query']
             date_from = form.cleaned_data['date_from']
-            date_to = form.cleaned_data['date_to']
-            show_clickbaits = form.cleaned_data['show_clickbaits']
+            date_to = form.cleaned_data['date_to'] + datetime.timedelta(days=1)
+            clickbait_tolerance = int(form.cleaned_data['clickbait_tolerance'])
+            
             thesun = form.cleaned_data['thesun']
             cbsnews = form.cleaned_data['cbsnews']
             abcnews = form.cleaned_data['abcnews']
+            
             # Use the form data as needed to filter the articles from the database
             
             query = Q()
@@ -234,8 +203,9 @@ def browse_articles(request):
             if search_query:
                 query &= Q(title__icontains=search_query) | Q(content_summary__icontains=search_query)
 
-            if not show_clickbaits:
-                query &= ~Q(clickbait_decision_final=1)
+            query &= Q(clickbait_decision_final__lte=clickbait_tolerance)
+
+            query &= Q(scraped_date__gte=date_from) & Q(scraped_date__lte=date_to)
 
             source_sites = []
             if thesun:
@@ -248,7 +218,7 @@ def browse_articles(request):
             if source_sites:
                 query &= Q(source_site__in=source_sites)
 
-            articles = Article.objects.filter(query)
+            articles = Article.objects.filter(query).order_by('-scraped_date')
             context = {'form': form}
             context['latest_article_list'] = articles
             return render(request, 'news/browse.html', context=context)
@@ -257,5 +227,62 @@ def browse_articles(request):
     else:
         form = SearchArticlesForm()
 
-    return render(request, 'news/browse.html', {'form': form})
+    articles = Article.objects.order_by('-scraped_date')[:10]
+    context = {'form': form, 'latest_article_list': articles}    
+    return render(request, 'news/browse.html', context=context)
+
+
+        
+def use_generator(request,site,scraper):
+    # doesn't return anything, updates the session variables
+    start = request.session[site]['start']
+    end = request.session[site]['end']
+    while start<=end:
+        try:
+            request.session[site]['urls_to_scrape'].append(
+                request.session[site]['urls_all'][start]
+            )
+        except IndexError:
+            request.session[site]['page'] +=  1
+            page_part = scraper.site_variables_dict[site]['page'].format(request.session[site]['page']) 
+            urls = scraper.scrape_article_urls(
+                f"{scraper.site_variables_dict[site]['main']}{page_part}"
+            )
+            request.session[site]['urls_all'] = urls
+            start,end = 0, end-start
+            request.session[site]['urls_to_scrape'].append(
+                request.session[site]['urls_all'][start]
+            )
+        
+        start += 1
+    request.session[site]['start'] = start
+    request.session[site]['end'] = end + 3
+            
+            
+def get_next_urls(request, sites):
+    ttt = []
+    for site in sites:
+        ttt.append(request.session[site]['urls_to_scrape'])
+        request.session[site]['urls_to_scrape'] = []
+    
+    urls = [item for sublist in zip(*ttt) for item in sublist]
+    return urls
+
+    
+def scrape_urls(request, site, scraper):
+    # doesn't return anything, updates the session variables
+    if not request.session.get(site,None):
+        urls = scraper.scrape_article_urls(scraper.site_variables_dict[site]['main'])
+        request.session[site] = {
+            'urls_all': urls,
+            'urls_to_scrape': [],
+            'page' : 1,
+            'start': 0,
+            'end': 2,
+            
+    }
+    use_generator(request,site,scraper)
+
+
+
 

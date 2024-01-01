@@ -7,6 +7,9 @@ from news.scripts.nlp import Word2VecModel, return_best_model, load_predictive_m
 from news.scripts.llm import LocalLLM
 from news.vertex.cloud.connections_based_on_docs import VertexAI
 
+from nltk.corpus import wordnet
+
+
 class Singleton(type):
     _instances = {}
     def __call__(cls, *args, **kwargs):
@@ -42,3 +45,6 @@ class ModelLoader(metaclass=Singleton):
         
         # load VertexAI
         self.vertex = VertexAI()
+        
+        # wordnet is lazy loaded, this poses a problem when using multiprocessing
+        wordnet.ensure_loaded()

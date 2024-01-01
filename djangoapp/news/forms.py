@@ -1,15 +1,28 @@
 from django import forms
 from datetime import datetime, timedelta
 from django.utils import timezone
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Layout
+from crispy_forms.bootstrap import InlineRadios
+
 
 class URLForm(forms.Form):
-    url = forms.URLField(label='', widget=forms.TextInput(attrs={'placeholder': 'Enter URL'}))
+    url = forms.URLField(label='', widget=forms.TextInput(attrs={'placeholder': 'Enter article URL'}))
 
 
 class SiteSelectionForm(forms.Form):
     thesun = forms.BooleanField(required=False, initial=True)
     cbsnews = forms.BooleanField(required=False, initial=True)
     abcnews = forms.BooleanField(required=False, initial=True)
+    clickbait_tolerance = forms.ChoiceField(
+        choices=[
+            ('0', '3/3'),
+            ('1', '2/3'),
+            ('2', '1/3'),
+            ('3', '0'),
+        ]
+    )
+
 
 class SearchArticlesForm(forms.Form):
     search_query = forms.CharField(max_length=100, required=False)
@@ -19,6 +32,16 @@ class SearchArticlesForm(forms.Form):
     thesun = forms.BooleanField(required=False, initial=True)
     cbsnews = forms.BooleanField(required=False, initial=True)
     abcnews = forms.BooleanField(required=False, initial=True)
+    clickbait_tolerance = forms.ChoiceField(
+        choices=[
+            ('0', '3/3'),
+            ('1', '2/3'),
+            ('2', '1/3'),
+            ('3', '0'),
+        ],
+        required=False,
+        initial='0'
+    )
 
 
     def __init__(self, *args, **kwargs):
