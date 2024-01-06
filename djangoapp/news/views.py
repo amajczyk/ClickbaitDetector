@@ -51,7 +51,7 @@ def check_url(request):
             title = scraped_data['title']
      
             try:
-                article = get_object_or_404(Article, title=scraped_data['title'], source_site=scraped_data['source_site'])
+                article = Article.objects.get(url_from=url)
             except:
                 content_summary = summarizer(scraped_data['content'], max_length=200, min_length=40, do_sample=False)[0]["summary_text"]
                 clickbait_decision_NLP = classify_NLP(title, predictive_model, model_w2v, scaler)
@@ -105,26 +105,32 @@ def classify_VERTEX(data, vertex):
 
 
 def process_article(url, scraper, predictive_model, model_w2v, scaler, llm, summarizer,vertex):
-    scraped_data = scraper.scrape(url)
-    scraped_data['url'] = url
-    title = scraped_data['title']
-    clickbait_decision_NLP = int(classify_NLP(title, predictive_model, model_w2v, scaler))
-    clickbait_decision_LLM = int(classify_LLM(title, llm))
-    content_summary = summarizer(scraped_data['content'], max_length=200, min_length=40, do_sample=False)[0]['summary_text'].replace(' .','.')
-    clickbait_decision_VERTEX = classify_VERTEX(title, vertex)
-    clickbait_decision_final = make_final_decision(clickbait_decision_NLP, clickbait_decision_LLM, clickbait_decision_VERTEX)
-    article = Article(
-        title=title,
-        url_from=url,
-        content_summary=content_summary,
-        source_site=scraped_data['source_site'],
-        clickbait_decision_NLP = clickbait_decision_NLP,
-        clickbait_decision_LLM = clickbait_decision_LLM,
-        clickbait_decision_VERTEX=clickbait_decision_VERTEX,
-        clickbait_decision_final=clickbait_decision_final,
-    )
-    article.save()
-    return article
+    # qery the database for the article using url
+    # if it exists, return it
+    try:
+        article = Article.objects.get(url_from=url)
+        return article
+    except:
+        scraped_data = scraper.scrape(url)
+        scraped_data['url'] = url
+        title = scraped_data['title']
+        clickbait_decision_NLP = int(classify_NLP(title, predictive_model, model_w2v, scaler))
+        clickbait_decision_LLM = int(classify_LLM(title, llm))
+        content_summary = summarizer(scraped_data['content'], max_length=200, min_length=40, do_sample=False)[0]['summary_text'].replace(' .','.')
+        clickbait_decision_VERTEX = classify_VERTEX(title, vertex)
+        clickbait_decision_final = make_final_decision(clickbait_decision_NLP, clickbait_decision_LLM, clickbait_decision_VERTEX)
+        article = Article(
+            title=title,
+            url_from=url,
+            content_summary=content_summary,
+            source_site=scraped_data['source_site'],
+            clickbait_decision_NLP = clickbait_decision_NLP,
+            clickbait_decision_LLM = clickbait_decision_LLM,
+            clickbait_decision_VERTEX=clickbait_decision_VERTEX,
+            clickbait_decision_final=clickbait_decision_final,
+        )
+        article.save()
+        return article
 
 
 
@@ -134,8 +140,13 @@ def scrape_articles(request):
         if form.is_valid():
             # Process the form data
             selected_sites = [
-                key for key, value in form.cleaned_data.items() if value and key != 'clickbait_tolerance'
+                key for key, value in form.cleaned_data.items() if value and key not in ['clickbait_tolerance','category']
             ]
+            selected_category = form.cleaned_data['category']
+            
+            request.session['selected_sites'] = selected_sites
+            request.session['selected_category'] = selected_category
+            
 
 
             model_loader = ModelLoader()
@@ -163,6 +174,35 @@ def scrape_articles(request):
         form = SiteSelectionForm()
 
     return render(request, 'news/index.html', {'form': form})
+
+
+def load_more_articles(request):
+    
+    model_loader = ModelLoader()
+    scraper = model_loader.scraper
+    model_w2v = model_loader.model_w2v
+    scaler = model_loader.scaler
+    predictive_model = model_loader.predictive_model
+    vertex = model_loader.vertex
+    llm = model_loader.llm
+    summarizer = model_loader.summarizer
+
+    selected_sites = request.session['selected_sites']
+    selected_category = request.session['selected_category']
+    for site in selected_sites:
+        use_generator(request,site,selected_category,scraper)
+    urls = get_next_urls(request, selected_sites)
+    print('DEBUG: urls', urls)
+    process_article_partial = partial(process_article, scraper=scraper, predictive_model=predictive_model, model_w2v=model_w2v, scaler=scaler, llm=llm, summarizer=summarizer,vertex=vertex)
+    with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
+        articles = list(executor.map(process_article_partial, urls))
+    print('DEBUG: articles', articles)
+    
+    request.session.save()
+    
+    articles_html = render_to_string('news/list_articles.html', {'latest_article_list': articles})
+    return JsonResponse({'articles': articles_html})
+
 
 
 
@@ -233,30 +273,40 @@ def browse_articles(request):
 
 
         
-def use_generator(request,site,scraper):
+def use_generator(request,site,selected_category,scraper):
+    
     # doesn't return anything, updates the session variables
-    start = request.session[site]['start']
-    end = request.session[site]['end']
+    site_category = f'{site}_{selected_category}'
+    
+    start = request.session[site_category]['start']
+    end = request.session[site_category]['end']
+    
+ 
+        
+    print('DEBUG: BEFORE :start, end', start, end)
     while start<=end:
         try:
-            request.session[site]['urls_to_scrape'].append(
-                request.session[site]['urls_all'][start]
+            request.session[site_category]['urls_to_scrape'].append(
+                request.session[site_category]['urls_all'][start]
             )
         except IndexError:
-            request.session[site]['page'] +=  1
-            page_part = scraper.site_variables_dict[site]['page'].format(request.session[site]['page']) 
+            print('DEBUG: IndexError')
+            request.session[site_category]['page'] +=  1
+            page_part = scraper.site_variables_dict[site]['page_suffix'].format(request.session[site_category]['page']) 
             urls = scraper.scrape_article_urls(
-                f"{scraper.site_variables_dict[site]['main']}{page_part}"
+                [f"{scraper.site_variables_dict[site][selected_category]}{page_part}"]
             )
-            request.session[site]['urls_all'] = urls
+            request.session[site_category]['urls_all'] = urls
             start,end = 0, end-start
-            request.session[site]['urls_to_scrape'].append(
-                request.session[site]['urls_all'][start]
+            request.session[site_category]['urls_to_scrape'].append(
+                request.session[site_category]['urls_all'][start]
             )
         
         start += 1
-    request.session[site]['start'] = start
-    request.session[site]['end'] = end + 3
+    request.session[site_category]['start'] = start
+    request.session[site_category]['end'] = end + 3
+    print('DEBUG: AFTER :start, end', start, end+3)
+    
             
             
 def get_next_urls(request, sites):
@@ -271,9 +321,24 @@ def get_next_urls(request, sites):
     
 def scrape_urls(request, site, scraper):
     # doesn't return anything, updates the session variables
-    if not request.session.get(site,None):
-        urls = scraper.scrape_article_urls(scraper.site_variables_dict[site]['main'])
-        request.session[site] = {
+    selected_category = request.session['selected_category']
+    if selected_category == 'front_page':
+        selected_category = 'main'
+        hrefs_to_find_urls = scraper.site_variables_dict[site][selected_category]
+    else:
+        hrefs_to_find_urls = scraper.site_variables_dict[site]['topics'][selected_category]
+
+    print(hrefs_to_find_urls)
+
+    # if not a list make it a list
+    if not isinstance(hrefs_to_find_urls, list):
+        hrefs_to_find_urls = [hrefs_to_find_urls]
+    print(selected_category)
+    site_category = f'{site}_{selected_category}'
+    if not request.session.get(site_category,None):
+        urls = scraper.scrape_article_urls(hrefs_to_find_urls)
+        print(urls)
+        request.session[site_category] = {
             'urls_all': urls,
             'urls_to_scrape': [],
             'page' : 1,
@@ -281,7 +346,7 @@ def scrape_urls(request, site, scraper):
             'end': 2,
             
     }
-    use_generator(request,site,scraper)
+    use_generator(request,site,selected_category,scraper)
 
 
 

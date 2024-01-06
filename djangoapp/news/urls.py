@@ -13,4 +13,7 @@ urlpatterns = [
     path("detail/<int:pk>/", views.DetailView.as_view(), name="detail"),
     path('check_url/', views.check_url, name='check_url'),
     
+    path('load_more_articles/', views.load_more_articles, name='load_more_articles'),
+
+    
 ]

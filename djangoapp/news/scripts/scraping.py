@@ -15,47 +15,51 @@ class Scraper:
             site_variables_dict = json.load(f)
         return site_variables_dict
 
-    def scrape_article_urls(self, main_url: str) -> list[str]:
-        response = requests.get(main_url)
-        try:
-            response.raise_for_status()
-        except requests.exceptions.HTTPError as e:
-            raise Exception(
-                f"HTTP request failed with status code {response.status_code}"
-            ) from e
+    def scrape_article_urls(self, main_urls:list[str]) -> list[str]:
+        all_matching_hrefs = []
+        for main_url in main_urls:
+            response = requests.get(main_url)
+            try:
+                response.raise_for_status()
+            except requests.exceptions.HTTPError as e:
+                raise Exception(
+                    f"HTTP request failed with status code {response.status_code}"
+                ) from e
 
-        soup = BeautifulSoup(response.text, "html.parser")
+            soup = BeautifulSoup(response.text, "html.parser")
 
-        site_variables = self.discern_website_from_url(main_url)
+            site_variables = self.discern_website_from_url(main_url)
 
-        url_matchings = site_variables.get("url_matchings")
-        compiled_excluded_patterns = []
-        compiled_included_patterns = []
-        # compile regex patterns
-        if url_matchings.get("excluded_patterns"):
-            compiled_excluded_patterns = [
-                re.compile(pattern.replace("\\\\", "\\"))
-                for pattern in url_matchings["excluded_patterns"]
+            url_matchings = site_variables.get("url_matchings")
+            compiled_excluded_patterns = []
+            compiled_included_patterns = []
+            # compile regex patterns
+            if url_matchings.get("excluded_patterns"):
+                compiled_excluded_patterns = [
+                    re.compile(pattern.replace("\\\\", "\\"))
+                    for pattern in url_matchings["excluded_patterns"]
+                ]
+            if url_matchings.get("included_patterns"):
+                compiled_included_patterns = [
+                    re.compile(pattern.replace("\\\\", "\\"))
+                    for pattern in url_matchings["included_patterns"]
+                ]
+
+            all_hrefs = [a["href"] for a in soup.find_all("a", href=True)]
+            # return all_hrefs, compiled_excluded_patterns, compiled_included_patterns
+            url_matchings = site_variables["url_matchings"]
+            matching_hrefs = [
+                href
+                for href in all_hrefs
+                if self.check_href_match_condition(
+                    href,
+                    url_matchings,
+                    compiled_excluded_patterns,
+                    compiled_included_patterns,
+                )
             ]
-        if url_matchings.get("included_patterns"):
-            compiled_included_patterns = [
-                re.compile(pattern.replace("\\\\", "\\"))
-                for pattern in url_matchings["included_patterns"]
-            ]
-
-        all_hrefs = [a["href"] for a in soup.find_all("a", href=True)]
-        # return all_hrefs, compiled_excluded_patterns, compiled_included_patterns
-        url_matchings = site_variables["url_matchings"]
-        matching_hrefs = [
-            href
-            for href in all_hrefs
-            if self.check_href_match_condition(
-                href,
-                url_matchings,
-                compiled_excluded_patterns,
-                compiled_included_patterns,
-            )
-        ]
+            
+        matching_hrefs = [item for sublist in zip(*all_matching_hrefs) for item in sublist]
         matching_hrefs = list(dict.fromkeys(matching_hrefs))
         return matching_hrefs
 

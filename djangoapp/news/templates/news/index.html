@@ -31,20 +31,65 @@
       </div>
     </div>
   </div>
+  {{form.category|as_crispy_field}}
 </form>
 
 <div class="container mt-2-3">
   <div class="m-0 p-0 mb-1 d-flex justify-content-between align-items-center">
     <h2>Results:</h2>
-    <input type="checkbox" class="btn-check" id="btn-check-4" checked autocomplete="off">
-    <label class="btn" for="btn-check-4">Show clickbaits toggle</label>
-  </div>
   {% include 'news/list_articles.html' %}
 </div>
+
+
 
 
 <div id="detailsSection">
   
 </div>
+
+<div id="article-container">
+  <!-- Existing articles -->
+  {% for article in articles %}
+      <div class="article">
+          <h3>{{ article.title }}</h3>
+          <p>{{ article.content }}</p>
+          <!-- Add other article details as needed -->
+      </div>
+  {% endfor %}
+</div>
+
+<!-- Load More Button -->
+<button id="load-more-btn">Load More</button>
+
+<script>
+  document.getElementById('load-more-btn').addEventListener('click', function() {
+      fetch('{% url "news:load_more_articles" %}')
+          .then(response => response.json())
+          .then(data => {
+              // Check if data.articles is a string (HTML for a single article)
+              if (typeof data.articles === 'string') {
+                  const articleContainer = document.getElementById('article-container');
+                  const articleDiv = document.createElement('div');
+                  articleDiv.className = 'article';
+                  articleDiv.innerHTML = data.articles;
+                  articleContainer.appendChild(articleDiv);
+              } else if (Array.isArray(data.articles)) {
+                  // If data.articles is an array, iterate over it
+                  const articleContainer = document.getElementById('article-container');
+                  data.articles.forEach(articleHtml => {
+                      const articleDiv = document.createElement('div');
+                      articleDiv.className = 'article';
+                      articleDiv.innerHTML = articleHtml;
+                      articleContainer.appendChild(articleDiv);
+                  });
+              } else {
+                  // Handle other scenarios if needed
+              }
+          })
+          .catch(error => {
+              console.error('Error fetching articles:', error);
+          });
+  });
+</script>
 
 {% endblock %}

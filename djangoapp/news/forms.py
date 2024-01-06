@@ -22,6 +22,18 @@ class SiteSelectionForm(forms.Form):
             ('3', '0'),
         ]
     )
+    category = forms.ChoiceField(
+        choices=[
+            ('front_page', 'Front Page'),
+            ('General', 'General'),
+            ('Politics', 'Politics'),
+            ('Sports', 'Sports'),
+            ('Jealth', 'Health'),
+            ('Technology', 'Technology'),
+        ],
+        initial='front_page'
+    )
+
 
 
 class SearchArticlesForm(forms.Form):
@@ -42,6 +54,19 @@ class SearchArticlesForm(forms.Form):
         required=False,
         initial='0'
     )
+    
+    categories = forms.MultipleChoiceField(
+        choices=[
+            ('front_page', 'Front Page'),
+            ('general', 'General'),
+            ('politics', 'Politics'),
+            ('sports', 'Sports'),
+            ('health', 'Health'),
+            ('technology', 'Technology'),
+        ],
+        required=False,
+        widget=forms.CheckboxSelectMultiple,
+    )
 
 
     def __init__(self, *args, **kwargs):
@@ -53,3 +78,5 @@ class SearchArticlesForm(forms.Form):
 
         self.fields['date_from'].initial = default_date_from.date()
         self.fields['date_to'].initial = default_date_to.date()
+
+
