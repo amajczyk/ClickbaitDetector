@@ -171,13 +171,10 @@ class Scraper:
         return result
 
     def scrape(self, url: str):
-        print(url)
         if not url.startswith("http://") and not url.startswith("https://"):
-            print('tu')
             raise NotSupportedWebsiteException(
                 f"Scraping for this website is not supported. Supported websites are: {', '.join(self.site_variables_dict.keys())}"
             )
-        print('tutaj')
         site_dict = self.discern_website_from_url(url)
         result_dict = self.scrape_content(
             url,
