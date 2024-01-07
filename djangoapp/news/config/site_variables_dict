@@ -14,7 +14,8 @@
                 "placeholder"
             ],
             "included_patterns": [
-                "https://www.thesun.co.uk/.*/\\d+/.*"
+                "https://www.thesun.co.uk/.*/\\d+/.*",
+                "/\\w+/\\d+/.*"
             ]
         },
         "page_suffix": "page/{number}/",

@@ -44,10 +44,9 @@ class Scraper:
             ]
 
         all_hrefs = [a["href"] for a in soup.find_all("a", href=True)]
-        # return all_hrefs, compiled_excluded_patterns, compiled_included_patterns
         url_matchings = site_variables["url_matchings"]
         matching_hrefs = [
-            href
+            f'https://thesun.co.uk{href}' if href.startswith('/') else href
             for href in all_hrefs
             if self.check_href_match_condition(
                 href,

@@ -34,29 +34,14 @@
   {{form.category|as_crispy_field}}
 </form>
 
-<div class="container mt-2-3">
-  <div class="m-0 p-0 mb-1 d-flex justify-content-between align-items-center">
+<div class="container mt-2-3" id="article-container">
     <h2>Results:</h2>
-  {% include 'news/list_articles.html' %}
+
+    {% include 'news/list_articles.html' %}
+
 </div>
 
 
-
-
-<div id="detailsSection">
-  
-</div>
-
-<div id="article-container">
-  <!-- Existing articles -->
-  {% for article in articles %}
-      <div class="article">
-          <h3>{{ article.title }}</h3>
-          <p>{{ article.content }}</p>
-          <!-- Add other article details as needed -->
-      </div>
-  {% endfor %}
-</div>
 
 <!-- Load More Button -->
 <button id="load-more-btn">Load More</button>

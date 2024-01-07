@@ -21,7 +21,6 @@ import concurrent.futures
 from functools import partial
 
 
-
 class DetailView(generic.DetailView):
     model = Article
     template_name = "news/detail.html"
@@ -98,15 +97,18 @@ def classify_LLM(data, llm):
     return int(probability > proba_cutoff)
     
 
-def classify_VERTEX(data, vertex):
+def classify_VERTEX(data, vertex, summary=None):
     try:
-        clickbait_decision_VERTEX = vertex.run(title=data)
-        return clickbait_decision_VERTEX
+        if summary:
+            clickbait_decision_VERTEX = vertex.run(title=data, summary=summary)
+        else:
+            clickbait_decision_VERTEX = vertex.run(title=data)
+        return int(clickbait_decision_VERTEX)
     except:
         return -1
 
 
-def process_article(url, scraper, predictive_model, model_w2v, scaler, llm, summarizer,vertex):
+def process_article(url, scraper, predictive_model, model_w2v, scaler, llm, summarizer,vertex, selected_category):
     # qery the database for the article using url
     # if it exists, return it
     try:
@@ -120,8 +122,8 @@ def process_article(url, scraper, predictive_model, model_w2v, scaler, llm, summ
         clickbait_decision_LLM = int(classify_LLM(title, llm))
         content_summary = summarizer(scraped_data['content'], max_length=200, min_length=40, do_sample=False)[0]['summary_text'].replace(' .','.')
 
-        vertex = VertexAI()
-        clickbait_decision_VERTEX = classify_VERTEX(title, vertex)
+        vertex = VertexAI() 
+        clickbait_decision_VERTEX = classify_VERTEX(title, vertex, content_summary)
         
         
         clickbait_decision_final = make_final_decision(clickbait_decision_NLP, clickbait_decision_LLM, clickbait_decision_VERTEX)
@@ -130,6 +132,7 @@ def process_article(url, scraper, predictive_model, model_w2v, scaler, llm, summ
             url_from=url,
             content_summary=content_summary,
             source_site=scraped_data['source_site'],
+            category = selected_category,
             clickbait_decision_NLP = clickbait_decision_NLP,
             clickbait_decision_LLM = clickbait_decision_LLM,
             clickbait_decision_VERTEX=clickbait_decision_VERTEX,
@@ -168,7 +171,7 @@ def scrape_articles(request):
             for site in selected_sites:
                 scrape_urls(request, site, scraper)
             urls = get_next_urls(request, selected_sites)
-            process_article_partial = partial(process_article, scraper=scraper, predictive_model=predictive_model, model_w2v=model_w2v, scaler=scaler, llm=llm, summarizer=summarizer,vertex=vertex)
+            process_article_partial = partial(process_article, scraper=scraper, predictive_model=predictive_model, model_w2v=model_w2v, scaler=scaler, llm=llm, summarizer=summarizer,vertex=vertex,selected_category=selected_category)
             with concurrent.futures.ThreadPoolExecutor(max_workers=9) as executor:
                 articles = list(executor.map(process_article_partial, urls))
 
@@ -198,12 +201,9 @@ def load_more_articles(request):
     for site in selected_sites:
         use_generator(request,site,selected_category,scraper)
     urls = get_next_urls(request, selected_sites)
-    print('DEBUG: urls', urls)
-    process_article_partial = partial(process_article, scraper=scraper, predictive_model=predictive_model, model_w2v=model_w2v, scaler=scaler, llm=llm, summarizer=summarizer,vertex=vertex)
+    process_article_partial = partial(process_article, scraper=scraper, predictive_model=predictive_model, model_w2v=model_w2v, scaler=scaler, llm=llm, summarizer=summarizer,vertex=vertex, selected_category=selected_category)
     with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
-        articles = list(executor.map(process_article_partial, urls))
-    print('DEBUG: articles', articles)
-    
+        articles = list(executor.map(process_article_partial, urls))    
     request.session.save()
     
     articles_html = render_to_string('news/list_articles.html', {'latest_article_list': articles})
@@ -289,9 +289,6 @@ def use_generator(request,site,selected_category,scraper):
     start = request.session[site_category]['start']
     end = request.session[site_category]['end']
     
- 
-        
-    print('DEBUG: BEFORE :start, end', start, end)
     while start<=end:
         try:
             request.session[site_category]['urls_to_scrape'].append(
@@ -299,7 +296,6 @@ def use_generator(request,site,selected_category,scraper):
             )
         except IndexError as e:
             print(e)
-            print('DEBUG: IndexError')
             request.session[site_category]['page'] +=  1
             page_part = scraper.site_variables_dict[site]['page_suffix'].format(request.session[site_category]['page']) 
             urls = scraper.scrape_article_urls(
