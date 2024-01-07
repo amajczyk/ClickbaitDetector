@@ -16,7 +16,7 @@ $(document).ready(function(){
     $('#load-more-btn').on('click', function() {
       $("#load-more-btn").addClass('d-none');
       $("#spinner").removeClass('d-none');
-      fetch('{% url "news:load_more_articles" %}')
+      fetch(loadMoreArticlesUrl)
         .then(response => response.json())
         .then(data => {
           console.log(data.articles_html); // Log the data to the console

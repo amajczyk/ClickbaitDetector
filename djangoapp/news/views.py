@@ -35,7 +35,6 @@ def check_url(request):
         form = URLForm(request.POST)
         if form.is_valid():
             url = form.cleaned_data['url']
-            print
             model_loader = ModelLoader()
 
             # Access the loaded models
@@ -80,7 +79,6 @@ def check_url(request):
             html_content = render_to_string('news/article_info.html', {'article': article})
             return JsonResponse({'html': html_content})    
     else:
-        print('nie fa')
         form = URLForm()
 
     return render(request, 'news/check_url.html', {'form': form})
