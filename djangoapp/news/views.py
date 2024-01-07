@@ -12,6 +12,8 @@ from .forms import URLForm, SiteSelectionForm, SearchArticlesForm
 
 from news.scripts.nlp import predict_on_text
 from news.scripts.model_loader import ModelLoader
+from news.vertex.cloud.connections_based_on_docs import VertexAI
+
 from django.db.models import Q
 
 import concurrent.futures
@@ -117,7 +119,11 @@ def process_article(url, scraper, predictive_model, model_w2v, scaler, llm, summ
         clickbait_decision_NLP = int(classify_NLP(title, predictive_model, model_w2v, scaler))
         clickbait_decision_LLM = int(classify_LLM(title, llm))
         content_summary = summarizer(scraped_data['content'], max_length=200, min_length=40, do_sample=False)[0]['summary_text'].replace(' .','.')
+
+        vertex = VertexAI()
         clickbait_decision_VERTEX = classify_VERTEX(title, vertex)
+        
+        
         clickbait_decision_final = make_final_decision(clickbait_decision_NLP, clickbait_decision_LLM, clickbait_decision_VERTEX)
         article = Article(
             title=title,
@@ -163,7 +169,7 @@ def scrape_articles(request):
                 scrape_urls(request, site, scraper)
             urls = get_next_urls(request, selected_sites)
             process_article_partial = partial(process_article, scraper=scraper, predictive_model=predictive_model, model_w2v=model_w2v, scaler=scaler, llm=llm, summarizer=summarizer,vertex=vertex)
-            with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=9) as executor:
                 articles = list(executor.map(process_article_partial, urls))
 
 

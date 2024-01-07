@@ -28,7 +28,7 @@ class SiteSelectionForm(forms.Form):
             ('General', 'General'),
             ('Politics', 'Politics'),
             ('Sports', 'Sports'),
-            ('Jealth', 'Health'),
+            ('Health', 'Health'),
             ('Technology', 'Technology'),
         ],
         initial='front_page'
