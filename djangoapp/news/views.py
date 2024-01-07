@@ -12,7 +12,7 @@ from .models import Article
 
 from .forms import URLForm, SiteSelectionForm, SearchArticlesForm
 
-from news.scripts.nlp import predict_on_text
+from news.scripts.nlp import NLP
 from news.scripts.model_loader import ModelLoader
 from django.db.models import Q
 
@@ -36,9 +36,7 @@ def check_url(request):
 
             # Access the loaded models
             scraper = model_loader.scraper
-            model_w2v = model_loader.model_w2v
-            scaler = model_loader.scaler
-            predictive_model = model_loader.predictive_model
+            nlp = model_loader.nlp
             vertex = model_loader.vertex
             llm = model_loader.llm
             summarizer = model_loader.summarizer
@@ -52,7 +50,7 @@ def check_url(request):
                 article = get_object_or_404(Article, title=scraped_data['title'], source_site=scraped_data['source_site'])
             except:
                 content_summary = summarizer(scraped_data['content'], max_length=200, min_length=40, do_sample=False)[0]["summary_text"]
-                clickbait_decision_NLP = classify_NLP(title, predictive_model, model_w2v, scaler)
+                clickbait_decision_NLP = classify_NLP(title, nlp)
                 clickbait_decision_LLM = classify_LLM(title, llm)
                 clickbait_decision_VERTEX = classify_VERTEX(title, vertex)
                 clickbait_decision_final = make_final_decision(clickbait_decision_NLP, clickbait_decision_LLM, clickbait_decision_VERTEX)
@@ -81,22 +79,22 @@ def check_url(request):
 
 
 
-def classify_NLP(data, predictive_model, model_w2v,scaler):
-    proba_cutoff = 0.3490965225838074
-    clickbait_decision_NLP_proba = predict_on_text(predictive_model, model_w2v, scaler, data)
+def classify_NLP(title, nlp):
+    clickbait_decision_NLP_proba = nlp.predict_on_text(title)
     clickbait_decision_NLP_proba = clickbait_decision_NLP_proba[0][1]
-    return int(clickbait_decision_NLP_proba > proba_cutoff)
+    return int(clickbait_decision_NLP_proba > nlp.proba_cutoff)
 
-def classify_LLM(data, llm):
+def classify_LLM(title, llm):
     proba_cutoff = 0.5
-    probability = llm.predict(data)
-    print(probability)
-    return int(probability > proba_cutoff)
+    probability = llm.predict(title)
+    result = int(probability > proba_cutoff)
+    print('llm result: ', result)
+    return result
     
 
-def classify_VERTEX(data, vertex):
+def classify_VERTEX(title, vertex):
     try:
-        clickbait_decision_VERTEX = vertex.run(title=data)
+        clickbait_decision_VERTEX = vertex.run(title=title)
         return clickbait_decision_VERTEX
     except:
         return -1
@@ -116,9 +114,7 @@ def scrape_articles(request):
 
             model_loader = ModelLoader()
             scraper = model_loader.scraper
-            model_w2v = model_loader.model_w2v
-            scaler = model_loader.scaler
-            predictive_model = model_loader.predictive_model
+            nlp = model_loader.nlp
             vertex = model_loader.vertex
             llm = model_loader.llm
             summarizer = model_loader.summarizer
@@ -140,7 +136,7 @@ def scrape_articles(request):
             for scraped_data, summary in zip(scraped_datas, summaries):
                 title = scraped_data['title']
                 content_summary = summary["summary_text"].replace(' .', '.')    
-                clickbait_decision_NLP = int(classify_NLP(title, predictive_model, model_w2v, scaler))
+                clickbait_decision_NLP = int(classify_NLP(title, nlp))
                 clickbait_decision_LLM = int(classify_LLM(title, llm))
                 clickbait_decision_VERTEX = int(classify_VERTEX(title, vertex))
                 clickbait_decision_final = make_final_decision(clickbait_decision_NLP, clickbait_decision_LLM, clickbait_decision_VERTEX)

@@ -5,37 +5,46 @@ import pickle
 import os
 import catboost
 import pandas as pd
+from django.conf import settings
+
 
 class NLP():
     class Word2VecModel():
-        def __init__(self, model_settings, path_to_w2v) -> None:
-            self.model = Word2Vec.load(path_to_w2v)
-            self.model_settings = model_settings
+        def __init__(self) -> None:
+            model_settings_path = os.path.join(settings.BASE_DIR, 'news', 'config', 'model_settings.json')
+            self.model_settings = return_best_model(path=model_settings_path)
+            
+            w2v_path = os.path.join(settings.BASE_DIR, 'news', 'word2vec_models', self.model_settings['model_path'])
+            self.model = Word2Vec.load(w2v_path)
+
             self.is_skipgram = self.model_settings['is_skipgram']
             self.window_size = self.model_settings['window_size']
             self.vector_size = self.model_settings['vector_size']
 
     class PredictiveModel():
-        def __init__(self, predictive_model) -> None:
-            self.model = predictive_model
+        def __init__(self) -> None:
+            model_path = os.path.join(settings.BASE_DIR, 'news', 'predictive_models', 'lightgbm.pkl')
+            self.model = pickle.load(open(model_path, 'rb'))
         
     class Scaler():
-        def __init__(self, scaler) -> None:
-            self.scaler = scaler
+        def __init__(self) -> None:
+            scaler_path = os.path.join(settings.BASE_DIR, 'news', 'predictive_models', 'scaler.pkl')
+            self.scaler = pickle.load(open(scaler_path, 'rb'))
 
-    def __init__(self, w2v_settings, w2v_path, predictive_model, scaler) -> None:
-        w2v = self.Word2VecModel(w2v_settings, w2v_path)
-        predictive_model = self.PredictiveModel(predictive_model)
-        scaler = self.Scaler(scaler)
+    def __init__(self) -> None:
+        w2v = self.Word2VecModel()
+        predictive_model = self.PredictiveModel().model
+        scaler = self.Scaler().scaler
 
         self.w2v = w2v
         self.predictive_model = predictive_model
         self.scaler = scaler
+        self.proba_cutoff = 0.3490965225838074
 
     def predict_on_text(self, title):
         
         # print(text)
-        text = preprocess_title(pd.DataFrame({'title': [text]}))
+        text = preprocess_title(pd.DataFrame({'title': [title]}))
         text = get_word_vectors(self.w2v, text['title'][0], aggregation='mean')
         text = self.scaler.transform([text])
         # print(len(text))
