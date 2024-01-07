@@ -47,7 +47,8 @@ class VertexAI:
             service_account: Optional[str] = None,
             model_name: ModelName = ModelName.GEMINI,
             title: str = "This is the Most Clickbait Title Ever!",
-            prompt: str = f"Is this title a clickbait: 'PLACE_FOR_TITLE'? Summary of the article: 'PLACE_FOR_SUMMARY'. Return 1 if yes, 0 if no."
+            prompt: str = f"Is this title a clickbait: 'PLACE_FOR_TITLE'? Summary of the article: "
+                          f"'PLACE_FOR_SUMMARY'. Return 1 if yes, 0 if no."
     ):
         self.my_chat_model = None
         self.project_id = project_id

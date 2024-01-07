@@ -18,7 +18,7 @@ from google.auth import default
 from .models import Article
 
 from unittest.mock import patch
-from news.vertex.cloud.connections_based_on_docs import VertexAI, ModelName
+from news.vertex.cloud.vertex_connection import VertexAI, ModelName
 from news.vertex.configs.config import Config
 
 # python manage.py test news
@@ -269,8 +269,8 @@ class TestVertexAI(TestCase):
     @patch('google.auth.load_credentials_from_dict')
     def test_run_clickbait(self, mock_load_credentials_from_dict):
         mock_load_credentials_from_dict.return_value = (None, None)
-        with patch('news.vertex.cloud.connections_based_on_docs.VertexAI.predict') as mock_predict:
-            with patch('news.vertex.cloud.connections_based_on_docs.VertexAI.predict_gemini') as mock_predict_gemini:
+        with patch('news.vertex.cloud.vertex_connection.VertexAI.predict') as mock_predict:
+            with patch('news.vertex.cloud.vertex_connection.VertexAI.predict_gemini') as mock_predict_gemini:
                 mock_predict_gemini.return_value = '1'
                 mock_predict.return_value = '1'
                 self.vertex_ai = VertexAIMock()
@@ -280,8 +280,8 @@ class TestVertexAI(TestCase):
     @patch('google.auth.load_credentials_from_dict')
     def test_run_not_clickbait(self, mock_load_credentials_from_dict):
         mock_load_credentials_from_dict.return_value = (None, None)
-        with patch('news.vertex.cloud.connections_based_on_docs.VertexAI.predict') as mock_predict:
-            with patch('news.vertex.cloud.connections_based_on_docs.VertexAI.predict_gemini') as mock_predict_gemini:
+        with patch('news.vertex.cloud.vertex_connection.VertexAI.predict') as mock_predict:
+            with patch('news.vertex.cloud.vertex_connection.VertexAI.predict_gemini') as mock_predict_gemini:
                 mock_predict_gemini.return_value = '0'
                 self.vertex_ai = VertexAIMock()
                 mock_predict.return_value = '0'

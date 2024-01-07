@@ -5,7 +5,7 @@ from news.scripts.scraping import Scraper
 from transformers import pipeline
 from news.scripts.nlp import Word2VecModel, return_best_model, load_predictive_model
 from news.scripts.llm import LocalLLM
-from news.vertex.cloud.connections_based_on_docs import VertexAI
+from news.vertex.cloud.vertex_connection import VertexAI
 
 class Singleton(type):
     _instances = {}
