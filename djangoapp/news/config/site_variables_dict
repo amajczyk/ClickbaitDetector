@@ -2,42 +2,10 @@
     "thesun": {
         "main": "https://www.thesun.co.uk",
         "topics": {
-            "General": {
-                "News": "https://www.thesun.co.uk/news/",
-                "World": "https://www.thesun.co.uk/news/worldnews/",
-                "UK": "https://www.thesun.co.uk/news/uknews/",
-                "Comment": "https://www.thesun.co.uk/news/opinion/"
-            },
-            "Sport": {
-                "Sport": "https://www.thesun.co.uk/sport/",
-                "Soccer": "https://www.thesun.co.uk/sport/football/",
-                "Boxing": "https://www.thesun.co.uk/sport/boxing/",
-                "MMA": "https://www.thesun.co.uk/sport/mma/",
-                "Horse Racing": "https://www.thesun.co.uk/sport/horseracing/",
-                "Golf": "https://www.thesun.co.uk/sport/golf/",
-                "WWE": "https://www.thesun.co.uk/sport/wwe/",
-                "Tennis": "https://www.thesun.co.uk/sport/tennis/",
-                "Motosport": "https://www.thesun.co.uk/sport/motorsport/",
-                "Rugby": "https://www.thesun.co.uk/sport/rugbyunion/",
-                "Cricket": "https://www.thesun.co.uk/sport/cricket/"
-            },
-            "Technology": {
-                "Technology": "https://www.thesun.co.uk/tech/",
-                "News": "https://www.thesun.co.uk/tech/news-tech/",
-                "Phones and gadgets": "https://www.thesun.co.uk/tech/phones-gadgets/",
-                "Gaming": "https://www.thesun.co.uk/tech/gaming/"
-            },
-            "Health": {
-                "Health": "https://www.thesun.co.uk/health/",
-                "Health News": "https://www.thesun.co.uk/news/health-news/",
-                "News Health": "https://www.thesun.co.uk/health/news-health/",
-                "Wellbeing": "https://www.thesun.co.uk/health/wellbeing/",
-                "Men": "https://www.thesun.co.uk/health/mens-health-and-fitness/",
-                "Women": "https://www.thesun.co.uk/health/womens-health/",
-                "Diet": "https://www.thesun.co.uk/health/diet-fitness/",
-                "Mental": "https://www.thesun.co.uk/health/mental-health/",
-                "Fabulous": "https://www.thesun.co.uk/topic/fabulous-health/"
-            },
+            "General": "https://www.thesun.co.uk/news/worldnews/",
+            "Sports": "https://www.thesun.co.uk/sport/",
+            "Technology": "https://www.thesun.co.uk/tech/",
+            "Health": "https://www.thesun.co.uk/health/",
             "Science": "https://www.thesun.co.uk/news/science/",
             "Politics": "https://www.thesun.co.uk/news/politics/"
         },
@@ -46,7 +14,8 @@
                 "placeholder"
             ],
             "included_patterns": [
-                "https://www.thesun.co.uk/.*/\\d+/.*"
+                "https://www.thesun.co.uk/.*/\\d+/.*",
+                "/\\w+/\\d+/.*"
             ]
         },
         "page_suffix": "page/{number}/",
@@ -62,24 +31,8 @@
     "cbsnews": {
         "main": "https://www.cbsnews.com",
         "topics": {
-            "General": {
-                "World": "https://www.cbsnews.com/latest/world/",
-                "US": "https://www.cbsnews.com/latest/us/",
-                "Entertainment": "https://www.cbsnews.com/latest/entertainment/",
-                "Crime": "https://www.cbsnews.com/crime/"
-            },
-            "Sport": {
-                "Sport": "https://www.cbssports.com/",
-                "Football": "https://www.cbssports.com/nfl/",
-                "Basketball": "https://www.cbssports.com/nba/",
-                "Hockey": "https://www.cbssports.com/nhl/",
-                "Baseball": "https://www.cbssports.com/mlb/",
-                "College Football": "https://www.cbssports.com/college-football/",
-                "College Basketball": "https://www.cbssports.com/college-basketball/",
-                "Soccer": "https://www.cbssports.com/soccer/",
-                "Golf": "https://www.cbssports.com/golf/",
-                "Tennis": "https://www.cbssports.com/tennis/"
-            },
+            "General": "https://www.cbsnews.com/latest/world/",
+            "Sports": "https://www.cbssports.com/",
             "Technology": "https://www.cbsnews.com/latest/technology",
             "Health": "https://www.cbsnews.com/latest/healthwatch/",
             "Science": "https://www.cbsnews.com/latest/science/",
@@ -106,13 +59,8 @@
     "abcnews": {
         "main": "https://abcnews.go.com",
         "topics": {
-            "General": {
-                "US": "https://abcnews.go.com/US",
-                "World": "https://abcnews.go.com/International",
-                "Weather": "https://abcnews.go.com/Alerts/Weather",
-                "Entertainment": "https://abcnews.go.com/Entertainment"
-            },
-            "Sport": "https://abcnews.go.com/Sports",
+            "General": "https://abcnews.go.com/International",
+            "Sports": "https://abcnews.go.com/Sports",
             "Technology": "https://abcnews.go.com/Technology",
             "Health": "https://abcnews.go.com/Health",
             "Politics": "https://abcnews.go.com/Politics"

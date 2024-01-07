@@ -8,16 +8,10 @@
       {% csrf_token %}
 
       <div class="row mb-2">
-        <div class="col-md-5">
+        <div class="col-md-4">
           <div class="form-floating">
             {{ form.search_query|as_crispy_field }}
             <!-- <label class="ms-3" for="{{ form.search_query.id_for_label }}">Search articles</label> -->
-          </div>
-        </div>
-        <div class="col-md-2">
-          <div class="form-floating">
-            {{ form.date_to|as_crispy_field }}
-            <!-- <label class="ms-3" for="{{ form.date_to.id_for_label }}">Date to</label> -->
           </div>
         </div>
         <div class="col-md-2">
@@ -26,10 +20,16 @@
             <!-- <label class="ms-3" for="{{ form.date_from.id_for_label }}">Date from</label> -->
           </div>
         </div>
-        <div class="col-md-2 ps-3 mt-2">
+        <div class="col-md-2">
+          <div class="form-floating">
+            {{ form.date_to|as_crispy_field }}
+            <!-- <label class="ms-3" for="{{ form.date_to.id_for_label }}">Date to</label> -->
+          </div>
+        </div>
+
+        <div class="col-md-3">
           <div class="form-check">
-            {{ form.show_clickbaits|as_crispy_field }}
-            <!-- <label class="btn form-check-label" for="{{ form.show_clickbaits.id_for_label }}">Show clickbaits toggle</label> -->
+            {{form.clickbait_tolerance|as_crispy_field}}
           </div>
         </div>
         <div class="col-md-1 mt-2">

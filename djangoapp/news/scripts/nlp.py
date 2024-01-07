@@ -4,16 +4,52 @@ from gensim.models import Word2Vec
 import pickle
 import os
 import catboost
+import pandas as pd
+from django.conf import settings
 
 
-class Word2VecModel():
-    def __init__(self, model_settings, path_to_w2v) -> None:
-        self.model = Word2Vec.load(path_to_w2v)
-        self.model_settings = model_settings
-        self.is_skipgram = self.model_settings['is_skipgram']
-        self.window_size = self.model_settings['window_size']
-        self.vector_size = self.model_settings['vector_size']
-    
+class NLP():
+    class Word2VecModel():
+        def __init__(self) -> None:
+            model_settings_path = os.path.join(settings.BASE_DIR, 'news', 'config', 'model_settings.json')
+            self.model_settings = return_best_model(path=model_settings_path)
+            
+            w2v_path = os.path.join(settings.BASE_DIR, 'news', 'word2vec_models', self.model_settings['model_path'])
+            self.model = Word2Vec.load(w2v_path)
+
+            self.is_skipgram = self.model_settings['is_skipgram']
+            self.window_size = self.model_settings['window_size']
+            self.vector_size = self.model_settings['vector_size']
+
+    class PredictiveModel():
+        def __init__(self) -> None:
+            model_path = os.path.join(settings.BASE_DIR, 'news', 'predictive_models', 'lightgbm.pkl')
+            self.model = pickle.load(open(model_path, 'rb'))
+        
+    class Scaler():
+        def __init__(self) -> None:
+            scaler_path = os.path.join(settings.BASE_DIR, 'news', 'predictive_models', 'scaler.pkl')
+            self.scaler = pickle.load(open(scaler_path, 'rb'))
+
+    def __init__(self) -> None:
+        w2v = self.Word2VecModel()
+        predictive_model = self.PredictiveModel().model
+        scaler = self.Scaler().scaler
+
+        self.w2v = w2v
+        self.predictive_model = predictive_model
+        self.scaler = scaler
+        self.proba_cutoff = 0.3490965225838074
+
+    def predict_on_text(self, title):
+        
+        # print(text)
+        text = preprocess_title(pd.DataFrame({'title': [title]}))
+        text = get_word_vectors(self.w2v, text['title'][0], aggregation='mean')
+        text = self.scaler.transform([text])
+        # print(len(text))
+        return self.predictive_model.predict_proba(text.reshape(1, -1))
+            
 
 def return_best_model(path: str):
     # Load the best model from the model_settings.json file (best_word2vec property)
@@ -41,9 +77,8 @@ def load_predictive_model(path:str):
 
 ####### PREPROCESSING FUNCTIONS ########
 # remove punctuation
-import nltk
 import string
-from nltk.corpus import words
+from nltk.corpus import words as nltk_corpus_words
 import inflect
 import re 
 from nltk.tokenize import word_tokenize
@@ -177,7 +212,7 @@ def remove_non_ascii_characters_from_list(text_list):
 
 
 
-def remove_non_eng_words(text_list, words = words):
+def remove_non_eng_words(text_list, words = nltk_corpus_words):
     return [word for word in text_list if word.lower() in words]
     
 
@@ -185,7 +220,8 @@ def remove_non_eng_words(text_list, words = words):
 def preprocess_title(df, verbose = False):
 
     # df = cp.deepcopy(df)
-    english_words = set(w.lower() for w in words.words())
+    
+    english_words = set(w.lower() for w in nltk_corpus_words.words())
 
     # remove punctuation and other stuff
     if verbose:
@@ -281,10 +317,3 @@ def preprocess_title(df, verbose = False):
 
 ####### MODEL FUNCTIONS ########
 import pandas as pd
-def predict_on_text(classifier, model_word2vec,scaler, text):
-    # print(text)
-    text = preprocess_title(pd.DataFrame({'title': [text]}))
-    text = get_word_vectors(model_word2vec, text['title'][0], aggregation='mean')
-    text = scaler.transform([text])
-    # print(len(text))
-    return classifier.predict_proba(text.reshape(1, -1))
