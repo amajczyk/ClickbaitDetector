@@ -7,6 +7,9 @@ from news.scripts.nlp import Word2VecModel, return_best_model, load_predictive_m
 from news.scripts.llm import LocalLLM
 from news.vertex.cloud.connections_based_on_docs import VertexAI
 
+from nltk.corpus import wordnet
+
+
 class Singleton(type):
     _instances = {}
     def __call__(cls, *args, **kwargs):
@@ -26,6 +29,10 @@ class ModelLoader(metaclass=Singleton):
         model_path = os.path.join(settings.BASE_DIR, 'news', 'word2vec_models', model_w2v_settings['model_path'])
         self.model_w2v = Word2VecModel(model_w2v_settings, model_path)
 
+        # wordnet is lazy loaded, this poses a problem when using multiprocessing
+        wordnet.ensure_loaded()
+
+
         # Load scaler
         scaler_path = os.path.join(settings.BASE_DIR, 'news', 'predictive_models', 'scaler.pkl')
         self.scaler = pickle.load(open(scaler_path, 'rb'))
@@ -42,3 +49,4 @@ class ModelLoader(metaclass=Singleton):
         
         # load VertexAI
         self.vertex = VertexAI()
+        

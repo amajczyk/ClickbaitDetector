@@ -13,15 +13,18 @@ def validate_date_is_not_future(value):
 class Article(models.Model):
     title = models.CharField(max_length=256)
     content_summary = models.TextField()
-    # pub_date = models.DateTimeField(null=True,blank=True, validators=[validate_date_is_not_future])
     scraped_date = models.DateTimeField(default=timezone.now, validators=[validate_date_is_not_future])
-    # author = models.CharField(max_length=64)
     source_site = models.CharField(max_length=64, default='UNKNOWN') 
     url_from = models.CharField(max_length=256, null=True,blank=True)
-    # clickbait = models.BooleanField(default=False)
+    category = models.CharField(max_length=64, null=True,blank=True)
+    subcategory = models.CharField(max_length=64, null=True,blank=True)
+    
     clickbait_decision_NLP = models.SmallIntegerField(default=-1)  # classic mlp model decision
+    clickbait_probability_NLP = models.FloatField(default=-1)  # classic mlp model decision
     clickbait_decision_LLM = models.SmallIntegerField(default=-1)  # LLM model decision
+    clickbait_probability_LLM = models.FloatField(default=-1)  # LLM model decision
     clickbait_decision_VERTEX = models.SmallIntegerField(default=-1)  # VERTEX AI model decision 
+    
     clickbait_decision_final = models.SmallIntegerField(default=-1) # joined decision
     # 0 - clickbait 0/3 or 0/2
     # 1 - clickbait 1/3
