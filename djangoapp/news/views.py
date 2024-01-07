@@ -308,9 +308,7 @@ def use_generator(request,site,selected_category,scraper):
         
         start += 1
     request.session[site_category]['start'] = start
-    request.session[site_category]['end'] = end + 3
-    print('DEBUG: AFTER :start, end', start, end+3)
-    
+    request.session[site_category]['end'] = end + 3    
             
             
 def get_next_urls(request, sites):
@@ -340,11 +338,9 @@ def scrape_urls(request, site, scraper):
     else:
         hrefs_to_find_urls = scraper.site_variables_dict[site]['topics'][selected_category]
 
-    print(hrefs_to_find_urls)
     site_category = f'{site}_{selected_category}'
     if not request.session.get(site_category,None):
         urls = scraper.scrape_article_urls(hrefs_to_find_urls)
-        print(urls)
         request.session[site_category] = {
             'urls_all': urls,
             'urls_to_scrape': [],
