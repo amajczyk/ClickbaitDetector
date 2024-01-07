@@ -1,6 +1,7 @@
 import os
 
 from django.apps import AppConfig
+from news.scripts.model_loader import ModelLoader
 
 
 class NewsConfig(AppConfig):
@@ -15,6 +16,9 @@ class NewsConfig(AppConfig):
         # Run the download_nltk_data management command when the app is ready
         from django.core import management
         management.call_command('download_nltk_data')
+
+        print('Initial model loading....')
+        model_loader = ModelLoader()
  
 
  

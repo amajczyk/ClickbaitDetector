@@ -3,40 +3,67 @@
 {% extends "news/base.html" %}
 
 {% block content %}
+{% load crispy_forms_tags %}
 
-<form method="post" action="{% url 'news:scrape_articles' %}">
+
+<form method="post" id="selectionForm" action="{% url 'news:scrape_articles' %}">
   {% csrf_token %}
   
   <div class="container">
-    <div class="m-0 p-0 mb-1 d-flex justify-content-between align-items-center">
+    <div class="row m-0 p-0 mb-1">
+      <div class="col-md-6  form-check p-1 pt-4">
+
       <h2>Choose sites:</h2>
-      <button class="btn btn-success" type="submit">Scrape</button>
+
+    </div>
+
+    <div class="col-md-2 form-check p-1 pt-0">
+      {{ form.clickbait_tolerance|as_crispy_field }}
+    </div>
+      <div class="col-md-2 form-check p-1 pt-0">
+        {{form.category|as_crispy_field}}
+      </div>
+      
+      <div class="col-md-1 form-check p-1 pt-4">
+        
+        </div>
+      <div class="col-md-1 form-check p-1 pt-3">
+      <button class="btn btn-success" type="submit" id="submit-button">Scrape</button>
+      </div>
+      
+
+
     </div>
 
     <div class="row p-0 m-0">
+
       <div class="col-md-2 form-check p-1">
-        {{ form.thesun }}
-        <label class="btn btn-lg btn-secondary btn-block w-100" for="{{ form.thesun.id_for_label }}">The Sun UK</label>
+        {{ form.thesun|as_crispy_field }}
       </div>
       <div class="col-md-2 form-check p-1">
-        {{ form.cbsnews }}
-        <label class="btn btn-lg btn-secondary btn-block w-100" for="{{ form.cbsnews.id_for_label }}">CBS News</label>
+        {{ form.cbsnews|as_crispy_field }}
       </div>
       <div class="col-md-2 form-check p-1">
-        {{ form.abcnews }}
-        <label class="btn btn-lg btn-secondary btn-block w-100" for="{{ form.abcnews.id_for_label }}">ABC News</label>
+        {{ form.abcnews|as_crispy_field }}
       </div>
     </div>
   </div>
 </form>
 
-<div class="container mt-2-3">
-  <div class="m-0 p-0 mb-1 d-flex justify-content-between align-items-center">
-    <h2>Results:</h2>
-    <input type="checkbox" class="btn-check" id="btn-check-4" checked autocomplete="off">
-    <label class="btn" for="btn-check-4">Show clickbaits toggle</label>
-  </div>
-  {% include 'news/list_articles.html' %}
+<div class="container mt-2" id="article-container">
+  <h2>Results:</h2>
 </div>
+
+
+<div class="m-5 d-flex justify-content-center d-none" id="spinner">
+  <div class="spinner-border" role="status">
+    <span class="sr-only">Loading...</span>
+  </div>
+</div>
+<div class="container mt-3 mb-3 d-flex justify-content-center">
+  <button type="button" class="btn btn-outline-secondary btn-sm d-none" id="load-more-btn">Load More</button>
+</div>
+
+
 
 {% endblock %}
