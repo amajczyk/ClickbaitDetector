@@ -206,7 +206,7 @@ def load_more_articles(request):
     request.session.save()
     
     articles_html = render_to_string('news/list_articles.html', {'latest_article_list': articles})
-    return JsonResponse({'articles': articles_html})
+    return JsonResponse({'articles_html': articles_html})
 
 
 

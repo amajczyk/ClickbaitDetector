@@ -53,17 +53,17 @@
 <div class="container mt-2" id="article-container">
   <h2>Results:</h2>
 
-  {% include 'news/list_articles.html' %}
+  <!-- {% include 'news/list_articles.html' %} -->
 
 </div>
 
 
-<div class="d-flex justify-content-center d-none" id="spinner">
+<div class="m-5 d-flex justify-content-center d-none" id="spinner">
   <div class="spinner-border" role="status">
     <span class="sr-only">Loading...</span>
   </div>
 </div>
-<div class="container mt-2 d-flex justify-content-center">
+<div class="container mt-3 mb-3 d-flex justify-content-center">
   <button type="button" class="btn btn-outline-secondary btn-sm d-none" id="load-more-btn">Load More</button>
 </div>
 
@@ -77,36 +77,29 @@ $(document).ready(function(){
       url: $(this).attr('action'),
       data: $(this).serialize(),
       success: function(response){
-        $("#article-container").html(response.articles_html);
+        $("#article-container").append(response.articles_html);
         $("#spinner").addClass('d-none');
         $('#load-more-btn').removeClass('d-none');
       }
     });
   });
+  $('#load-more-btn').on('click', function() {
+    $("#load-more-btn").addClass('d-none');
+    $("#spinner").removeClass('d-none');
+    fetch('{% url "news:load_more_articles" %}')
+      .then(response => response.json())
+      .then(data => {
+        console.log(data.articles_html); // Log the data to the console
+        $("#article-container").append(data.articles_html);
+        $("#spinner").addClass('d-none');
+        $('#load-more-btn').removeClass('d-none');
+      })
+      .catch(error => {
+        console.error('Error fetching articles:', error);
+      });
+  });
 });
-$('#load-more-btn').on('click', function() {
-  fetch('{% url "news:load_more_articles" %}')
-    .then(response => response.json())
-    .then(data => {
-      const articleContainer = document.getElementById('article-container');
-      if (typeof data.articles === 'string') {
-        const articleDiv = document.createElement('div');
-        articleDiv.className = 'article';
-        articleDiv.innerHTML = data.articles;
-        articleContainer.appendChild(articleDiv);
-      } else if (Array.isArray(data.articles)) {
-        data.articles.forEach(articleHtml => {
-          const articleDiv = document.createElement('div');
-          articleDiv.className = 'article';
-          articleDiv.innerHTML = articleHtml;
-          articleContainer.appendChild(articleDiv);
-        });
-      }
-    })
-    .catch(error => {
-      console.error('Error fetching articles:', error);
-    });
-});
+
 </script>
 
 {% endblock %}
