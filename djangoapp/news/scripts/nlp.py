@@ -4,16 +4,43 @@ from gensim.models import Word2Vec
 import pickle
 import os
 import catboost
+import pandas as pd
 
+class NLP():
+    class Word2VecModel():
+        def __init__(self, model_settings, path_to_w2v) -> None:
+            self.model = Word2Vec.load(path_to_w2v)
+            self.model_settings = model_settings
+            self.is_skipgram = self.model_settings['is_skipgram']
+            self.window_size = self.model_settings['window_size']
+            self.vector_size = self.model_settings['vector_size']
 
-class Word2VecModel():
-    def __init__(self, model_settings, path_to_w2v) -> None:
-        self.model = Word2Vec.load(path_to_w2v)
-        self.model_settings = model_settings
-        self.is_skipgram = self.model_settings['is_skipgram']
-        self.window_size = self.model_settings['window_size']
-        self.vector_size = self.model_settings['vector_size']
-    
+    class PredictiveModel():
+        def __init__(self, predictive_model) -> None:
+            self.model = predictive_model
+        
+    class Scaler():
+        def __init__(self, scaler) -> None:
+            self.scaler = scaler
+
+    def __init__(self, w2v_settings, w2v_path, predictive_model, scaler) -> None:
+        w2v = self.Word2VecModel(w2v_settings, w2v_path)
+        predictive_model = self.PredictiveModel(predictive_model)
+        scaler = self.Scaler(scaler)
+
+        self.w2v = w2v
+        self.predictive_model = predictive_model
+        self.scaler = scaler
+
+    def predict_on_text(self, title):
+        
+        # print(text)
+        text = preprocess_title(pd.DataFrame({'title': [text]}))
+        text = get_word_vectors(self.w2v, text['title'][0], aggregation='mean')
+        text = self.scaler.transform([text])
+        # print(len(text))
+        return self.predictive_model.predict_proba(text.reshape(1, -1))
+            
 
 def return_best_model(path: str):
     # Load the best model from the model_settings.json file (best_word2vec property)
@@ -281,10 +308,3 @@ def preprocess_title(df, verbose = False):
 
 ####### MODEL FUNCTIONS ########
 import pandas as pd
-def predict_on_text(classifier, model_word2vec,scaler, text):
-    # print(text)
-    text = preprocess_title(pd.DataFrame({'title': [text]}))
-    text = get_word_vectors(model_word2vec, text['title'][0], aggregation='mean')
-    text = scaler.transform([text])
-    # print(len(text))
-    return classifier.predict_proba(text.reshape(1, -1))
