@@ -276,6 +276,8 @@ def browse_articles(request):
 def use_generator(request,site,selected_category,scraper):
     
     # doesn't return anything, updates the session variables
+    if selected_category == 'front_page':
+        selected_category = 'main'
     site_category = f'{site}_{selected_category}'
     
     start = request.session[site_category]['start']
@@ -289,12 +291,13 @@ def use_generator(request,site,selected_category,scraper):
             request.session[site_category]['urls_to_scrape'].append(
                 request.session[site_category]['urls_all'][start]
             )
-        except IndexError:
+        except IndexError as e:
+            print(e)
             print('DEBUG: IndexError')
             request.session[site_category]['page'] +=  1
             page_part = scraper.site_variables_dict[site]['page_suffix'].format(request.session[site_category]['page']) 
             urls = scraper.scrape_article_urls(
-                [f"{scraper.site_variables_dict[site][selected_category]}{page_part}"]
+                f"{scraper.site_variables_dict[site][selected_category]}{page_part}"
             )
             request.session[site_category]['urls_all'] = urls
             start,end = 0, end-start
@@ -310,10 +313,18 @@ def use_generator(request,site,selected_category,scraper):
             
             
 def get_next_urls(request, sites):
+    selected_category = request.session['selected_category']
+    if selected_category == 'front_page':
+        selected_category = 'main'
+
+    
+
     ttt = []
     for site in sites:
-        ttt.append(request.session[site]['urls_to_scrape'])
-        request.session[site]['urls_to_scrape'] = []
+        site_category = f'{site}_{selected_category}'
+
+        ttt.append(request.session[site_category]['urls_to_scrape'])
+        request.session[site_category]['urls_to_scrape'] = []
     
     urls = [item for sublist in zip(*ttt) for item in sublist]
     return urls
@@ -329,11 +340,6 @@ def scrape_urls(request, site, scraper):
         hrefs_to_find_urls = scraper.site_variables_dict[site]['topics'][selected_category]
 
     print(hrefs_to_find_urls)
-
-    # if not a list make it a list
-    if not isinstance(hrefs_to_find_urls, list):
-        hrefs_to_find_urls = [hrefs_to_find_urls]
-    print(selected_category)
     site_category = f'{site}_{selected_category}'
     if not request.session.get(site_category,None):
         urls = scraper.scrape_article_urls(hrefs_to_find_urls)

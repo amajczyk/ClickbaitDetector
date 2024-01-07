@@ -63,13 +63,13 @@ class TestScraper(TestCase):
 
     def test_scrape_article_urls(self):
         # Test scraping urls from the main website
-        result= self.scraper.scrape_article_urls([self.scraper.site_variables_dict['thesun']['main']])
+        result= self.scraper.scrape_article_urls(self.scraper.site_variables_dict['thesun']['main'])
         self.assertGreater(len(result), 0)
         
-        result= self.scraper.scrape_article_urls([self.scraper.site_variables_dict['cbsnews']['main']])
+        result= self.scraper.scrape_article_urls(self.scraper.site_variables_dict['cbsnews']['main'])
         self.assertGreater(len(result), 0)
         
-        result= self.scraper.scrape_article_urls([self.scraper.site_variables_dict['abcnews']['main']])
+        result= self.scraper.scrape_article_urls(self.scraper.site_variables_dict['abcnews']['main'])
         self.assertGreater(len(result), 0)
 
 
