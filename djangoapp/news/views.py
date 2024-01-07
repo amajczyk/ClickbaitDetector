@@ -10,7 +10,7 @@ from .models import Article
 
 from .forms import URLForm, SiteSelectionForm, SearchArticlesForm
 
-from news.scripts.nlp import predict_on_text
+from news.scripts.nlp import NLP
 from news.scripts.model_loader import ModelLoader
 from news.scripts.scraping import NotSupportedWebsiteException
 from news.vertex.cloud.connections_based_on_docs import VertexAI
@@ -40,9 +40,7 @@ def check_url(request):
 
             # Access the loaded models
             scraper = model_loader.scraper
-            model_w2v = model_loader.model_w2v
-            scaler = model_loader.scaler
-            predictive_model = model_loader.predictive_model
+            nlp = model_loader.nlp
             vertex = model_loader.vertex
             llm = model_loader.llm
             summarizer = model_loader.summarizer
@@ -60,7 +58,7 @@ def check_url(request):
                 article = Article.objects.get(url_from=url)
             except:
                 content_summary = summarizer(scraped_data['content'], max_length=200, min_length=40, do_sample=False)[0]["summary_text"]
-                clickbait_decision_NLP = classify_NLP(title, predictive_model, model_w2v, scaler)
+                clickbait_decision_NLP = classify_NLP(title, nlp)
                 clickbait_decision_LLM = classify_LLM(title, llm)
                 clickbait_decision_VERTEX = classify_VERTEX(title, vertex)
                 clickbait_decision_final = make_final_decision(clickbait_decision_NLP, clickbait_decision_LLM, clickbait_decision_VERTEX)
@@ -89,31 +87,30 @@ def check_url(request):
 
 
 
-def classify_NLP(data, predictive_model, model_w2v,scaler):
-    proba_cutoff = 0.3490965225838074
-    clickbait_decision_NLP_proba = predict_on_text(predictive_model, model_w2v, scaler, data)
+def classify_NLP(title, nlp):
+    clickbait_decision_NLP_proba = nlp.predict_on_text(title)
     clickbait_decision_NLP_proba = clickbait_decision_NLP_proba[0][1]
-    return int(clickbait_decision_NLP_proba > proba_cutoff)
+    return int(clickbait_decision_NLP_proba > nlp.proba_cutoff)
 
-def classify_LLM(data, llm):
+def classify_LLM(title, llm):
     proba_cutoff = 0.5
-    probability = llm.predict(data)
-    print(probability)
-    return int(probability > proba_cutoff)
+    probability = llm.predict(title)
+    result = int(probability > proba_cutoff)
+    return result
     
 
-def classify_VERTEX(data, vertex, summary=None):
+def classify_VERTEX(title, vertex, summary=None):
     try:
         if summary:
-            clickbait_decision_VERTEX = vertex.run(title=data, summary=summary)
+            clickbait_decision_VERTEX = vertex.run(title=title, summary=summary)
         else:
-            clickbait_decision_VERTEX = vertex.run(title=data)
+            clickbait_decision_VERTEX = vertex.run(title=title)
         return int(clickbait_decision_VERTEX)
     except:
         return -1
 
 
-def process_article(url, scraper, predictive_model, model_w2v, scaler, llm, summarizer,vertex, selected_category):
+def process_article(url, scraper, nlp, llm, summarizer,vertex, selected_category):
     # qery the database for the article using url
     # if it exists, return it
     try:
@@ -123,7 +120,7 @@ def process_article(url, scraper, predictive_model, model_w2v, scaler, llm, summ
         scraped_data = scraper.scrape(url)
         scraped_data['url'] = url
         title = scraped_data['title']
-        clickbait_decision_NLP = int(classify_NLP(title, predictive_model, model_w2v, scaler))
+        clickbait_decision_NLP = int(classify_NLP(title, nlp))
         clickbait_decision_LLM = int(classify_LLM(title, llm))
         content_summary = summarizer(scraped_data['content'], max_length=200, min_length=40, do_sample=False)[0]['summary_text'].replace(' .','.')
 
@@ -165,9 +162,7 @@ def scrape_articles(request):
 
             model_loader = ModelLoader()
             scraper = model_loader.scraper
-            model_w2v = model_loader.model_w2v
-            scaler = model_loader.scaler
-            predictive_model = model_loader.predictive_model
+            nlp = model_loader.nlp
             vertex = model_loader.vertex
             llm = model_loader.llm
             summarizer = model_loader.summarizer
@@ -176,11 +171,10 @@ def scrape_articles(request):
             for site in selected_sites:
                 scrape_urls(request, site, scraper)
             urls = get_next_urls(request, selected_sites)
-            process_article_partial = partial(process_article, scraper=scraper, predictive_model=predictive_model, model_w2v=model_w2v, scaler=scaler, llm=llm, summarizer=summarizer,vertex=vertex,selected_category=selected_category)
+            process_article_partial = partial(process_article, scraper=scraper, nlp=nlp, llm=llm, summarizer=summarizer,vertex=vertex,selected_category=selected_category)
             with concurrent.futures.ThreadPoolExecutor(max_workers=9) as executor:
                 articles = list(executor.map(process_article_partial, urls))
-
-
+                
             context = {'form': form}
             articles_html =  render_to_string('news/list_articles.html', {'latest_article_list': articles})
             return JsonResponse({'articles_html': articles_html})
@@ -194,9 +188,7 @@ def load_more_articles(request):
     
     model_loader = ModelLoader()
     scraper = model_loader.scraper
-    model_w2v = model_loader.model_w2v
-    scaler = model_loader.scaler
-    predictive_model = model_loader.predictive_model
+    nlp = model_loader.nlp
     vertex = model_loader.vertex
     llm = model_loader.llm
     summarizer = model_loader.summarizer
@@ -206,7 +198,7 @@ def load_more_articles(request):
     for site in selected_sites:
         use_generator(request,site,selected_category,scraper)
     urls = get_next_urls(request, selected_sites)
-    process_article_partial = partial(process_article, scraper=scraper, predictive_model=predictive_model, model_w2v=model_w2v, scaler=scaler, llm=llm, summarizer=summarizer,vertex=vertex, selected_category=selected_category)
+    process_article_partial = partial(process_article, scraper=scraper, nlp=nlp, llm=llm, summarizer=summarizer,vertex=vertex, selected_category=selected_category)
     with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
         articles = list(executor.map(process_article_partial, urls))    
     request.session.save()

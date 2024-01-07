@@ -31,7 +31,7 @@ print('Time now: ', timezone.now())
 import unittest
 from unittest.mock import patch
 from news.scripts.scraping import Scraper 
-from news.scripts.nlp import load_predictive_model, Word2VecModel, predict_on_text, return_best_model
+from news.scripts.nlp import NLP
 from news.scripts.llm import LocalLLM
 
 
@@ -101,21 +101,13 @@ class TestScraper(TestCase):
 class NLPPredictorTests(TestCase):
     def test_predict_on_text(self):
         # Test the model on a non-clickbait title
-        predictive_model_path = os.path.join(settings.BASE_DIR, 'news', 'predictive_models', 'lightgbm.pkl')
-        predictive_model = pickle.load(open(predictive_model_path, 'rb'))
-        scaler_path = os.path.join(settings.BASE_DIR, 'news', 'predictive_models', 'scaler.pkl')
-        scaler = pickle.load(open(scaler_path, 'rb'))
-        model_settings_path = os.path.join(settings.BASE_DIR, 'news', 'config', 'model_settings.json')
-        model_w2v_settings = return_best_model(path=model_settings_path)
-        model_path = os.path.join(settings.BASE_DIR, 'news', 'word2vec_models', model_w2v_settings['model_path'])
-        model_w2v = Word2VecModel(model_w2v_settings,model_path)
-        proba_cutoff = 0.3490965225838074
-        result = predict_on_text(predictive_model, model_w2v, scaler, CLICKBAIT_TITLE)
-        self.assertGreater(result[0][1], proba_cutoff)
+        nlp = NLP()
+        result = nlp.predict_on_text(CLICKBAIT_TITLE)
+        self.assertGreater(result[0][1], nlp.proba_cutoff)
         
         # Test the model on a non-clickbait title
-        result = predict_on_text(predictive_model, model_w2v, scaler, NOT_CLICKBAIT_TITLE)
-        self.assertLess(result[0][1], proba_cutoff)
+        result = nlp.predict_on_text(NOT_CLICKBAIT_TITLE)
+        self.assertLess(result[0][1], nlp.proba_cutoff)
         
         
 # class LLMPredictorTests(TestCase):

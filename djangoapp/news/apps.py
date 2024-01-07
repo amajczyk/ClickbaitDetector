@@ -1,10 +1,6 @@
 import os
 
 from django.apps import AppConfig
-from django.conf import settings
-
-from news.scripts.scraping import Scraper
-from news.scripts.nlp import Word2VecModel, return_best_model, predict_on_text, load_predictive_model
 from news.scripts.model_loader import ModelLoader
 
 
@@ -23,4 +19,6 @@ class NewsConfig(AppConfig):
 
         print('Initial model loading....')
         model_loader = ModelLoader()
+ 
+
  
