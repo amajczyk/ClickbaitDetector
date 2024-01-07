@@ -41,7 +41,13 @@
         data: $(this).serialize(),
         success: function(response){
           // Update the details section with the response from the server
-          $("#detailsSection").html(response.html);
+          if (response.error) {
+            $("#detailsSection").html('');
+            alert(response.error);
+
+          } else {
+            $("#detailsSection").html(response.html);
+          }
         }
       });
     });

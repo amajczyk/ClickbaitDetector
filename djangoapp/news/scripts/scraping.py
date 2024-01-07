@@ -4,6 +4,9 @@ import json
 from bs4 import BeautifulSoup
 
 
+class NotSupportedWebsiteException(Exception):
+    pass
+
 class Scraper:
     def __init__(self, path_to_site_variables: str):
         self.site_variables_dict = self.get_site_variables_dict(path_to_site_variables)
@@ -72,7 +75,9 @@ class Scraper:
             None,
         )
         if not site_variables:
-            raise Exception("Website not supported")
+            raise NotSupportedWebsiteException(
+                f"Scraping for this website is not supported. Supported websites are: {', '.join(self.site_variables_dict.keys())}"
+            )
         return site_variables
 
     @staticmethod
@@ -166,6 +171,13 @@ class Scraper:
         return result
 
     def scrape(self, url: str):
+        print(url)
+        if not url.startswith("http://") and not url.startswith("https://"):
+            print('tu')
+            raise NotSupportedWebsiteException(
+                f"Scraping for this website is not supported. Supported websites are: {', '.join(self.site_variables_dict.keys())}"
+            )
+        print('tutaj')
         site_dict = self.discern_website_from_url(url)
         result_dict = self.scrape_content(
             url,

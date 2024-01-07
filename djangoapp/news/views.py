@@ -12,6 +12,7 @@ from .forms import URLForm, SiteSelectionForm, SearchArticlesForm
 
 from news.scripts.nlp import predict_on_text
 from news.scripts.model_loader import ModelLoader
+from news.scripts.scraping import NotSupportedWebsiteException
 from news.vertex.cloud.connections_based_on_docs import VertexAI
 
 from django.db.models import Q
@@ -34,7 +35,7 @@ def check_url(request):
         form = URLForm(request.POST)
         if form.is_valid():
             url = form.cleaned_data['url']
-
+            print
             model_loader = ModelLoader()
 
             # Access the loaded models
@@ -47,8 +48,12 @@ def check_url(request):
             summarizer = model_loader.summarizer
             
 
-            
-            scraped_data = scraper.scrape(url)
+            try:
+                scraped_data = scraper.scrape(url)
+            except NotSupportedWebsiteException as e:
+                return JsonResponse({'error': str(e)})
+
+
             title = scraped_data['title']
      
             try:
@@ -77,6 +82,7 @@ def check_url(request):
             html_content = render_to_string('news/article_info.html', {'article': article})
             return JsonResponse({'html': html_content})    
     else:
+        print('nie fa')
         form = URLForm()
 
     return render(request, 'news/check_url.html', {'form': form})
