@@ -72,9 +72,8 @@ def check_url(request):
                     clickbait_decision_VERTEX = clickbait_decision_VERTEX,
                     clickbait_decision_final = clickbait_decision_final,
                 )
+                article.save()
                 
-            
-            article.save()
             html_content = render_to_string('news/article_info.html', {'article': article})
             return JsonResponse({'html': html_content})    
     else:
@@ -177,8 +176,8 @@ def scrape_articles(request):
 
 
             context = {'form': form}
-            context['latest_article_list'] = articles
-            return render(request, 'news/index.html', context)
+            articles_html =  render_to_string('news/list_articles.html', {'latest_article_list': articles})
+            return JsonResponse({'articles_html': articles_html})
     else:
         form = SiteSelectionForm()
 

@@ -11,16 +11,17 @@ class URLForm(forms.Form):
 
 
 class SiteSelectionForm(forms.Form):
-    thesun = forms.BooleanField(required=False, initial=True)
-    cbsnews = forms.BooleanField(required=False, initial=True)
-    abcnews = forms.BooleanField(required=False, initial=True)
+    thesun = forms.BooleanField(required=False, initial=True, label='The Sun')
+    cbsnews = forms.BooleanField(required=False, initial=True, label='CBS News')
+    abcnews = forms.BooleanField(required=False, initial=True, label='ABC News')
     clickbait_tolerance = forms.ChoiceField(
         choices=[
             ('0', '3/3'),
             ('1', '2/3'),
             ('2', '1/3'),
             ('3', '0'),
-        ]
+        ],
+        required=False
     )
     category = forms.ChoiceField(
         choices=[
@@ -31,9 +32,11 @@ class SiteSelectionForm(forms.Form):
             ('Health', 'Health'),
             ('Technology', 'Technology'),
         ],
-        initial='front_page'
-    )
+        initial='front_page',
+        required=False
 
+    )
+    
 
 
 class SearchArticlesForm(forms.Form):

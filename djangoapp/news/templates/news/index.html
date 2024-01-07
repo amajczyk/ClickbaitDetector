@@ -6,16 +6,33 @@
 {% load crispy_forms_tags %}
 
 
-<form method="post" action="{% url 'news:scrape_articles' %}">
+<form method="post" id="selectionForm" action="{% url 'news:scrape_articles' %}">
   {% csrf_token %}
   
   <div class="container">
-    <div class="m-0 p-0 mb-1 d-flex justify-content-between align-items-center">
+    <div class="row m-0 p-0 mb-1">
+      <div class="col-md-6  form-check p-1 pt-4">
+
       <h2>Choose sites:</h2>
 
-      {{form.clickbait_tolerance|as_crispy_field}}
+    </div>
 
-      <button class="btn btn-success" type="submit">Scrape</button>
+    <div class="col-md-2 form-check p-1 pt-0">
+      {{ form.clickbait_tolerance|as_crispy_field }}
+    </div>
+      <div class="col-md-2 form-check p-1 pt-0">
+        {{form.category|as_crispy_field}}
+      </div>
+      
+      <div class="col-md-1 form-check p-1 pt-4">
+        
+        </div>
+      <div class="col-md-1 form-check p-1 pt-3">
+      <button class="btn btn-success" type="submit" id="submit-button">Scrape</button>
+      </div>
+      
+
+
     </div>
 
     <div class="row p-0 m-0">
@@ -31,50 +48,65 @@
       </div>
     </div>
   </div>
-  {{form.category|as_crispy_field}}
 </form>
 
-<div class="container mt-2-3" id="article-container">
-    <h2>Results:</h2>
+<div class="container mt-2" id="article-container">
+  <h2>Results:</h2>
 
-    {% include 'news/list_articles.html' %}
+  {% include 'news/list_articles.html' %}
 
 </div>
 
 
-
-<!-- Load More Button -->
-<button id="load-more-btn">Load More</button>
+<div class="d-flex justify-content-center d-none" id="spinner">
+  <div class="spinner-border" role="status">
+    <span class="sr-only">Loading...</span>
+  </div>
+</div>
+<div class="container mt-2 d-flex justify-content-center">
+  <button type="button" class="btn btn-outline-secondary btn-sm d-none" id="load-more-btn">Load More</button>
+</div>
 
 <script>
-  document.getElementById('load-more-btn').addEventListener('click', function() {
-      fetch('{% url "news:load_more_articles" %}')
-          .then(response => response.json())
-          .then(data => {
-              // Check if data.articles is a string (HTML for a single article)
-              if (typeof data.articles === 'string') {
-                  const articleContainer = document.getElementById('article-container');
-                  const articleDiv = document.createElement('div');
-                  articleDiv.className = 'article';
-                  articleDiv.innerHTML = data.articles;
-                  articleContainer.appendChild(articleDiv);
-              } else if (Array.isArray(data.articles)) {
-                  // If data.articles is an array, iterate over it
-                  const articleContainer = document.getElementById('article-container');
-                  data.articles.forEach(articleHtml => {
-                      const articleDiv = document.createElement('div');
-                      articleDiv.className = 'article';
-                      articleDiv.innerHTML = articleHtml;
-                      articleContainer.appendChild(articleDiv);
-                  });
-              } else {
-                  // Handle other scenarios if needed
-              }
-          })
-          .catch(error => {
-              console.error('Error fetching articles:', error);
-          });
+$(document).ready(function(){
+  $("#selectionForm").submit(function(event){
+    event.preventDefault();
+    $("#spinner").removeClass('d-none');
+    $.ajax({
+      type: $(this).attr('method'),
+      url: $(this).attr('action'),
+      data: $(this).serialize(),
+      success: function(response){
+        $("#article-container").html(response.articles_html);
+        $("#spinner").addClass('d-none');
+        $('#load-more-btn').removeClass('d-none');
+      }
+    });
   });
+});
+$('#load-more-btn').on('click', function() {
+  fetch('{% url "news:load_more_articles" %}')
+    .then(response => response.json())
+    .then(data => {
+      const articleContainer = document.getElementById('article-container');
+      if (typeof data.articles === 'string') {
+        const articleDiv = document.createElement('div');
+        articleDiv.className = 'article';
+        articleDiv.innerHTML = data.articles;
+        articleContainer.appendChild(articleDiv);
+      } else if (Array.isArray(data.articles)) {
+        data.articles.forEach(articleHtml => {
+          const articleDiv = document.createElement('div');
+          articleDiv.className = 'article';
+          articleDiv.innerHTML = articleHtml;
+          articleContainer.appendChild(articleDiv);
+        });
+      }
+    })
+    .catch(error => {
+      console.error('Error fetching articles:', error);
+    });
+});
 </script>
 
 {% endblock %}
