@@ -307,7 +307,9 @@ def preprocess_title(df, verbose = False):
     stop_words = set(stopwords.words('english'))
     df['title'] = df['title'].apply(lambda x: [word for word in x if word not in stop_words])
 
-
+    # remove spaces
+    df['title'] = df['title'].apply(lambda x: [word for word in x if word != ' '])
+    
 
 
 
