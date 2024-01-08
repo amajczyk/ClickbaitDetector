@@ -168,3 +168,7 @@ modelling/results/backup/*
 modelling/data/*
 
 
+modelling/word2vec_selection/catboost_info/catboost_training.json
+modelling/word2vec_selection/catboost_info/learn_error.tsv
+modelling/word2vec_selection/catboost_info/time_left.tsv
+modelling/word2vec_selection/catboost_info/learn/events.out.tfevents
