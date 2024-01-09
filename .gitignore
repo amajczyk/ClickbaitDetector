@@ -159,7 +159,6 @@ cython_debug/
 # .idea
 .idea/
 
-# modelling
 modelling/word2vec_models/*
 !modelling/word2vec_models/word2vec_vs20_win8_sg1.model
 modelling/catboost_info/*
