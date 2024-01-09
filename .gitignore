@@ -160,6 +160,7 @@ cython_debug/
 .idea/
 
 modelling/word2vec_models/*
+modelling/word2vec_models/word2vec_vs100_win7_sg0.model
 !modelling/word2vec_models/word2vec_vs20_win8_sg1.model
 modelling/catboost_info/*
 modelling/word2vec_selection/results/backup/*
