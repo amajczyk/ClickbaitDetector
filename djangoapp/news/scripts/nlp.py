@@ -39,7 +39,7 @@ class NLP():
         self.w2v = w2v
         self.predictive_model = predictive_model
         self.scaler = scaler
-        self.proba_cutoff = 0.3490965225838074
+        self.proba_cutoff = 0.30123012301230123
 
     def predict_on_text(self, title):
         
