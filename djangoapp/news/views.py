@@ -13,7 +13,7 @@ from .forms import URLForm, SiteSelectionForm, SearchArticlesForm
 from news.scripts.nlp import NLP
 from news.scripts.model_loader import ModelLoader
 from news.scripts.scraping import NotSupportedWebsiteException
-from news.vertex.cloud.connections_based_on_docs import VertexAI
+from news.vertex.cloud.vertex_connection import VertexAI
 
 from django.db.models import Q
 
