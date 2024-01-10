@@ -13,7 +13,7 @@ from .forms import URLForm, SiteSelectionForm, SearchArticlesForm
 from news.scripts.nlp import NLP
 from news.scripts.model_loader import ModelLoader
 from news.scripts.scraping import NotSupportedWebsiteException
-from news.vertex.cloud.connections_based_on_docs import VertexAI
+from news.vertex.cloud.vertex_connection import VertexAI
 
 from django.db.models import Q
 
@@ -57,8 +57,8 @@ def check_url(request):
                 article = Article.objects.get(url_from=url)
             except:
                 content_summary = summarizer(scraped_data['content'], max_length=200, min_length=40, do_sample=False)[0]["summary_text"]
-                clickbait_decision_NLP = classify_NLP(title, nlp)
-                clickbait_decision_LLM = classify_LLM(title, llm)
+                clickbait_decision_NLP, clickbait_probability_NLP = classify_NLP(title, nlp)
+                clickbait_decision_LLM, clickbait_probability_LLM = classify_LLM(title, llm)
                 clickbait_decision_VERTEX = classify_VERTEX(title, vertex)
                 clickbait_decision_final = make_final_decision(clickbait_decision_NLP, clickbait_decision_LLM, clickbait_decision_VERTEX)
                 
@@ -70,7 +70,9 @@ def check_url(request):
                     url_from=url,
                     source_site=scraped_data['source_site'],
                     clickbait_decision_NLP = clickbait_decision_NLP,
+                    clickbait_probability_NLP = clickbait_probability_NLP,
                     clickbait_decision_LLM = int(clickbait_decision_LLM),
+                    clickbait_probability_LLM = clickbait_probability_LLM,
                     clickbait_decision_VERTEX = clickbait_decision_VERTEX,
                     clickbait_decision_final = clickbait_decision_final,
                 )
@@ -88,13 +90,16 @@ def check_url(request):
 def classify_NLP(title, nlp):
     clickbait_decision_NLP_proba = nlp.predict_on_text(title)
     clickbait_decision_NLP_proba = clickbait_decision_NLP_proba[0][1]
-    return int(clickbait_decision_NLP_proba > nlp.proba_cutoff)
+    decision = int(clickbait_decision_NLP_proba > nlp.proba_cutoff)
+    probability = round(clickbait_decision_NLP_proba, 3)
+    return decision, probability
 
 def classify_LLM(title, llm):
     proba_cutoff = 0.5
     probability = llm.predict(title)
-    result = int(probability > proba_cutoff)
-    return result
+    decision = int(probability > proba_cutoff)
+    probability = round(probability, 3)
+    return decision, probability
     
 
 def classify_VERTEX(title, vertex, summary=None):
@@ -118,8 +123,8 @@ def process_article(url, scraper, nlp, llm, summarizer,vertex, selected_category
         scraped_data = scraper.scrape(url)
         scraped_data['url'] = url
         title = scraped_data['title']
-        clickbait_decision_NLP = int(classify_NLP(title, nlp))
-        clickbait_decision_LLM = int(classify_LLM(title, llm))
+        clickbait_decision_NLP, clickbait_probability_NLP = classify_NLP(title, nlp)
+        clickbait_decision_LLM, clickbait_probability_LLM = classify_LLM(title, llm)
         content_summary = summarizer(scraped_data['content'], max_length=200, min_length=40, do_sample=False)[0]['summary_text'].replace(' .','.')
 
         vertex = VertexAI() 
@@ -134,7 +139,9 @@ def process_article(url, scraper, nlp, llm, summarizer,vertex, selected_category
             source_site=scraped_data['source_site'],
             category = selected_category,
             clickbait_decision_NLP = clickbait_decision_NLP,
+            clickbait_probability_NLP = clickbait_probability_NLP,
             clickbait_decision_LLM = clickbait_decision_LLM,
+            clickbait_probability_LLM = clickbait_probability_LLM,
             clickbait_decision_VERTEX=clickbait_decision_VERTEX,
             clickbait_decision_final=clickbait_decision_final,
         )

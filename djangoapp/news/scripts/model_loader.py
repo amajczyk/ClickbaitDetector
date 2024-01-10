@@ -1,3 +1,8 @@
+"""
+summarizer model by Falconsai/text_summarization from huggingface - https://huggingface.co/Falconsai/text_summarization
+Under Apache 2.0 License
+"""
+
 import os
 import pickle
 from django.conf import settings

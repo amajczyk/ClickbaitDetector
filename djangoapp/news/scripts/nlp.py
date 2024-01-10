@@ -39,7 +39,7 @@ class NLP():
         self.w2v = w2v
         self.predictive_model = predictive_model
         self.scaler = scaler
-        self.proba_cutoff = 0.3490965225838074
+        self.proba_cutoff = 0.30123012301230123
 
     def predict_on_text(self, title):
         
@@ -307,6 +307,9 @@ def preprocess_title(df, verbose = False):
     stop_words = set(stopwords.words('english'))
     df['title'] = df['title'].apply(lambda x: [word for word in x if word not in stop_words])
 
+
+    # remove spaces
+    df['title'] = df['title'].apply(lambda x: [word for word in x if word != ' '])
 
 
 
