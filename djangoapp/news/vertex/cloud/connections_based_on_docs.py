@@ -108,9 +108,9 @@ class VertexAI:
         self.load_config()
         self.load_model()
         prediction = self.predict()
-        print(f"Prediction: {prediction} for prompt: {self.prompt}")
+        # print(f"Prediction: {prediction} for prompt: {self.prompt}")
         return_value = False if prediction.strip() == '0' else True
-        print(f"Return value: {return_value}")
+        # print(f"Return value: {return_value}")
         return return_value
 
 
