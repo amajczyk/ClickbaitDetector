@@ -1,3 +1,6 @@
+## model by christinacdl/clickbait_binary_detection from huggingface - https://huggingface.co/christinacdl/clickbait_binary_detection
+## Under MIT License 
+
 from transformers import AutoTokenizer, AutoTokenizer, AutoModelForSequenceClassification, pipeline
 from torch.nn.functional import softmax
 
