@@ -22,7 +22,6 @@ $(document).ready(function(){
       fetch(loadMoreArticlesUrl)
         .then(response => response.json())
         .then(data => {
-          console.log(data.articles_html); // Log the data to the console
           $("#article-container").append(data.articles_html);
           $("#spinner").addClass('d-none');
           $('#load-more-btn').removeClass('d-none');

@@ -3,9 +3,11 @@ from datetime import datetime, timedelta
 from django.utils import timezone
 
 
+
+
 class URLForm(forms.Form):
     url = forms.URLField(
-        label="", widget=forms.TextInput(attrs={"placeholder": "Enter article URL"})
+        label="Enter article URL", widget=forms.TextInput()
     )
 
 
@@ -25,14 +27,14 @@ class SiteSelectionForm(forms.Form):
     )
     category = forms.ChoiceField(
         choices=[
-            ("front_page", "Front Page"),
+            ("main", "Front Page"),
             ("General", "General"),
             ("Politics", "Politics"),
             ("Sports", "Sports"),
             ("Health", "Health"),
             ("Technology", "Technology"),
         ],
-        initial="front_page",
+        initial="main",
         required=False,
     )
 
@@ -60,7 +62,7 @@ class SearchArticlesForm(forms.Form):
 
     categories = forms.MultipleChoiceField(
         choices=[
-            ("front_page", "Front Page"),
+            ("main", "Front Page"),
             ("general", "General"),
             ("politics", "Politics"),
             ("sports", "Sports"),
@@ -69,6 +71,7 @@ class SearchArticlesForm(forms.Form):
         ],
         required=False,
         widget=forms.CheckboxSelectMultiple,
+        initial=["main", "general", "politics", "sports", "health", "technology"],
     )
 
     def __init__(self, *args, **kwargs):

@@ -211,8 +211,6 @@ def update_session_variables(
     If the user changes the category or the sites, the session variables are kept track of.
     This is the function that stops the user from scraping the same urls again and limits the number of urls that can be scraped per click to 3 per site.
     """
-    if selected_category == "front_page":
-        selected_category = "main"
     site_category = f"{site}_{selected_category}"
 
     start = request.session[site_category]["start"]
@@ -256,9 +254,6 @@ def get_next_urls(request: HttpRequest, sites: List[str] = None) -> List[str]:
     """
 
     selected_category = request.session["selected_category"]
-    if selected_category == "front_page":
-        selected_category = "main"
-
     site_url_lists = []
     for site in sites:
         site_category = f"{site}_{selected_category}"
@@ -268,9 +263,7 @@ def get_next_urls(request: HttpRequest, sites: List[str] = None) -> List[str]:
             request.session[site_category]["urls_to_scrape"] = []
 
     urls = [item for sublist in zip(*site_url_lists) for item in sublist]
-    print(urls)
     if not urls:
-        print('tu')
         raise NoMoreUrlsException(
             "There are no more urls to scrape from this category."
         )
@@ -285,8 +278,7 @@ def scrape_urls(
     It scrapes all the available urls from the selected sites and categories and stores them in session variables.
     """
     selected_category = request.session["selected_category"]
-    if selected_category == "front_page":
-        selected_category = "main"
+    if selected_category == "main":
         hrefs_to_find_urls = scraper.site_variables_dict[site][selected_category]
     else:
         hrefs_to_find_urls = scraper.site_variables_dict[site]["topics"][

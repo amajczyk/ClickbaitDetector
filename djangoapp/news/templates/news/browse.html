@@ -24,7 +24,7 @@
           </div>
         </div>
 
-        <div class="col-md-3">
+        <div class="col-md-2">
           <div class="form-check">
             {{form.clickbait_tolerance|as_crispy_field}}
           </div>
@@ -33,7 +33,13 @@
           <button class="btn btn-success" type="submit">Search</button>
         </div>
       </div>
-
+      
+      <div class="row">
+        <div class="form-check">
+          <!-- FOR FIELD IN CATEGORIES DO EACH CHOICE IN THE SAME LIE -->
+          {{form.categories|as_crispy_field}}
+        </div>
+      </div>
       <div class="card">
         <div class="card-body">
           <div class="row px-2">
