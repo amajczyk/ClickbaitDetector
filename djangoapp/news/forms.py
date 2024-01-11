@@ -21,6 +21,7 @@ class SiteSelectionForm(forms.Form):
             ("3", "0"),
         ],
         required=False,
+        initial="3",
     )
     category = forms.ChoiceField(
         choices=[

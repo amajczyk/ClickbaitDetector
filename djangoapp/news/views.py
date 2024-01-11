@@ -24,8 +24,6 @@ from typing import Optional, List
 from transformers.pipelines.text2text_generation import SummarizationPipeline
 
 
-
-
 class NoMoreUrlsException(Exception):
     pass
 
@@ -34,7 +32,10 @@ class NoMoreUrlsException(Exception):
 #                 HELPERS                   #
 #############################################
 
-def get_model_loader_attributes() -> tuple([Scraper, NLP, LocalLLM, SummarizationPipeline, VertexAI]):
+
+def get_model_loader_attributes() -> (
+    tuple([Scraper, NLP, LocalLLM, SummarizationPipeline, VertexAI])
+):
     """
     Returns the attributes of the model loader.
     Model loader is a singleton class, so it's attributes are the same for every instance.
@@ -47,7 +48,8 @@ def get_model_loader_attributes() -> tuple([Scraper, NLP, LocalLLM, Summarizatio
     summarizer = model_loader.summarizer
     return scraper, nlp, llm, summarizer, vertex
 
-def classify_NLP(title:str, nlp:NLP) -> tuple([int, float]):
+
+def classify_NLP(title: str, nlp: NLP) -> tuple([int, float]):
     """
     Returns the decision and the probability made by the NLP model.
     """
@@ -58,7 +60,7 @@ def classify_NLP(title:str, nlp:NLP) -> tuple([int, float]):
     return decision, probability
 
 
-def classify_LLM(title:str, llm:LocalLLM) -> tuple([int, float]):
+def classify_LLM(title: str, llm: LocalLLM) -> tuple([int, float]):
     """
     Returns the decision and the probability made by the LLM model.
     """
@@ -68,7 +70,7 @@ def classify_LLM(title:str, llm:LocalLLM) -> tuple([int, float]):
     return decision, probability
 
 
-def classify_VERTEX(title:str, vertex:VertexAI, summary:str=None):
+def classify_VERTEX(title: str, vertex: VertexAI, summary: str = None):
     """
     Returns the decision made by the VertexAI model.
     If the models fails to load or there is an error, returns -1.
@@ -85,7 +87,9 @@ def classify_VERTEX(title:str, vertex:VertexAI, summary:str=None):
 
 
 def make_final_decision(
-    clickbait_decision_NLP:int, clickbait_decision_LLM:int, clickbait_decision_VERTEX:int
+    clickbait_decision_NLP: int,
+    clickbait_decision_LLM: int,
+    clickbait_decision_VERTEX: int,
 ) -> int:
     if clickbait_decision_VERTEX != -1:
         return int(
@@ -103,7 +107,15 @@ def make_final_decision(
     return -1
 
 
-def process_article(url:str, scraper:Scraper, nlp:NLP, llm:LocalLLM, summarizer:SummarizationPipeline, vertex:VertexAI, selected_category:str) -> Optional[Article]:
+def process_article(
+    url: str,
+    scraper: Scraper,
+    nlp: NLP,
+    llm: LocalLLM,
+    summarizer: SummarizationPipeline,
+    vertex: VertexAI,
+    selected_category: str,
+) -> Optional[Article]:
     """
     This function scrapes the article from the url, classifies it and saves it to the database if it doesn't exist.
     If the article already exists in the database, it returns it.
@@ -148,9 +160,15 @@ def process_article(url:str, scraper:Scraper, nlp:NLP, llm:LocalLLM, summarizer:
         except Exception as e:
             print(e)
             return None
-        
 
-def get_articles(request:HttpRequest, selected_sites:List[str]=None, selected_category:str=None) -> List[Article]:  
+
+def get_articles(
+    request: HttpRequest,
+    selected_sites: List[str] = None,
+    selected_category: str = None,
+    clickbait_tolerance: int = None,
+    load_more=False,
+) -> List[Article]:
     """
     This function is used to get the articles from the selected sites and categories.
     """
@@ -158,13 +176,16 @@ def get_articles(request:HttpRequest, selected_sites:List[str]=None, selected_ca
     scraper, nlp, llm, summarizer, vertex = get_model_loader_attributes()
 
     if not selected_sites or not selected_category:
-    # Get the session variables, from the scrape_articles view
+        # Get the session variables, from the scrape_articles view
         selected_sites = request.session["selected_sites"]
         selected_category = request.session["selected_category"]
-
+        clickbait_tolerance = request.session["clickbait_tolerance"]
 
     for site in selected_sites:
-        use_generator(request, site, selected_category, scraper)
+        if load_more:
+            update_session_variables(request, site, selected_category, scraper)
+        else:
+            scrape_urls(request, site, selected_category, scraper)
     urls = get_next_urls(request, selected_sites)
     process_article_partial = partial(
         process_article,
@@ -177,9 +198,119 @@ def get_articles(request:HttpRequest, selected_sites:List[str]=None, selected_ca
     )
     with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
         articles = list(executor.map(process_article_partial, urls))
-        articles = [el for el in articles if el is not None]
+        articles = [el for el in articles if el is not None and el.clickbait_decision_final <= clickbait_tolerance]
     return articles
 
+
+def update_session_variables(
+    request: HttpRequest, site: str, selected_category: str, scraper: Scraper
+) -> None:
+    """
+    This function is used to update the session when the users scrapes many articles.
+    It is used to keep track of the urls that have been scraped per site and category.
+    If the user changes the category or the sites, the session variables are kept track of.
+    This is the function that stops the user from scraping the same urls again and limits the number of urls that can be scraped per click to 3 per site.
+    """
+    if selected_category == "front_page":
+        selected_category = "main"
+    site_category = f"{site}_{selected_category}"
+
+    start = request.session[site_category]["start"]
+    end = request.session[site_category]["end"]
+
+    print(
+        f"{site_category}, articles: {start} - {end}, page: {request.session[site_category]['page']}"
+    )
+
+    while start <= end:
+        try:
+            request.session[site_category]["urls_to_scrape"].append(
+                request.session[site_category]["urls_all"][start]
+            )
+        except IndexError as e:
+            if selected_category == "main" or site == "abcnews":
+                # main sites and abcnews don't have pagination
+                break
+
+            # This situation means that there are no more urls on the current page, so we need to go to the next page
+            request.session[site_category]["page"] += 1
+            number = request.session[site_category]["page"]
+            page_part = eval(f"f'{scraper.site_variables_dict[site]['page_suffix']}'")
+            urls = scraper.scrape_article_urls(
+                f"{scraper.site_variables_dict[site]['topics'][selected_category]}{page_part}"
+            )
+            request.session[site_category]["urls_all"] = urls
+            start, end = 0, 3
+            request.session[site_category]["urls_to_scrape"].append(
+                request.session[site_category]["urls_all"][start]
+            )
+
+        start += 1
+    request.session[site_category]["start"] = start
+    request.session[site_category]["end"] = start + 3
+
+
+def get_next_urls(request: HttpRequest, sites: List[str] = None) -> List[str]:
+    """
+    This function is used to get the next urls from the selected sites and categories.
+    """
+
+    selected_category = request.session["selected_category"]
+    if selected_category == "front_page":
+        selected_category = "main"
+
+    site_url_lists = []
+    for site in sites:
+        site_category = f"{site}_{selected_category}"
+        url_list = request.session[site_category]["urls_to_scrape"]
+        if url_list:
+            site_url_lists.append(url_list)
+            request.session[site_category]["urls_to_scrape"] = []
+
+    urls = [item for sublist in zip(*site_url_lists) for item in sublist]
+    print(urls)
+    if not urls:
+        print('tu')
+        raise NoMoreUrlsException(
+            "There are no more urls to scrape from this category."
+        )
+    return urls
+
+
+def scrape_urls(
+    request: HttpRequest, site: str, selected_category: str, scraper: Scraper
+) -> None:
+    """
+    This function is used to scrape the urls from the selected sites and categories.
+    It scrapes all the available urls from the selected sites and categories and stores them in session variables.
+    """
+    selected_category = request.session["selected_category"]
+    if selected_category == "front_page":
+        selected_category = "main"
+        hrefs_to_find_urls = scraper.site_variables_dict[site][selected_category]
+    else:
+        hrefs_to_find_urls = scraper.site_variables_dict[site]["topics"][
+            selected_category
+        ]
+
+    site_category = f"{site}_{selected_category}"
+    if not request.session.get(site_category, None):
+        urls = scraper.scrape_article_urls(hrefs_to_find_urls)
+        if not urls:
+            print(f"No urls found for {site_category}")
+        request.session[site_category] = {
+            "urls_all": urls,
+            "urls_to_scrape": [],
+            "page": 1,
+            "start": 0,
+            "end": 2,
+        }
+    if site_category == "cbsnews_Sports":
+        # cbsnews_Sports have a different site structure than the other sites
+        # we don't support this for now
+        request.session.save()
+    else:
+        update_session_variables(request, site, selected_category, scraper)
 
 
 #############################################
@@ -191,6 +322,7 @@ class DetailView(generic.DetailView):
     """
     This view is used to display the details of a single article.
     """
+
     model = Article
     template_name = "news/detail.html"
 
@@ -198,7 +330,7 @@ class DetailView(generic.DetailView):
         return Article.objects.filter(scraped_date__lte=timezone.now())
 
 
-def check_url(request:HttpRequest):
+def check_url(request: HttpRequest):
     """
     This view is used to check the url of a single article provided by the user.
     """
@@ -224,8 +356,7 @@ def check_url(request:HttpRequest):
     return render(request, "news/check_url.html", {"form": form})
 
 
-
-def scrape_articles(request:HttpRequest):
+def scrape_articles(request: HttpRequest):
     """
     This view is used to scrape articles from the selected sites and categories.
     It accepts a POST request with the form data and returns a JsonResponse with the html of the scraped articles.
@@ -241,11 +372,13 @@ def scrape_articles(request:HttpRequest):
                 if value and key not in ["clickbait_tolerance", "category"]
             ]
             selected_category = form.cleaned_data["category"]
+            clickbait_tolerance = int(form.cleaned_data["clickbait_tolerance"])
 
             request.session["selected_sites"] = selected_sites
             request.session["selected_category"] = selected_category
+            request.session["clickbait_tolerance"] = clickbait_tolerance
 
-            articles = get_articles(request, selected_sites, selected_category)
+            articles = get_articles(request, selected_sites, selected_category, clickbait_tolerance)
 
             articles_html = render_to_string(
                 "news/list_articles.html", {"latest_article_list": articles}
@@ -257,14 +390,13 @@ def scrape_articles(request:HttpRequest):
     return render(request, "news/index.html", {"form": form})
 
 
-
-def load_more_articles(request:HttpRequest) -> JsonResponse:
+def load_more_articles(request: HttpRequest) -> JsonResponse:
     """
     This is a view used to load more articles from the selected sites and categories.
     It is only possible to be called after the scrape_articles view.
     """
-   
-    articles = get_articles(request)
+
+    articles = get_articles(request, load_more=True)
     request.session.save()
     articles_html = render_to_string(
         "news/list_articles.html", {"latest_article_list": articles}
@@ -328,97 +460,3 @@ def browse_articles(request):
     articles = Article.objects.order_by("-scraped_date")[:10]
     context = {"form": form, "latest_article_list": articles}
     return render(request, "news/browse.html", context=context)
-
-
-def use_generator(request, site, selected_category, scraper):
-    # doesn't return anything, updates the session variables
-    if selected_category == "front_page":
-        selected_category = "main"
-    site_category = f"{site}_{selected_category}"
-
-    start = request.session[site_category]["start"]
-    end = request.session[site_category]["end"]
-
-    print(
-        f"{site_category}: {start} - {end}, page: {request.session[site_category]['page']}"
-    )
-
-    while start <= end:
-        try:
-            request.session[site_category]["urls_to_scrape"].append(
-                request.session[site_category]["urls_all"][start]
-            )
-        except IndexError as e:
-            print(e)
-            if selected_category == "main" or site == "abcnews":
-                # main sites and abcnews don't have pagination
-                break
-            # This situation means that there are no more urls on the current page, so we need to go to the next page
-            request.session[site_category]["page"] += 1
-            number = request.session[site_category]["page"]
-
-            page_part = eval(f"f'{scraper.site_variables_dict[site]['page_suffix']}'")
-            urls = scraper.scrape_article_urls(
-                f"{scraper.site_variables_dict[site]['topics'][selected_category]}{page_part}"
-            )
-            if not urls:
-                print("no urls")
-            request.session[site_category]["urls_all"] = urls
-            start, end = 0, 3
-            request.session[site_category]["urls_to_scrape"].append(
-                request.session[site_category]["urls_all"][start]
-            )
-
-        start += 1
-    request.session[site_category]["start"] = start
-    request.session[site_category]["end"] = start + 3
-
-
-def get_next_urls(request, sites):
-    selected_category = request.session["selected_category"]
-    if selected_category == "front_page":
-        selected_category = "main"
-
-    site_url_lists = []
-    for site in sites:
-        site_category = f"{site}_{selected_category}"
-        url_list = request.session[site_category]["urls_to_scrape"]
-        if url_list:
-            site_url_lists.append(url_list)
-            request.session[site_category]["urls_to_scrape"] = []
-
-    urls = [item for sublist in zip(*site_url_lists) for item in sublist]
-    if not urls:
-        raise NoMoreUrlsException(
-            "There are no more urls to scrape from this category."
-        )
-    return urls
-
-
-def scrape_urls(request, site, scraper):
-    # doesn't return anything, updates the session variables
-    selected_category = request.session["selected_category"]
-    if selected_category == "front_page":
-        selected_category = "main"
-        hrefs_to_find_urls = scraper.site_variables_dict[site][selected_category]
-    else:
-        hrefs_to_find_urls = scraper.site_variables_dict[site]["topics"][
-            selected_category
-        ]
-
-    site_category = f"{site}_{selected_category}"
-    if not request.session.get(site_category, None):
-        urls = scraper.scrape_article_urls(hrefs_to_find_urls)
-        if not urls:
-            print(f"No urls found for {site_category}")
-        request.session[site_category] = {
-            "urls_all": urls,
-            "urls_to_scrape": [],
-            "page": 1,
-            "start": 0,
-            "end": 2,
-        }
-    if site_category == "cbsnews_Sports":
-        request.session.save()
-    else:
-        use_generator(request, site, selected_category, scraper)
