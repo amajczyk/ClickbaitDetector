@@ -1,9 +1,0 @@
-{
-    "best_word2vec":
-    {
-        "model_path": "word2vec_vs20_win8_sg1.model",
-        "vector_size": 20,
-        "window_size": 8,
-        "is_skipgram": true
-    }
-}

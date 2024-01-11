@@ -1,1 +1,0 @@
-https://www.kaggle.com/competitions/clickbait-news-detection/data
