@@ -1,14 +1,29 @@
 {
     "grid_search_grids": {
+        "decision_tree_grid": {
+            "max_depth": [
+                null,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8
+            ],
+            "max_features": [
+                "sqrt",
+                "log2",
+                null
+            ]
+        },
+
         "catboost_grid": {
             "iterations": [
                 100,
-                200,
-                300,
-                400,
+                250,
                 500,
-                1000,
-                1500
+                750,
+                1000
             ],
             "learning_rate": [
                 null,
@@ -32,24 +47,15 @@
                 5,
                 7,
                 9
-            ],
-            "best_params": {
-                "depth": 8,
-                "iterations": 1500,
-                "l2_leaf_reg": 5,
-                "learning_rate": null
-            },
-            "roc_auc": 0.9023705609240388,
-            "f1": 0.7636632200886263
+            ]
         },
         "lightgbm_grid": {
             "n_estimators": [
+                10,
+                25,
                 50,
                 100,
-                200,
-                300,
-                400,
-                500
+                250
             ],
             "learning_rate": [
                 0.001,
@@ -72,26 +78,16 @@
                 31,
                 62,
                 93,
-                124,
-                155
-            ],
-            "best_params": {
-                "learning_rate": 0.1,
-                "max_depth": -1,
-                "n_estimators": 500,
-                "num_leaves": 155
-            },
-            "roc_auc": 0.8995012624180527,
-            "f1": 0.7736263736263737
+                124
+            ]
         },
         "xgboost_grid": {
             "n_estimators": [
+                10,
+                25,
                 50,
                 100,
-                200,
-                300,
-                400,
-                500
+                250
             ],
             "learning_rate": [
                 null,
@@ -113,29 +109,24 @@
             "gamma": [
                 null,
                 0,
+                0.001,
+                0.01,
+                0.1,
+                0.5,
                 1,
                 2,
                 3,
                 4,
                 5
-            ],
-            "best_params": {
-                "gamma": 1,
-                "learning_rate": 0.1,
-                "max_depth": 8,
-                "n_estimators": 200
-            },
-            "roc_auc": 0.8978925497180171,
-            "f1": 0.7666422823701535
+            ]
         },
         "random_forest_grid": {
             "n_estimators": [
                 50,
                 100,
-                200,
-                300,
-                400,
-                500
+                250,
+                750,
+                1000
             ],
             "max_depth": [
                 null,
@@ -148,36 +139,10 @@
             ],
             "max_features": [
                 "sqrt",
-                "log2"
-            ],
-            "best_params": {
-                "max_depth": null,
-                "max_features": "sqrt",
-                "n_estimators": 500
-            },
-            "roc_auc": 0.8969251234018227,
-            "f1": 0.7557879014189695
-        },
-        "decision_tree_grid": {
-            "max_depth": [
-                null,
-                3,
-                4,
-                5,
-                6,
-                7,
-                8
-            ],
-            "max_features": [
-                "sqrt",
-                "log2"
-            ],
-            "best_params": {
-                "max_depth": 8,
-                "max_features": "sqrt"
-            },
-            "roc_auc": 0.8189227121650197,
-            "f1": 0.6853677028051555
+                "log2",
+                null
+            ]
         }
+        
     }
 }
