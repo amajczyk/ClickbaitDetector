@@ -81,17 +81,5 @@
             "Article__Header__Branding",
             "PinnedPostsContainer"
         ]
-    },
-    "nbcuniversal": {
-        "source_site": "NBC Universal",
-        "paragraph_tag": "p",
-        "title_tag": "h1",
-        "exclude": [
-            "block-socialblock",
-            "social-btns",
-            "social-links-margin",
-            "block-copyrightblock",
-            "copyright print-no"
-        ]
     }
 }

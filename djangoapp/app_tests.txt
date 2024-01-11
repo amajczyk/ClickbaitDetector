@@ -1,4 +1,0 @@
-Testing news app...
-Time now:  2023-12-06 06:30:32.545837+00:00
-Found 11 test(s).
-System check identified no issues (0 silenced).

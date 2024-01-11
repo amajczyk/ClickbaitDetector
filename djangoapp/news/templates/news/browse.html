@@ -11,19 +11,16 @@
         <div class="col-md-4">
           <div class="form-floating">
             {{ form.search_query|as_crispy_field }}
-            <!-- <label class="ms-3" for="{{ form.search_query.id_for_label }}">Search articles</label> -->
           </div>
         </div>
         <div class="col-md-2">
           <div class="form-floating">
-            {{ form.date_from|as_crispy_field }}
-            <!-- <label class="ms-3" for="{{ form.date_from.id_for_label }}">Date from</label> -->
+            {{ form.date_scraped_from|as_crispy_field }}
           </div>
         </div>
         <div class="col-md-2">
           <div class="form-floating">
-            {{ form.date_to|as_crispy_field }}
-            <!-- <label class="ms-3" for="{{ form.date_to.id_for_label }}">Date to</label> -->
+            {{ form.date_scraped_to|as_crispy_field }}
           </div>
         </div>
 
@@ -42,15 +39,12 @@
           <div class="row px-2">
             <div class="col-md-2 form-check">
               {{ form.thesun|as_crispy_field }}
-              <!-- <label class="form-check-label" for="{{ form.thesun.id_for_label }}">The Sun UK</label> -->
             </div>
             <div class="col-md-2 form-check">
               {{ form.cbsnews|as_crispy_field }}
-              <!-- <label class="form-check-label" for="{{ form.cbsnews.id_for_label }}">CBS News</label> -->
             </div>
             <div class="col-md-2 form-check">
               {{ form.abcnews|as_crispy_field }}
-              <!-- <label class="form-check-label" for="{{ form.abcnews.id_for_label }}">ABC News</label> -->
             </div>
           </div>
         </div>
