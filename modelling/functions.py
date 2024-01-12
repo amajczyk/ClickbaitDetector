@@ -282,8 +282,15 @@ def get_dimensions_to_drop():
 import pandas as pd
 def predict_on_text(classifier, model_word2vec, text):
     # print(text)
+    dropped = get_dimensions_to_drop()
     text = preprocess_title(pd.DataFrame({'title': [text]}))
     text = get_word_vectors(model_word2vec, text['title'][0], aggregation='mean')
+
+    scaler = pickle.load(open('predictive_models/scaler.pkl', 'rb'))
+    text = drop_dimensions_from_vector(text, dropped)
+    text = scaler.transform(text.reshape(1, -1))
+
+    
     # print(len(text))
     return classifier.predict_proba(text.reshape(1, -1))
 
