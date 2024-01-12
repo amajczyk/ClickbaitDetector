@@ -7,28 +7,33 @@
     <div class="card mb-1">
         <div class="card-header p-0" id="heading{{article.id}}">
             <div class="m-0 p-0 d-flex justify-content-between align-items-center">
-                <a class="btn btn-link" type="button" href="{{article.url_from}}">
-                    {{ article.title }}
-                </a>
+                <div class="d-flex px-3 py-1 text-wrap text-left">
+                    <a type="button" href="{{article.url_from}}">
+                        {{ article.title }}
+                    </a>
+                </div>
 
                 <div class="d-flex align-items-center">
-                    <span class="me-2 fs-6"> <b>{{article.source_site}}</b> | {{ article.scraped_date|date:"d.m.Y H:i" }}</span>
+                    <span class="text-wrap text-center" style="font-size: x-small; width: 5rem;"> <b>{{article.source_site}}</b> {{ article.scraped_date|date:"d.m.Y H:i" }}</span>
 
                     <div class="d-flex">
                         <a type="button" class="btn btn-outline-info p-0 px-2 m-2"
                             href="{% url 'news:detail' article.id %}"></button>
                             <i class="fa fa-info"></i>
                         </a>
-
+                        
+                        <span class="mt-1">
                         {% if article.clickbait_decision_final == 3 %}
-                            <i class="fa fa-times fa-2x" style="color: red;" title="Final Decision: Clickbait"></i>
+                        
+                            {% include 'news/svg/sure_clickbait.svg' %}
                         {% elif article.clickbait_decision_final == 2 %}
-                            <i class="fa fa-times fa-2x" style="color: orange;" title="Final Decision: Likely Clickbait"></i>
+                            {% include 'news/svg/unsure_clickbait.svg' %}
                         {% elif article.clickbait_decision_final == 1 %}
-                            <i class="fa fa-check fa-2x" style="color: yellow;" title="Final Decision: Potentially Clickbait"></i>
+                            {% include 'news/svg/unsure_not_clickbait.svg' %}
                         {% else %}
-                            <i class="fa fa-check fa-2x" style="color: green;" title="Final Decision: No Clickbait"></i>
+                            {% include 'news/svg/sure_not_clickbait.svg' %}
                         {% endif %}
+                        </span>
 
 
                         <button type="button" class="btn btn-default p-1 px-2 toggle-button" data-bs-toggle="collapse"
@@ -56,24 +61,3 @@
 <p></p>
 {% endif %}
 
-
-<script>
-    const toggleButtons = document.querySelectorAll(".toggle-button");
-
-    toggleButtons.forEach((button) => {
-        button.addEventListener("click", function () {
-            const icon = this.querySelector("i");
-            if (icon.classList.contains("fa-chevron-down")) {
-                icon.classList.remove("fa-chevron-down");
-                icon.classList.add("fa-chevron-up");
-                this.classList.add("active");
-                this.setAttribute("aria-pressed", "true");
-            } else {
-                icon.classList.remove("fa-chevron-up");
-                icon.classList.add("fa-chevron-down");
-                this.classList.remove("active");
-                this.setAttribute("aria-pressed", "false");
-            }
-        });
-    });
-</script>

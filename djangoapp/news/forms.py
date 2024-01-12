@@ -7,7 +7,7 @@ from django.utils import timezone
 
 class URLForm(forms.Form):
     url = forms.URLField(
-        label="Enter article URL", widget=forms.TextInput()
+        label="", widget=forms.TextInput()
     )
 
 
@@ -47,33 +47,28 @@ class SearchArticlesForm(forms.Form):
     date_scraped_to = forms.DateField(
         required=False, widget=forms.DateInput(attrs={"type": "date"})
     )
-    thesun = forms.BooleanField(required=False, initial=True)
-    cbsnews = forms.BooleanField(required=False, initial=True)
-    abcnews = forms.BooleanField(required=False, initial=True)
+    thesun = forms.BooleanField(required=False, initial=True, label="The Sun UK")
+    cbsnews = forms.BooleanField(required=False, initial=True, label="CBS News")
+    abcnews = forms.BooleanField(required=False, initial=True, label="ABC News")
     clickbait_tolerance = forms.ChoiceField(
         choices=[
             ("0", "3/3"),
             ("1", "2/3"),
             ("2", "1/3"),
+            ("3", "0"),
         ],
         required=False,
         initial="3",
     )
 
-    categories = forms.MultipleChoiceField(
-        choices=[
-            ("main", "Front Page"),
-            ("general", "General"),
-            ("politics", "Politics"),
-            ("sports", "Sports"),
-            ("health", "Health"),
-            ("technology", "Technology"),
-        ],
-        required=False,
-        widget=forms.CheckboxSelectMultiple,
-        initial=["main", "general", "politics", "sports", "health", "technology"],
-    )
-
+    main = forms.BooleanField(required=False, initial=False, label="Front Page")
+    General = forms.BooleanField(required=False, initial=False, label="General")
+    Politics = forms.BooleanField(required=False, initial=False, label="Politics")
+    Sports = forms.BooleanField(required=False, initial=False, label="Sports")
+    Health = forms.BooleanField(required=False, initial=False, label="Health")
+    Technology = forms.BooleanField(required=False, initial=False, label="Technology")
+    
+    
     def __init__(self, *args, **kwargs):
         super(SearchArticlesForm, self).__init__(*args, **kwargs)
 

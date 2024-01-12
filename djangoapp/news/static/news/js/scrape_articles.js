@@ -1,13 +1,15 @@
 $(document).ready(function(){
     $("#selectionForm").submit(function(event){
       event.preventDefault();
+      $("#load-more-btn").addClass('d-none');
       $("#spinner").removeClass('d-none');
+      $("#article-container").html('');
       $.ajax({
         type: $(this).attr('method'),
         url: $(this).attr('action'),
         data: $(this).serialize(),
         success: function(response){
-          $("#article-container").append(response.articles_html);
+          $("#article-container").html(response.articles_html);
           $("#spinner").addClass('d-none');
           $('#load-more-btn').removeClass('d-none');
         },

@@ -8,7 +8,7 @@
       {% csrf_token %}
 
       <div class="row mb-2">
-        <div class="col-md-4">
+        <div class="col-md-5">
           <div class="form-floating">
             {{ form.search_query|as_crispy_field }}
           </div>
@@ -25,24 +25,42 @@
         </div>
 
         <div class="col-md-2">
-          <div class="form-check">
+          <div class="form-floating">
             {{form.clickbait_tolerance|as_crispy_field}}
           </div>
         </div>
-        <div class="col-md-1 mt-2">
+        <div class="col-md-1 mt-4 pt-2">
           <button class="btn btn-success" type="submit">Search</button>
         </div>
       </div>
       
-      <div class="row">
-        <div class="form-check">
-          <!-- FOR FIELD IN CATEGORIES DO EACH CHOICE IN THE SAME LIE -->
-          {{form.categories|as_crispy_field}}
+      <div class="row px-2 pt-2">
+        <div class="card-title">
+          <h6>Categories:</h6>
+        </div>
+        <div class="col-md-2 form-check">
+          {{ form.main|as_crispy_field }}
+        </div>
+        <div class="col-md-2 form-check">
+          {{ form.General|as_crispy_field }}
+        </div>
+        <div class="col-md-2 form-check">
+          {{ form.Politics|as_crispy_field }}
+        </div>
+        <div class="col-md-2 form-check">
+          {{ form.Sports|as_crispy_field }}
+        </div>
+        <div class="col-md-2 form-check">
+          {{ form.Health|as_crispy_field }}
+        </div>
+        <div class="col-md-2 form-check">
+          {{ form.Technology|as_crispy_field }}
         </div>
       </div>
       <div class="card">
+      
         <div class="card-body">
-          <div class="row px-2">
+          <div class="row px-2 pt-2">
             <div class="col-md-2 form-check">
               {{ form.thesun|as_crispy_field }}
             </div>

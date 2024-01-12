@@ -121,10 +121,11 @@ def process_article(
     If the article already exists in the database, it returns it.
     The function returns None if there have been any errors during the process.
     """
-    try:
-        article = Article.objects.get(url_from=url)
+
+    article = Article.objects.filter(url_from=url).first()
+    if article:
         return article
-    except:
+    else:
         try:
             scraped_data = scraper.scrape(url)
             scraped_data["url"] = url
@@ -196,7 +197,7 @@ def get_articles(
         vertex=vertex,
         selected_category=selected_category,
     )
-    with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=9) as executor:
         articles = list(executor.map(process_article_partial, urls))
         articles = [el for el in articles if el is not None and el.clickbait_decision_final <= clickbait_tolerance]
     return articles
@@ -226,26 +227,26 @@ def update_session_variables(
                 request.session[site_category]["urls_all"][start]
             )
         except IndexError as e:
-            if selected_category == "main" or site == "abcnews":
+            if selected_category == "main" or site == "abcnews" or site_category == "cbsnews_Sports":
                 # main sites and abcnews don't have pagination
                 break
 
             # This situation means that there are no more urls on the current page, so we need to go to the next page
             request.session[site_category]["page"] += 1
-            number = request.session[site_category]["page"]
+            number = request.session[site_category]["page"] # this is used in the next line
             page_part = eval(f"f'{scraper.site_variables_dict[site]['page_suffix']}'")
             urls = scraper.scrape_article_urls(
                 f"{scraper.site_variables_dict[site]['topics'][selected_category]}{page_part}"
             )
             request.session[site_category]["urls_all"] = urls
-            start, end = 0, 3
+            start, end = 0, 2
             request.session[site_category]["urls_to_scrape"].append(
                 request.session[site_category]["urls_all"][start]
             )
 
         start += 1
     request.session[site_category]["start"] = start
-    request.session[site_category]["end"] = start + 3
+    request.session[site_category]["end"] = start + 2
 
 
 def get_next_urls(request: HttpRequest, sites: List[str] = None) -> List[str]:
@@ -301,6 +302,7 @@ def scrape_urls(
         # cbsnews_Sports have a different site structure than the other sites
         # we don't support this for now
         request.session.save()
+
     else:
         update_session_variables(request, site, selected_category, scraper)
 
@@ -357,6 +359,7 @@ def scrape_articles(request: HttpRequest):
     if request.method == "POST":
         form = SiteSelectionForm(request.POST)
         if form.is_valid():
+            request.session['articles_html'] = ""
             # Process the form data, and remember them in the session
             selected_sites = [
                 key
@@ -375,11 +378,15 @@ def scrape_articles(request: HttpRequest):
             articles_html = render_to_string(
                 "news/list_articles.html", {"latest_article_list": articles}
             )
+            request.session['articles_html'] += articles_html
             return JsonResponse({"articles_html": articles_html})
     else:
         form = SiteSelectionForm()
-
-    return render(request, "news/index.html", {"form": form})
+    if request.session.get('articles_html', None):
+        articles_html = request.session['articles_html']
+    else:
+        articles_html = ""
+    return render(request, "news/index.html", {"form": form, "articles_html": articles_html})
 
 
 def load_more_articles(request: HttpRequest) -> JsonResponse:
@@ -389,10 +396,11 @@ def load_more_articles(request: HttpRequest) -> JsonResponse:
     """
 
     articles = get_articles(request, load_more=True)
-    request.session.save()
     articles_html = render_to_string(
         "news/list_articles.html", {"latest_article_list": articles}
     )
+    request.session['articles_html'] += articles_html
+    request.session.save()
     return JsonResponse({"articles_html": articles_html})
 
 
@@ -406,13 +414,22 @@ def browse_articles(request):
             search_query = form.cleaned_data["search_query"]
             date_scraped_from = form.cleaned_data["date_scraped_from"]
             date_scraped_to = form.cleaned_data[
-                "date_scraped_from"
+                "date_scraped_to"
             ] + datetime.timedelta(days=1)
             clickbait_tolerance = int(form.cleaned_data["clickbait_tolerance"])
 
             thesun = form.cleaned_data["thesun"]
             cbsnews = form.cleaned_data["cbsnews"]
             abcnews = form.cleaned_data["abcnews"]
+
+            # categories:
+            main = form.cleaned_data["main"]
+            general = form.cleaned_data["General"]
+            politics = form.cleaned_data["Politics"]
+            sports = form.cleaned_data["Sports"]
+            health = form.cleaned_data["Health"]
+            technology = form.cleaned_data["Technology"]
+            
 
             # Use the form data as needed to filter the articles from the database
 
@@ -430,7 +447,7 @@ def browse_articles(request):
                 scraped_date__lte=date_scraped_to
             )
 
-            source_sites = []
+            source_sites = list()
             if thesun:
                 source_sites.append("The Sun UK")
             if cbsnews:
@@ -440,10 +457,30 @@ def browse_articles(request):
 
             if source_sites:
                 query &= Q(source_site__in=source_sites)
-
+                
+            if any([main, general, politics, sports, health, technology]):
+                categories = list()
+                if main:
+                    categories.append("main")
+                if general:
+                    categories.append("General")
+                if politics:
+                    categories.append("Politics")
+                if sports:
+                    categories.append("Sports")
+                if health:
+                    categories.append("Health")
+                if technology:
+                    categories.append("Technology")                
+                query &= Q(category__in=categories) 
+            
+            
+            
             articles = Article.objects.filter(query).order_by("-scraped_date")
             context = {"form": form}
             context["latest_article_list"] = articles
+            
+                        
             return render(request, "news/browse.html", context=context)
 
     else:
