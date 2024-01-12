@@ -166,5 +166,5 @@ modelling/catboost_info/*
 modelling/word2vec_selection/results/backup/*
 modelling/results/backup/*
 modelling/data/*
-
+modelling/predictive_models/*
 

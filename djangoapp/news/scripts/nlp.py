@@ -40,16 +40,30 @@ class NLP():
         self.predictive_model = predictive_model
         self.scaler = scaler
         self.proba_cutoff = 0.30123012301230123
+        self.dropped_dims = get_dimensions_to_drop()
 
     def predict_on_text(self, title):
         
         # print(text)
         text = preprocess_title(pd.DataFrame({'title': [title]}))
         text = get_word_vectors(self.w2v, text['title'][0], aggregation='mean')
+
+        # drop dimensions
+        text = np.delete(text, self.dropped_dims)
+
         text = self.scaler.transform([text])
         # print(len(text))
         return self.predictive_model.predict_proba(text.reshape(1, -1))
             
+def get_dimensions_to_drop():
+    var_path = os.path.join(settings.BASE_DIR, 'news', 'predictive_models', 'worst_performing_dimensions_intersection.pkl')
+    # read variables to be dropped from pickle file
+    with open(var_path, 'rb') as f:
+        variables_to_drop = pickle.load(f)
+
+    variables_to_drop = [x.replace('dim_', '') for x in variables_to_drop]
+    variables_to_drop = [int(x) for x in variables_to_drop]
+    return variables_to_drop
 
 def return_best_model(path: str):
     # Load the best model from the model_settings.json file (best_word2vec property)
