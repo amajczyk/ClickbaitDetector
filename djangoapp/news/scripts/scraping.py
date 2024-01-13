@@ -7,6 +7,7 @@ from bs4 import BeautifulSoup
 class NotSupportedWebsiteException(Exception):
     pass
 
+
 class Scraper:
     def __init__(self, path_to_site_variables: str):
         self.site_variables_dict = self.get_site_variables_dict(path_to_site_variables)
@@ -49,7 +50,7 @@ class Scraper:
         all_hrefs = [a["href"] for a in soup.find_all("a", href=True)]
         url_matchings = site_variables["url_matchings"]
         matching_hrefs = [
-            f'https://thesun.co.uk{href}' if href.startswith('/') else href
+            f"https://thesun.co.uk{href}" if href.startswith("/") else href
             for href in all_hrefs
             if self.check_href_match_condition(
                 href,

@@ -27,7 +27,7 @@
       <div class="col-md-1 form-check p-1 pt-4">
         
         </div>
-      <div class="col-md-1 form-check p-1 pt-3">
+      <div class="col-md-1 form-check p-1 pt-4">
       <button class="btn btn-success" type="submit" id="submit-button">Scrape</button>
       </div>
       
@@ -51,7 +51,9 @@
 </form>
 
 <div class="container mt-2" id="article-container">
-  <h2>Results:</h2>
+  {% if articles_html %}
+  {{ articles_html|safe }}
+  {% endif %}
 </div>
 
 
@@ -61,7 +63,13 @@
   </div>
 </div>
 <div class="container mt-3 mb-3 d-flex justify-content-center">
+  {% if  articles_html %}
+  <button type="button" class="btn btn-outline-secondary btn-sm" id="load-more-btn">Load More</button>
+  {% else %}
   <button type="button" class="btn btn-outline-secondary btn-sm d-none" id="load-more-btn">Load More</button>
+
+  {% endif %}
+
 </div>
 
 

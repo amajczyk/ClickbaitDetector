@@ -17,33 +17,34 @@ from nltk.corpus import wordnet
 
 class Singleton(type):
     _instances = {}
+
     def __call__(cls, *args, **kwargs):
         if cls not in cls._instances:
             cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
         return cls._instances[cls]
 
+
 class ModelLoader(metaclass=Singleton):
     def __init__(self):
-
-
         # load Scraper
-        config_path = os.path.join(settings.BASE_DIR, 'news', 'config', 'site_variables_dict')
+        config_path = os.path.join(
+            settings.BASE_DIR, "news", "config", "site_variables_dict"
+        )
         self.scraper = Scraper(config_path)
 
-
         # load NLP model
-        self.nlp = NLP() 
+        self.nlp = NLP()
 
         # wordnet is lazy loaded, this poses a problem when using multiprocessing
         wordnet.ensure_loaded()
-
 
         # load LocalLLM
         self.llm = LocalLLM()
 
         # load summarizer
-        self.summarizer = pipeline("summarization", model="Falconsai/text_summarization")
-        
+        self.summarizer = pipeline(
+            "summarization", model="Falconsai/text_summarization"
+        )
+
         # load VertexAI
         self.vertex = VertexAI()
-        
