@@ -1,48 +1,93 @@
 {% block content %}
+{% load custom_filters %}
     <div class="card">
         <div class="card-body">
             <h2 class="card-title">{{ article.title }}</h2>
             <div class="m-0 p-0 d-flex justify-content-between align-items-center">
 
             <div class="d-flex align-items-center">
-                <span class="me-2"> <b>{{article.source_site}}</b> - {{ article.scraped_date|date:"Y-m-d H:i" }}</span>
+                <span class="card-subtitle me-2 text-muted"> <b>{{article.source_site}}</b> - {{ article.scraped_date|date:"d-m-Y H:i" }} </span>
+                {% if  article.category  and not article.category == "UNKNOWN" %}
+                <span class="badge rounded-pill bg-info text-dark">{{ article.category}}</span>
+                {% endif %}
+
+                
+                
             </div>
 
-                <div class="d-flex me-1">
 
-                {% if article.clickbait_decision_NLP == 0 %}
-                    <i class="fa fa-check fa-2x" style="color: green;" title="NLP Decision: No Clickbait"></i>
-                {% else %}
-                    <i class="fa fa-times fa-2x" style="color: red;" title="NLP Decision: Clickbait"></i>
-                {% endif %}
+            </div>
+            <hr>  
+
+            <div class="d-flex justify-content-sm-start">
+                
+            <div class="p-1 flex-grow-1 text-center">
+                    <span class="mt-1">
+                        NLP clickbait probability: {{ article.clickbait_probability_NLP |multiply:"100"|floatformat:1 }}% ➜
+                    </span>
+                    
+                    {% if article.clickbait_decision_NLP == 0 %}
+                    {% include 'news/svg/sure_not_clickbait.svg' %}
+                    {% else %}
+                    {% include 'news/svg/sure_clickbait.svg' %}
+                    {% endif %}
+
+                </div>
+            <div class="vr"></div>
+
+
+                
+            <div class="p-1 flex-grow-1 text-center">
+
+                    <span class="mt-1">
+                
+                LLM clickbait probability: {{ article.clickbait_probability_LLM|multiply:"100"|floatformat:1 }}% ➜
+            </span>
+
+
+                
+
                 
                 {% if article.clickbait_decision_LLM == 0 %}
-                    <i class="fa fa-check fa-2x" style="color: green;" title="LLM Decision: No Clickbait"></i>
+                {% include 'news/svg/sure_not_clickbait.svg' %}
                 {% else %}
-                    <i class="fa fa-times fa-2x" style="color: red;" title="LLM Decision: Clickbait"></i>
-                {% endif %}
-                
-                {% if article.clickbait_decision_VERTEX == 0 %}
-                    <i class="fa fa-check fa-2x" style="color: green;" title="VERTEX Decision: No Clickbait"></i>
-                {% elif article.clickbait_decision_VERTEX == 1 %}
-                    <i class="fa fa-times fa-2x" style="color: red;" title="VERTEX Decision: Clickbait"></i>
-                {% else %}
-                    <i class="fa fa-question fa-2x" style="color: gray;" title="VERTEX Unavailable"></i>
-                {% endif %}
-                
-                <div style="border-left: 1px solid #000; height: 20px; margin: 0 10px;"></div>
-
-
-                {% if article.clickbait_decision_final == 3 %}
-                    <i class="fa fa-times fa-2x" style="color: red;" title="Final Decision: Clickbait"></i>
-                {% elif article.clickbait_decision_final == 2 %}
-                    <i class="fa fa-times fa-2x" style="color: orange;" title="Final Decision: Likely Clickbait"></i>
-                {% elif article.clickbait_decision_final == 1 %}
-                    <i class="fa fa-check fa-2x" style="color: yellow;" title="Final Decision: Potentially Clickbait"></i>
-                {% else %}
-                    <i class="fa fa-check fa-2x" style="color: green;" title="Final Decision: No Clickbait"></i>
+                {% include 'news/svg/sure_clickbait.svg' %}
                 {% endif %}
             </div>
+
+            <div class="vr"></div>
+                
+            <div class="p-1 flex-grow-1 text-center">
+
+
+
+                <span class="mt-1 ">VertexAI decision:</span>
+                {% if article.clickbait_decision_VERTEX == 0 %}
+                {% include 'news/svg/sure_not_clickbait.svg' %}
+                {% elif article.clickbait_decision_VERTEX == 1 %}
+                {% include 'news/svg/sure_clickbait.svg' %}
+                {% else %}
+                {% include 'news/svg/undecided.svg' %}
+                                {% endif %}
+            </div>
+                
+            <div class="vr"></div>
+            <div class="p-1 flex-grow-1 text-center bd-highlight">
+
+                <span class="fw-bold fs-4 mt-2 px-2">FINAL:
+            </span>
+
+                {% if article.clickbait_decision_final == 3 %}
+                {% include 'news/svg/sure_clickbait.svg' %}
+                {% elif article.clickbait_decision_final == 2 %}
+                {% include 'news/svg/unsure_clickbait.svg' %}
+                {% elif article.clickbait_decision_final == 1 %}
+                {% include 'news/svg/unsure_not_clickbait.svg' %}
+                {% else %}
+                {% include 'news/svg/sure_not_clickbait.svg' %}
+                {% endif %}
+            </div>
+
             </div>
             <hr>  
             <p class="card-text">{{ article.content_summary }}</p>

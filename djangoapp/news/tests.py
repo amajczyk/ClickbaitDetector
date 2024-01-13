@@ -24,34 +24,34 @@ from news.vertex.configs.config import Config
 # python manage.py test news
 # https://docs.djangoproject.com/en/4.2/intro/tutorial05/
 
-print('Testing news app...')
-print('Time now: ', timezone.now())
+print("Testing news app...")
+print("Time now: ", timezone.now())
 
 
 import unittest
 from unittest.mock import patch
-from news.scripts.scraping import Scraper 
+from news.scripts.scraping import Scraper
 from news.scripts.nlp import NLP
 from news.scripts.llm import LocalLLM
 
 
-
-ABCNEWS_NOT_CLICKBAIT = 'https://abcnews.go.com/Politics/joe-biden-apparent-winner-presidency/story?id=73981165'
-CBSNEWS_NOT_CLICKBAIT = 'https://www.cbsnews.com/news/joe-biden-wins-2020-election-46th-president-united-states/'
-THESUN_NOT_CLICKBAIT = 'https://www.thesun.co.uk/news/19747379/queen-elizabeth-dead-news/'
-CBSSPORTS_NOT_CLICKBAIT = 'https://www.cbssports.com/nba/news/p-j-tucker-says-theres-not-enough-basketballs-on-the-planet-for-clippers/'
+ABCNEWS_NOT_CLICKBAIT = "https://abcnews.go.com/Politics/joe-biden-apparent-winner-presidency/story?id=73981165"
+CBSNEWS_NOT_CLICKBAIT = "https://www.cbsnews.com/news/joe-biden-wins-2020-election-46th-president-united-states/"
+THESUN_NOT_CLICKBAIT = (
+    "https://www.thesun.co.uk/news/19747379/queen-elizabeth-dead-news/"
+)
+CBSSPORTS_NOT_CLICKBAIT = "https://www.cbssports.com/nba/news/p-j-tucker-says-theres-not-enough-basketballs-on-the-planet-for-clippers/"
 CLICKBAIT_TITLE = "10 Signs Your Partner Is Cheating - Don't Ignore #7!"
 NOT_CLICKBAIT_TITLE = "Joe Biden projected to win presidency"
-
-
 
 
 class TestScraper(TestCase):
     def setUp(self):
         # Set up any necessary resources or configurations for tests
-        config_path = os.path.join(settings.BASE_DIR, 'news', 'config', 'site_variables_dict')
+        config_path = os.path.join(
+            settings.BASE_DIR, "news", "config", "site_variables_dict"
+        )
         self.scraper = Scraper(config_path)
-
 
     def test_get_site_variables_dict(self):
         site_variables_dict = self.scraper.site_variables_dict
@@ -59,30 +59,34 @@ class TestScraper(TestCase):
         self.assertIn("cbsnews", site_variables_dict)
         self.assertIn("thesun", site_variables_dict)
         self.assertIn("abcnews", site_variables_dict)
-        
 
     def test_scrape_article_urls(self):
         # Test scraping urls from the main website
-        result= self.scraper.scrape_article_urls(self.scraper.site_variables_dict['thesun']['main'])
-        self.assertGreater(len(result), 0)
-        
-        result= self.scraper.scrape_article_urls(self.scraper.site_variables_dict['cbsnews']['main'])
-        self.assertGreater(len(result), 0)
-        
-        result= self.scraper.scrape_article_urls(self.scraper.site_variables_dict['abcnews']['main'])
+        result = self.scraper.scrape_article_urls(
+            self.scraper.site_variables_dict["thesun"]["main"]
+        )
         self.assertGreater(len(result), 0)
 
+        result = self.scraper.scrape_article_urls(
+            self.scraper.site_variables_dict["cbsnews"]["main"]
+        )
+        self.assertGreater(len(result), 0)
+
+        result = self.scraper.scrape_article_urls(
+            self.scraper.site_variables_dict["abcnews"]["main"]
+        )
+        self.assertGreater(len(result), 0)
 
     def test_discern_website_from_url(self):
         result = self.scraper.discern_website_from_url(ABCNEWS_NOT_CLICKBAIT)
         self.assertEqual(result["source_site"], "ABC News")
-        
+
         result = self.scraper.discern_website_from_url(CBSNEWS_NOT_CLICKBAIT)
         self.assertEqual(result["source_site"], "CBS News")
 
         result = self.scraper.discern_website_from_url(THESUN_NOT_CLICKBAIT)
         self.assertEqual(result["source_site"], "The Sun UK")
-        
+
         result = self.scraper.discern_website_from_url(CBSSPORTS_NOT_CLICKBAIT)
         self.assertEqual(result["source_site"], "CBS News")
 
@@ -104,35 +108,36 @@ class NLPPredictorTests(TestCase):
         nlp = NLP()
         result = nlp.predict_on_text(CLICKBAIT_TITLE)
         self.assertGreater(result[0][1], nlp.proba_cutoff)
-        
+
         # Test the model on a non-clickbait title
         result = nlp.predict_on_text(NOT_CLICKBAIT_TITLE)
         self.assertLess(result[0][1], nlp.proba_cutoff)
-        
-        
+
+
 # class LLMPredictorTests(TestCase):
-    
+
 #     def test_predict(self):
 #         llm = LocalLLM()
 #         result = llm.predict(CLICKBAIT_TITLE)
 #         self.assertEqual(result, 1)
-        
+
 #         result = llm.predict(NOT_CLICKBAIT_TITLE)
 #         self.assertEqual(result, 0)
-    
 
-class ArticleModelTests(TestCase):  
-    
+
+class ArticleModelTests(TestCase):
     def test_default_values(self):
         """
         Test that default values are set for clickbait_decision fields.
         """
-        new_article = Article.objects.create(title="Test Article", content_summary="Summary")
+        new_article = Article.objects.create(
+            title="Test Article", content_summary="Summary"
+        )
         self.assertEqual(new_article.clickbait_decision_NLP, -1)
         self.assertEqual(new_article.clickbait_decision_LLM, -1)
         self.assertEqual(new_article.clickbait_decision_VERTEX, -1)
         self.assertEqual(new_article.clickbait_decision_final, -1)
-    
+
     def test_was_scraped_within_the_last_24h(self):
         """
         was_scraped_today() should return True for articles whose scraped_date
@@ -141,7 +146,7 @@ class ArticleModelTests(TestCase):
         time = timezone.now() - datetime.timedelta(hours=23, minutes=59)
         recent_article = Article(scraped_date=time)
         self.assertIs(recent_article.was_scraped_today(), True)
-    
+
     def test_was_scraped_later_than_the_last_24h(self):
         """
         was_scraped_today() should return False for articles whose scraped_date
@@ -177,17 +182,15 @@ class ArticleModelTests(TestCase):
                 title="Test Article",
                 content_summary="Summary",
                 clickbait_decision_NLP=decision,
-                clickbait_decision_LLM = decision,
-                clickbait_decision_VERTEX = decision,
-                clickbait_decision_final = decision
+                clickbait_decision_LLM=decision,
+                clickbait_decision_VERTEX=decision,
+                clickbait_decision_final=decision,
             )
-
 
     def test_decision_integer_constraint(self):
         # Attempt to save a record with an invalid value
         with self.assertRaises(IntegrityError):
             Article.objects.create(clickbait_decision_NLP=42)  # An invalid value
-
 
 
 class VertexAIMock(VertexAI):
@@ -199,31 +202,33 @@ class VertexAIMock(VertexAI):
 
     def predict(self, title: Optional[str] = None, summary: Optional[str] = None):
         if title:
-            return '1' if title.strip() == 'My Clickbait Title' else '0'
+            return "1" if title.strip() == "My Clickbait Title" else "0"
         elif self.title:
-            return '1' if self.title.strip() == 'My Clickbait Title' else '0'
-        return '0'
+            return "1" if self.title.strip() == "My Clickbait Title" else "0"
+        return "0"
 
-
-    @patch('google.auth.load_credentials_from_dict')
+    @patch("google.auth.load_credentials_from_dict")
     def load_config(self, mock_load_credentials_from_dict):
-
         try:
             return_value = Config(
                 refresh_token="test_refresh_token",
                 client_id="test_client_id",
                 client_secret="test_client_secret",
                 quota_project_id="test_quota_project_id",
-                type="test_type"
+                type="test_type",
             )
-            mock_load_credentials_from_dict.return_value = (return_value, return_value.quota_project_id)
-            self.credentials, self.project_id = mock_load_credentials_from_dict(asdict(return_value))
+            mock_load_credentials_from_dict.return_value = (
+                return_value,
+                return_value.quota_project_id,
+            )
+            self.credentials, self.project_id = mock_load_credentials_from_dict(
+                asdict(return_value)
+            )
         except FileNotFoundError or KeyError:
             self.credentials, self.project_id = default()
 
 
 class TestVertexAI(TestCase):
-
     def test_init(self):
         self.vertex_ai = VertexAIMock()
         """Test initializing VertexAI object."""
@@ -238,11 +243,11 @@ class TestVertexAI(TestCase):
         self.assertEqual(self.vertex_ai.title, "This is the Most Clickbait Title Ever!")
         self.assertEqual(
             self.vertex_ai.prompt,
-            "Is this title a clickbait: 'PLACE_FOR_TITLE'? Summary of the article: 'PLACE_FOR_SUMMARY'. Return 1 if yes, 0 if no."
+            "Is this title a clickbait: 'PLACE_FOR_TITLE'? Summary of the article: 'PLACE_FOR_SUMMARY'. Return 1 if yes, 0 if no.",
         )
         self.assertIsNone(self.vertex_ai.my_chat_model)
 
-    @patch('google.auth.load_credentials_from_dict')
+    @patch("google.auth.load_credentials_from_dict")
     def test_load_config(self, mock_load_credentials_from_dict):
         mock_load_credentials_from_dict.return_value = (None, None)
         self.vertex_ai = VertexAIMock()
@@ -250,7 +255,9 @@ class TestVertexAI(TestCase):
         self.assertEqual(self.vertex_ai.credentials.refresh_token, "test_refresh_token")
         self.assertEqual(self.vertex_ai.credentials.client_id, "test_client_id")
         self.assertEqual(self.vertex_ai.credentials.client_secret, "test_client_secret")
-        self.assertEqual(self.vertex_ai.credentials.quota_project_id, "test_quota_project_id")
+        self.assertEqual(
+            self.vertex_ai.credentials.quota_project_id, "test_quota_project_id"
+        )
         self.assertEqual(self.vertex_ai.credentials.type, "test_type")
 
     def test_predict(self):
@@ -258,29 +265,37 @@ class TestVertexAI(TestCase):
         result = self.vertex_ai.predict("My Clickbait Title")
         assert bool(result) is True
 
-    @patch('google.auth.load_credentials_from_dict')
+    @patch("google.auth.load_credentials_from_dict")
     def test_run_clickbait(self, mock_load_credentials_from_dict):
         mock_load_credentials_from_dict.return_value = (None, None)
-        with patch('news.vertex.cloud.vertex_connection.VertexAI.predict') as mock_predict:
-            with patch('news.vertex.cloud.vertex_connection.VertexAI.predict_gemini') as mock_predict_gemini:
-                mock_predict_gemini.return_value = '1'
-                mock_predict.return_value = '1'
+        with patch(
+            "news.vertex.cloud.vertex_connection.VertexAI.predict"
+        ) as mock_predict:
+            with patch(
+                "news.vertex.cloud.vertex_connection.VertexAI.predict_gemini"
+            ) as mock_predict_gemini:
+                mock_predict_gemini.return_value = "1"
+                mock_predict.return_value = "1"
                 self.vertex_ai = VertexAIMock()
-                result = self.vertex_ai.run(title='My Clickbait Title')
+                result = self.vertex_ai.run(title="My Clickbait Title")
                 assert bool(result) is True
 
-    @patch('google.auth.load_credentials_from_dict')
+    @patch("google.auth.load_credentials_from_dict")
     def test_run_not_clickbait(self, mock_load_credentials_from_dict):
         mock_load_credentials_from_dict.return_value = (None, None)
-        with patch('news.vertex.cloud.vertex_connection.VertexAI.predict') as mock_predict:
-            with patch('news.vertex.cloud.vertex_connection.VertexAI.predict_gemini') as mock_predict_gemini:
-                mock_predict_gemini.return_value = '0'
+        with patch(
+            "news.vertex.cloud.vertex_connection.VertexAI.predict"
+        ) as mock_predict:
+            with patch(
+                "news.vertex.cloud.vertex_connection.VertexAI.predict_gemini"
+            ) as mock_predict_gemini:
+                mock_predict_gemini.return_value = "0"
                 self.vertex_ai = VertexAIMock()
-                mock_predict.return_value = '0'
+                mock_predict.return_value = "0"
                 titles = [
                     "A Comprehensive Review of the Latest Machine Learning Techniques",
                     "The Impact of Artificial Intelligence on Society",
-                    "The Future of Work in the Age of Automation"
+                    "The Future of Work in the Age of Automation",
                 ]
                 for title in titles:
                     result = self.vertex_ai.run(title=title)

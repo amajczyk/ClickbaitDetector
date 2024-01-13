@@ -23,32 +23,32 @@ SUMMARY_PLACEHOLDER = "PLACE_FOR_SUMMARY"
 
 class VertexAI:
     __slots__ = [
-        'project_id',
-        'location',
-        'experiment',
-        'staging_bucket',
-        'credentials',
-        'encryption_spec_key_name',
-        'service_account',
-        'my_chat_model',
-        'model_name',
-        'title',
-        'prompt'
+        "project_id",
+        "location",
+        "experiment",
+        "staging_bucket",
+        "credentials",
+        "encryption_spec_key_name",
+        "service_account",
+        "my_chat_model",
+        "model_name",
+        "title",
+        "prompt",
     ]
 
     def __init__(
-            self,
-            project_id: Optional[str] = None,
-            location: Optional[str] = None,
-            experiment: Optional[str] = None,
-            staging_bucket: Optional[str] = None,
-            credentials=None,
-            encryption_spec_key_name: Optional[str] = None,
-            service_account: Optional[str] = None,
-            model_name: ModelName = ModelName.GEMINI,
-            title: str = "This is the Most Clickbait Title Ever!",
-            prompt: str = f"Is this title a clickbait: 'PLACE_FOR_TITLE'? Summary of the article: "
-                          f"'PLACE_FOR_SUMMARY'. Return 1 if yes, 0 if no."
+        self,
+        project_id: Optional[str] = None,
+        location: Optional[str] = None,
+        experiment: Optional[str] = None,
+        staging_bucket: Optional[str] = None,
+        credentials=None,
+        encryption_spec_key_name: Optional[str] = None,
+        service_account: Optional[str] = None,
+        model_name: ModelName = ModelName.GEMINI,
+        title: str = "This is the Most Clickbait Title Ever!",
+        prompt: str = f"Is this title a clickbait: 'PLACE_FOR_TITLE'? Summary of the article: "
+        f"'PLACE_FOR_SUMMARY'. Return 1 if yes, 0 if no.",
     ):
         self.my_chat_model = None
         self.project_id = project_id
@@ -76,7 +76,9 @@ class VertexAI:
 
     def load_config(self):
         try:
-            self.credentials, self.project_id = load_credentials_from_dict(asdict(load_config_from_file()))
+            self.credentials, self.project_id = load_credentials_from_dict(
+                asdict(load_config_from_file())
+            )
         except FileNotFoundError or KeyError:
             self.credentials, self.project_id = default()
 
@@ -93,10 +95,7 @@ class VertexAI:
 
     def predict_gemini(self):
         return self.my_chat_model.generate_content(
-            self.prompt,
-            generation_config={
-                "temperature": 0.3
-            }
+            self.prompt, generation_config={"temperature": 0.3}
         ).text
 
     def run(self, title, summary=None):
@@ -105,23 +104,20 @@ class VertexAI:
             self.prompt = f"Is this title a clickbait: '{title}'? Summary of the article: '{summary}'. Return 1 if yes, 0 if no."
         else:
             self.title = title
-            self.prompt = f"Is this title a clickbait: '{title}'? Return 1 if yes, 0 if no."
+            self.prompt = (
+                f"Is this title a clickbait: '{title}'? Return 1 if yes, 0 if no."
+            )
         self.load_config()
         self.load_model()
         prediction = self.predict()
-        print(f"Prediction: {prediction} for prompt: {self.prompt}")
-        return_value = False if prediction.strip() == '0' else True
-        print(f"Return value: {return_value}")
+        # print(f"Prediction: {prediction} for prompt: {self.prompt}")
+        return_value = False if prediction.strip() == "0" else True
+        # print(f"Return value: {return_value}")
         return return_value
 
 
-def runner(
-        vertex_ai: VertexAI,
-        title: str
-):
-    vertex_ai.run(
-        title=title
-    )
+def runner(vertex_ai: VertexAI, title: str):
+    vertex_ai.run(title=title)
 
 
 def main():
