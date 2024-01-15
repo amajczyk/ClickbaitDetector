@@ -168,3 +168,5 @@ modelling/**/results/backup/*
 modelling/**/data/*
 modelling/**/predictive_models/*
 
+djangoapp/news/scripts/model_loader.py
+djangoapp/news/vertex/cloud/vertex_connection.py
