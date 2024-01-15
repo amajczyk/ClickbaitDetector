@@ -265,12 +265,32 @@ def preprocess_title(df, verbose = False):
     return df
 
 
+def drop_dimensions_from_vector(vector, dimensions_to_drop):
+    return np.delete(vector, dimensions_to_drop)
+
+import pickle
+def get_dimensions_to_drop():
+    # read variables to be dropped from pickle file
+    with open('predictive_models/worst_performing_dimensions_intersection.pkl', 'rb') as f:
+        variables_to_drop = pickle.load(f)
+
+    variables_to_drop = [x.replace('dim_', '') for x in variables_to_drop]
+    variables_to_drop = [int(x) for x in variables_to_drop]
+    return variables_to_drop
 
 ####### MODEL FUNCTIONS ########
 import pandas as pd
 def predict_on_text(classifier, model_word2vec, text):
     # print(text)
+    dropped = get_dimensions_to_drop()
     text = preprocess_title(pd.DataFrame({'title': [text]}))
     text = get_word_vectors(model_word2vec, text['title'][0], aggregation='mean')
+
+    scaler = pickle.load(open('predictive_models/scaler.pkl', 'rb'))
+    text = drop_dimensions_from_vector(text, dropped)
+    text = scaler.transform(text.reshape(1, -1))
+
+    
     # print(len(text))
     return classifier.predict_proba(text.reshape(1, -1))
+

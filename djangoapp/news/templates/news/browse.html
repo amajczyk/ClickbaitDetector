@@ -11,46 +11,64 @@
         <div class="col-md-5">
           <div class="form-floating">
             {{ form.search_query|as_crispy_field }}
-            <!-- <label class="ms-3" for="{{ form.search_query.id_for_label }}">Search articles</label> -->
           </div>
         </div>
         <div class="col-md-2">
           <div class="form-floating">
-            {{ form.date_to|as_crispy_field }}
-            <!-- <label class="ms-3" for="{{ form.date_to.id_for_label }}">Date to</label> -->
+            {{ form.date_scraped_from|as_crispy_field }}
           </div>
         </div>
         <div class="col-md-2">
           <div class="form-floating">
-            {{ form.date_from|as_crispy_field }}
-            <!-- <label class="ms-3" for="{{ form.date_from.id_for_label }}">Date from</label> -->
+            {{ form.date_scraped_to|as_crispy_field }}
           </div>
         </div>
-        <div class="col-md-2 ps-3 mt-2">
-          <div class="form-check">
-            {{ form.show_clickbaits|as_crispy_field }}
-            <!-- <label class="btn form-check-label" for="{{ form.show_clickbaits.id_for_label }}">Show clickbaits toggle</label> -->
+
+        <div class="col-md-2">
+          <div class="form-floating">
+            {{form.clickbait_tolerance|as_crispy_field}}
           </div>
         </div>
-        <div class="col-md-1 mt-2">
+        <div class="col-md-1 mt-4 pt-2">
           <button class="btn btn-success" type="submit">Search</button>
         </div>
       </div>
-
+      
+      <div class="row px-2 pt-2">
+        <div class="card-title">
+          <h6>Categories:</h6>
+        </div>
+        <div class="col-md-2 form-check">
+          {{ form.main|as_crispy_field }}
+        </div>
+        <div class="col-md-2 form-check">
+          {{ form.General|as_crispy_field }}
+        </div>
+        <div class="col-md-2 form-check">
+          {{ form.Politics|as_crispy_field }}
+        </div>
+        <div class="col-md-2 form-check">
+          {{ form.Sports|as_crispy_field }}
+        </div>
+        <div class="col-md-2 form-check">
+          {{ form.Health|as_crispy_field }}
+        </div>
+        <div class="col-md-2 form-check">
+          {{ form.Technology|as_crispy_field }}
+        </div>
+      </div>
       <div class="card">
+      
         <div class="card-body">
-          <div class="row px-2">
+          <div class="row px-2 pt-2">
             <div class="col-md-2 form-check">
               {{ form.thesun|as_crispy_field }}
-              <!-- <label class="form-check-label" for="{{ form.thesun.id_for_label }}">The Sun UK</label> -->
             </div>
             <div class="col-md-2 form-check">
               {{ form.cbsnews|as_crispy_field }}
-              <!-- <label class="form-check-label" for="{{ form.cbsnews.id_for_label }}">CBS News</label> -->
             </div>
             <div class="col-md-2 form-check">
               {{ form.abcnews|as_crispy_field }}
-              <!-- <label class="form-check-label" for="{{ form.abcnews.id_for_label }}">ABC News</label> -->
             </div>
           </div>
         </div>

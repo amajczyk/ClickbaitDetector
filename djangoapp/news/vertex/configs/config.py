@@ -14,7 +14,7 @@ class Config:
 
 
 # Create a function to load the configuration file
-def load_config_from_file(config_path: str = 'news/vertex/config.json') -> Config:
+def load_config_from_file(config_path: str = "news/vertex/config.json") -> Config:
     with open(config_path) as f:
         config = json.load(f)
     return Config(**config)

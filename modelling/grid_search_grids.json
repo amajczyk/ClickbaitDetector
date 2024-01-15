@@ -1,0 +1,135 @@
+{
+    "grid_search_grids": {
+        "decision_tree_grid": {
+            "max_depth": [
+                null,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8
+            ],
+            "max_features": [
+                "sqrt",
+                "log2",
+                null
+            ]
+        },
+
+        "catboost_grid": {
+            "iterations": [
+                100,
+                250,
+                500
+            ],
+            "learning_rate": [
+                null,
+                0.001,
+                0.01,
+                0.1,
+                0.2,
+                0.3
+            ],
+            "depth": [
+                3,
+                4,
+                5,
+                6,
+                7,
+                8
+            ],
+            "l2_leaf_reg": [
+                1,
+                3,
+                5,
+                7,
+                9
+            ]
+        },
+        "lightgbm_grid": {
+            "n_estimators": [
+                50,
+                100,
+                250,
+                500
+            ],
+            "learning_rate": [
+                null,
+                0.01,
+                0.1,
+                0.2,
+                0.3
+            ],
+            "max_depth": [
+                -1,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8
+            ],
+            "num_leaves": [
+                15, 31, 62, 93, 124, 155, 187, 217
+            ]
+        },
+        "xgboost_grid": {
+            "n_estimators": [
+                10,
+                25,
+                50,
+                100,
+                250
+            ],
+            "learning_rate": [
+                null,
+                0.001,
+                0.01,
+                0.1,
+                0.2,
+                0.3
+            ],
+            "max_depth": [
+                null,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8
+            ],
+            "gamma": [
+                0,
+                0.01,
+                0.1,
+                0.5,
+                1,
+                5
+            ]
+        },
+        "random_forest_grid": {
+            "n_estimators": [
+                50,
+                100,
+                250,
+                500
+            ],
+            "max_depth": [
+                null,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8
+            ],
+            "max_features": [
+                "sqrt",
+                "log2",
+                null
+            ]
+        }
+        
+    }
+}
