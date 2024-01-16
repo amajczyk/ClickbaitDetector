@@ -5,7 +5,7 @@ import os
 bucket_name = "clickbait-detector-bucket"
 
 # The ID of the folder to download
-folder_paths = ["clickbait_dataset", "clickbait_dataset_more_variables", "fake_news"]
+folder_paths = ["clickbait_dataset", "clickbait_dataset_more_variables", "fake_news", "model_testing"]
 
 
 # The local path to download the folder to
