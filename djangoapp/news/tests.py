@@ -42,7 +42,7 @@ THESUN_NOT_CLICKBAIT = (
 )
 CBSSPORTS_NOT_CLICKBAIT = "https://www.cbssports.com/nba/news/p-j-tucker-says-theres-not-enough-basketballs-on-the-planet-for-clippers/"
 CLICKBAIT_TITLE = "10 Signs Your Partner Is Cheating - Don't Ignore #7!"
-NOT_CLICKBAIT_TITLE = "Joe Biden projected to win presidency"
+NOT_CLICKBAIT_TITLE = "Hertz is selling Teslas for as little as $21,000, as it offloads the pricey EVs from its rental fleet"
 
 
 class TestScraper(TestCase):
