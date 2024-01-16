@@ -171,3 +171,9 @@ modelling/**/predictive_models/*
 djangoapp/news/scripts/model_loader.py
 djangoapp/news/vertex/cloud/vertex_connection.py
 modelling/model_testing/llm_results.csv
+
+
+modelling/clickbait_dataset/*
+modelling/clickbait_dataset_more_variables/*
+modelling/fake_news/*
+
