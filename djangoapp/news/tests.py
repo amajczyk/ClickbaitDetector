@@ -258,6 +258,7 @@ class TestVertexAI(TestCase):
     def setUp(self):
         """Set up the test case."""
         self.vertex_ai = VertexAIMock()
+        self.vertex_ai.cloud_setup.credentials = None
 
     def test_init(self):
         """Test initializing VertexAI object."""
@@ -267,6 +268,7 @@ class TestVertexAI(TestCase):
         self.assertEqual(self.vertex_ai.cloud_setup.staging_bucket, None)
         self.assertIsNone(self.vertex_ai.cloud_setup.encryption_spec_key_name)
         self.assertIsNone(self.vertex_ai.cloud_setup.service_account)
+        self.assertIsNone(self.vertex_ai.cloud_setup.credentials)
         self.assertEqual(self.vertex_ai.model_name, ModelName.GEMINI)
         self.assertEqual(self.vertex_ai.title, "This is the Most Clickbait Title Ever!")
         self.assertEqual(
