@@ -15,11 +15,8 @@ def upload_folder_to_gcs(bucket_name, folder_path):
             # Get the local file path
             local_file_path = os.path.join(root, file)
 
-            # replace \ with / (windows -> unix)
-            local_file_path = local_file_path.replace("\\", "/")
-
             # Create a blob object
-            blob = bucket.blob("modelling/" + local_file_path)
+            blob = bucket.blob(os.path.join("modelling", local_file_path))
 
             # Upload the file to GCS
             blob.upload_from_filename(local_file_path)
@@ -35,11 +32,8 @@ def upload_file_to_gcs(bucket_name, local_file_path):
     # Get the bucket
     bucket = client.get_bucket(bucket_name)
 
-    # replace \ with / (windows -> unix)
-    local_file_path = local_file_path.replace("\\", "/")
-
     # Create a blob object
-    blob = bucket.blob("modelling/" + local_file_path)
+    blob = bucket.blob(os.path.join("modelling", local_file_path))
 
     # Upload the file to GCS
     blob.upload_from_filename(local_file_path)
@@ -56,9 +50,9 @@ folder_paths = [
     "fake_news",
     ]
 
-# file_paths = [
-#     "model_testing\\vertex_results.csv"
-# ]
+file_paths = [
+    os.path.join("model_testing", "vertex_results.csv")
+]
 
 
 
