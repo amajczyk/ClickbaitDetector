@@ -168,8 +168,7 @@ modelling/**/results/backup/*
 modelling/**/data/*
 modelling/**/predictive_models/*
 
-djangoapp/news/scripts/model_loader.py
-djangoapp/news/vertex/cloud/vertex_connection.py
+
 modelling/model_testing/llm_results.csv
 modelling/model_testing/vertex_results.csv
 
@@ -178,3 +177,5 @@ modelling/clickbait_dataset/*
 modelling/clickbait_dataset_more_variables/*
 modelling/fake_news/*
 
+djangoapp/news/scripts/model_loader2.py
+djangoapp/news/vertex/cloud/vertex_connection2.py
