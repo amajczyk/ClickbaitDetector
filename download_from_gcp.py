@@ -28,4 +28,6 @@ for folder_path in folder_paths:
         os.makedirs(dir, exist_ok=True)
         blob.download_to_filename(
             os.path.join(local_path, blob.name.replace("/", "\\"))
+
         )
+

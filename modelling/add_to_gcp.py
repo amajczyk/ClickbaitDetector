@@ -50,6 +50,7 @@ def upload_file_to_gcs(bucket_name, local_file_path):
 # Usage example
 bucket_name = "clickbait-detector-bucket"
 folder_paths = [
+
     "clickbait_dataset",
     "clickbait_dataset_more_variables",
     "fake_news",
@@ -60,8 +61,11 @@ folder_paths = [
 # ]
 
 
+
 for folder_path in folder_paths:
     upload_folder_to_gcs(bucket_name, folder_path)
 
+
 # for file_path in file_paths:
 #     upload_file_to_gcs(bucket_name, file_path)
+
