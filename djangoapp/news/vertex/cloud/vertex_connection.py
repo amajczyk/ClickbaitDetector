@@ -2,7 +2,7 @@ import threading
 from typing import Optional
 from enum import Enum
 from google.auth import default, load_credentials_from_dict
-from djangoapp.news.vertex.configs.config import load_config_from_file
+from vertex.configs.config import load_config_from_file
 from vertexai.language_models import TextGenerationModel
 from vertexai.preview import generative_models as gen
 from dataclasses import asdict
