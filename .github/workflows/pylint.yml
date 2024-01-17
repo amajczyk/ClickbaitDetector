@@ -21,7 +21,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements_workflow.txt
-        pip install pylint
+        pip install pylint-django
     - name: Analysing the code with pylint
       run: |
-        pylint --recursive=y djangoapp
+        pylint --recursive=y --load-plugins pylint_django djangoapp
