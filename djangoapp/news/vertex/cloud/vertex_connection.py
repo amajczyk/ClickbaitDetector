@@ -2,9 +2,9 @@ import threading
 from typing import Optional
 from enum import Enum
 from google.auth import default, load_credentials_from_dict
-from vertex.configs.config import load_config_from_file
+from djangoapp.news.vertex.configs.config import load_config_from_file
 from vertexai.language_models import TextGenerationModel
-from vertexai.preview import generative_models as gen
+from vertexai.preview.generative_models import GenerativeModel
 from dataclasses import asdict
 from google.cloud import aiplatform
 
@@ -34,7 +34,6 @@ class VertexAI:
         "model_name",
         "title",
         "prompt",
-        "safety",
     ]
 
     def __init__(
@@ -50,7 +49,6 @@ class VertexAI:
         title: str = "This is the Most Clickbait Title Ever!",
         prompt: str = f"Is this title a clickbait: 'PLACE_FOR_TITLE'? Summary of the article: "
         f"'PLACE_FOR_SUMMARY'. Return 1 if yes, 0 if no.",
-        safety: bool = False,
     ):
         self.my_chat_model = None
         self.project_id = project_id
@@ -63,20 +61,6 @@ class VertexAI:
         self.model_name = model_name
         self.title = title
         self.prompt = prompt
-        if not safety:
-            self.safety = {
-                gen.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: gen.HarmBlockThreshold.BLOCK_NONE,
-                gen.HarmCategory.HARM_CATEGORY_HARASSMENT: gen.HarmBlockThreshold.BLOCK_NONE,
-                gen.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: gen.HarmBlockThreshold.BLOCK_NONE,
-                gen.HarmCategory.HARM_CATEGORY_HATE_SPEECH: gen.HarmBlockThreshold.BLOCK_NONE,
-            }
-        else:
-            self.safety = {
-                gen.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: gen.HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-                gen.HarmCategory.HARM_CATEGORY_HARASSMENT: gen.HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-                gen.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: gen.HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-                gen.HarmCategory.HARM_CATEGORY_HATE_SPEECH: gen.HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-            }
         self.init_connection()
 
     def init_connection(self):
@@ -100,7 +84,7 @@ class VertexAI:
 
     def load_model(self):
         if self.model_name == ModelName.GEMINI:
-            self.my_chat_model = gen.GenerativeModel(self.model_name.value)
+            self.my_chat_model = GenerativeModel(self.model_name.value)
             return
         self.my_chat_model = TextGenerationModel.from_pretrained(self.model_name.value)
 
@@ -111,9 +95,7 @@ class VertexAI:
 
     def predict_gemini(self):
         return self.my_chat_model.generate_content(
-            self.prompt,
-            generation_config={"temperature": 0.3},
-            safety_settings=self.safety,
+            self.prompt, generation_config={"temperature": 0.3}
         ).text
 
     def run(self, title, summary=None):
@@ -128,7 +110,9 @@ class VertexAI:
         self.load_config()
         self.load_model()
         prediction = self.predict()
+        # print(f"Prediction: {prediction} for prompt: {self.prompt}")
         return_value = False if prediction.strip() == "0" else True
+        # print(f"Return value: {return_value}")
         return return_value
 
 
