@@ -1,0 +1,174 @@
+"""Vertex AI connection module."""
+import threading
+from typing import Optional
+from enum import Enum
+from dataclasses import asdict
+from news.vertex.configs.config import load_config_from_file
+from vertexai.language_models import TextGenerationModel
+from vertexai.preview import generative_models as gen
+from google.auth import default, load_credentials_from_dict
+from google.cloud import aiplatform
+
+
+class ModelName(Enum):
+    """Model names."""
+    BISON_001 = "text-bison@001"
+    UNICORN_001 = "text-unicorn@001"
+    BISON = "text-bison"
+    BISON_32 = "text-bison-32k"
+    GEMINI = "gemini-pro"
+
+
+TITLE_PLACEHOLDER = "PLACE_FOR_TITLE"
+SUMMARY_PLACEHOLDER = "PLACE_FOR_SUMMARY"
+
+
+# pylint: disable=too-few-public-methods
+# pylint: disable=too-many-arguments
+class CloudSetup:
+    """Cloud setup class."""
+    def __init__(
+        self,
+        project_id: Optional[str] = None,
+        location: Optional[str] = None,
+        experiment: Optional[str] = None,
+        staging_bucket: Optional[str] = None,
+        credentials: Optional[str] = None,
+        encryption_spec_key_name: Optional[str] = None,
+        service_account: Optional[str] = None
+    ):
+        self.project_id = project_id
+        self.location = location
+        self.experiment = experiment
+        self.staging_bucket = staging_bucket
+        self.credentials = credentials
+        self.encryption_spec_key_name = encryption_spec_key_name
+        self.service_account = service_account
+# pylint: enable=too-few-public-methods
+# pylint: enable=too-many-arguments
+
+
+class VertexAI:
+    """Vertex AI class."""
+    __slots__ = [
+        "cloud_setup",
+        "my_chat_model",
+        "model_name",
+        "title",
+        "prompt",
+        "safety",
+    ]
+
+    def __init__(
+            self,
+            cloud_setup: CloudSetup = CloudSetup(),
+            model_name: ModelName = ModelName.GEMINI,
+            title: str = "This is the Most Clickbait Title Ever!",
+            prompt: str = "Is this title a clickbait: 'PLACE_FOR_TITLE'? Summary of the article: "
+                          "'PLACE_FOR_SUMMARY'. Return 1 if yes, 0 if no.",
+            safety: bool = False,
+    ):
+        self.my_chat_model = None
+        self.cloud_setup = cloud_setup
+        self.model_name = model_name
+        self.title = title
+        self.prompt = prompt
+        if not safety:
+            self.safety = {
+                gen.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: gen.HarmBlockThreshold.BLOCK_NONE,
+                gen.HarmCategory.HARM_CATEGORY_HARASSMENT: gen.HarmBlockThreshold.BLOCK_NONE,
+                gen.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: gen.HarmBlockThreshold.BLOCK_NONE,
+                gen.HarmCategory.HARM_CATEGORY_HATE_SPEECH: gen.HarmBlockThreshold.BLOCK_NONE,
+            }
+        else:
+            # pylint: disable=line-too-long
+            self.safety = {
+                gen.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: gen.HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+                gen.HarmCategory.HARM_CATEGORY_HARASSMENT: gen.HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+                gen.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: gen.HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+                gen.HarmCategory.HARM_CATEGORY_HATE_SPEECH: gen.HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+            }
+            # pylint: enable=line-too-long
+        self.init_connection()
+
+    def init_connection(self):
+        """Initialize connection."""
+        aiplatform.init(
+            project=self.cloud_setup.project_id,
+            location=self.cloud_setup.location,
+            experiment=self.cloud_setup.experiment,
+            staging_bucket=self.cloud_setup.staging_bucket,
+            credentials=self.cloud_setup.credentials,
+            encryption_spec_key_name=self.cloud_setup.encryption_spec_key_name,
+            service_account=self.cloud_setup.service_account,
+        )
+
+    def load_config(self):
+        """Load config."""
+        try:
+            self.cloud_setup.credentials, self.cloud_setup.project_id = load_credentials_from_dict(
+                asdict(load_config_from_file())
+            )
+        except (FileNotFoundError, KeyError):
+            self.cloud_setup.credentials, self.cloud_setup.project_id = default()
+
+    def load_model(self):
+        """Load model."""
+        if self.model_name == ModelName.GEMINI:
+            self.my_chat_model = gen.GenerativeModel(self.model_name.value)
+            return
+        self.my_chat_model = TextGenerationModel.from_pretrained(self.model_name.value)
+
+    def predict(self):
+        """Predict."""
+        if self.model_name == ModelName.GEMINI:
+            return self.predict_gemini()
+        return self.my_chat_model.predict(self.prompt).text
+
+    def predict_gemini(self):
+        """Predict gemini."""
+        return self.my_chat_model.generate_content(
+            self.prompt,
+            generation_config={"temperature": 0.3},
+            safety_settings=self.safety,
+        ).text
+
+    def run(self, title, summary=None):
+        """Run."""
+        if summary:
+            self.title = title
+            self.prompt = f"Is this title a clickbait: '{title}'? Summary of the article: '{summary}'. Return 1 if yes, 0 if no."  # pylint: disable=line-too-long
+        else:
+            self.title = title
+            self.prompt = (
+                f"Is this title a clickbait: '{title}'? Return 1 if yes, 0 if no."
+            )
+        self.load_config()
+        self.load_model()
+        prediction = self.predict()
+        return_value = prediction.strip() != "0"
+        return return_value
+
+
+def runner(vertex_ai: VertexAI, title: str):
+    """Runner."""
+    vertex_ai.run(title=title)
+
+
+def main():
+    """Main."""
+    titles = [
+        "You have to see this!",
+        "Presidential election results",
+        "Barack Obama claimed to be a lizard person",
+        "EU to ban all cars by 2035",
+        "Lionel Messi to join PSG",
+    ]
+    for title in titles:
+        vertex_ai = VertexAI()
+        t = threading.Thread(target=runner, args=(vertex_ai, title))
+        t.start()
+
+
+if "__main__" == __name__:
+    main()

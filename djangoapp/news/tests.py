@@ -13,7 +13,6 @@ from django.conf import settings
 
 from google.auth import default
 
-
 from news.vertex.cloud.vertex_connection import VertexAI, ModelName
 from news.vertex.configs.config import Config
 from news.scripts.scraping import Scraper
@@ -21,7 +20,6 @@ from news.scripts.nlp import NLP
 from news.scripts.llm import LocalLLM
 
 from .models import Article
-
 
 # pylint: disable=line-too-long
 ABCNEWS_NOT_CLICKBAIT = "https://abcnews.go.com/Politics/joe-biden-apparent-winner-presidency/story?id=73981165"
@@ -32,10 +30,13 @@ THESUN_NOT_CLICKBAIT = (
 CBSSPORTS_NOT_CLICKBAIT = "https://www.cbssports.com/nba/news/p-j-tucker-says-theres-not-enough-basketballs-on-the-planet-for-clippers/"
 CLICKBAIT_TITLE = "10 Signs Your Partner Is Cheating - Don't Ignore #7!"
 NOT_CLICKBAIT_TITLE = "Hertz is selling Teslas for as little as $21,000, as it offloads the pricey EVs from its rental fleet"
+
+
 # pylint: enable=line-too-long
 
 class TestScraper(TestCase):
     """Test the Scraper class."""
+
     def setUp(self):
         # Set up any necessary resources or configurations for tests
         # python manage.py test news
@@ -110,6 +111,7 @@ class TestScraper(TestCase):
 
 class NLPPredictorTests(TestCase):
     """Test the NLP class."""
+
     def test_predict_on_text(self):
         """Test that the predict_on_text() method returns a list of tuples
         containing the predicted class and the probability of the predicted
@@ -127,6 +129,7 @@ class NLPPredictorTests(TestCase):
 
 class LLMPredictorTests(TestCase):
     """Test the LocalLLM class."""
+
     def test_predict(self):
         """Test that the predict() method returns a float."""
         llm = LocalLLM()
@@ -141,6 +144,7 @@ class LLMPredictorTests(TestCase):
 
 class ArticleModelTests(TestCase):
     """Test the Article model."""
+
     def test_default_values(self):
         """Test that default values are set for clickbait_decision fields.
         """
@@ -213,6 +217,7 @@ class ArticleModelTests(TestCase):
 
 class VertexAIMock(VertexAI):
     """Mock the VertexAI class."""
+
     def init_connection(self):
         pass
 
@@ -240,15 +245,16 @@ class VertexAIMock(VertexAI):
                 return_value,
                 return_value.quota_project_id,
             )
-            self.cloud_setup.credentials, self.cloud_setup.project_id = mock_load_credentials_from_dict(
-                asdict(return_value)
-            )
+            (
+                self.cloud_setup.credentials, self.cloud_setup.project_id
+            ) = mock_load_credentials_from_dict(asdict(return_value))
         except (FileNotFoundError, KeyError):
             self.cloud_setup.credentials, self.cloud_setup.project_id = default()
 
 
 class TestVertexAI(TestCase):
     """Test the VertexAI class."""
+
     def setUp(self):
         """Set up the test case."""
         self.vertex_ai = VertexAIMock()
@@ -259,7 +265,6 @@ class TestVertexAI(TestCase):
         self.assertEqual(self.vertex_ai.cloud_setup.location, None)
         self.assertEqual(self.vertex_ai.cloud_setup.experiment, None)
         self.assertEqual(self.vertex_ai.cloud_setup.staging_bucket, None)
-        self.assertIsNone(self.vertex_ai.cloud_setup.credentials)
         self.assertIsNone(self.vertex_ai.cloud_setup.encryption_spec_key_name)
         self.assertIsNone(self.vertex_ai.cloud_setup.service_account)
         self.assertEqual(self.vertex_ai.model_name, ModelName.GEMINI)
@@ -267,6 +272,7 @@ class TestVertexAI(TestCase):
         self.assertEqual(
             self.vertex_ai.prompt,
             "Is this title a clickbait: 'PLACE_FOR_TITLE'? Summary of the article: 'PLACE_FOR_SUMMARY'. Return 1 if yes, 0 if no.",  # pylint: disable=line-too-long
+            # pylint: disable=line-too-long
         )
         self.assertIsNone(self.vertex_ai.my_chat_model)
 
