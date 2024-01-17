@@ -1,30 +1,34 @@
-import requests
-import re
+"""Scraping module for scraping articles from websites."""
 import json
+import re
+
+import requests
 from bs4 import BeautifulSoup
 
 
 class NotSupportedWebsiteException(Exception):
-    pass
+    """Exception for not supported websites."""
 
 
 class Scraper:
+    """Scraper class."""
     def __init__(self, path_to_site_variables: str):
         self.site_variables_dict = self.get_site_variables_dict(path_to_site_variables)
 
     @staticmethod
     def get_site_variables_dict(path: str) -> dict:
-        # read json file
-        with open(path, "r") as f:
+        """Read json file."""
+        with open(path, "r", encoding="utf-8") as f:
             site_variables_dict = json.load(f)
         return site_variables_dict
 
     def scrape_article_urls(self, main_url: str) -> list[str]:
-        response = requests.get(main_url)
+        """Scrape article urls."""
+        response = requests.get(main_url, timeout=5)
         try:
             response.raise_for_status()
         except requests.exceptions.HTTPError as e:
-            raise Exception(
+            raise Exception(  # pylint: disable=broad-exception-raised
                 f"HTTP request failed with status code {response.status_code}"
             ) from e
 
@@ -63,6 +67,7 @@ class Scraper:
         return matching_hrefs
 
     def discern_website_from_url(self, url: str) -> dict:
+        """Discern website from url."""
         if url.startswith("https://www.cbssports.com"):
             return self.site_variables_dict["cbsnews"]
 
@@ -77,7 +82,9 @@ class Scraper:
         )
         if not site_variables:
             raise NotSupportedWebsiteException(
-                f"Scraping for this website is not supported. Supported websites are: {', '.join(self.site_variables_dict.keys())}"
+                f"""Scraping for this website is not supported.
+                Supported websites are: {', '.join(self.site_variables_dict.keys())}
+                """
             )
         return site_variables
 
@@ -85,6 +92,7 @@ class Scraper:
     def check_href_match_condition(
         url, url_matchings, compiled_excluded_patterns, compiled_included_patterns
     ):
+        """Check href match condition."""
         excluded_patterns_match_condition = True
         if compiled_excluded_patterns:
             excluded_patterns_match_condition = not any(
@@ -113,13 +121,16 @@ class Scraper:
         paragraph_tag: str,
         title_tag: str,
         subtitle_tag: str = None,
-        exclude: list[str] = [],
+        exclude=None,
     ) -> dict[str, str]:
-        response = requests.get(url)
+        """Scrape content."""
+        if exclude is None:
+            exclude = []
+        response = requests.get(url, timeout=5)
         try:
             response.raise_for_status()
         except requests.exceptions.HTTPError as e:
-            raise Exception(
+            raise Exception(  # pylint: disable=broad-exception-raised
                 f"HTTP request failed with status code {response.status_code}"
             ) from e
 
@@ -172,9 +183,12 @@ class Scraper:
         return result
 
     def scrape(self, url: str):
+        """Scrape content."""
         if not url.startswith("http://") and not url.startswith("https://"):
             raise NotSupportedWebsiteException(
-                f"Scraping for this website is not supported. Supported websites are: {', '.join(self.site_variables_dict.keys())}"
+                f"""Scraping for this website is not supported.
+                Supported websites are: {', '.join(self.site_variables_dict.keys())}
+                """
             )
         site_dict = self.discern_website_from_url(url)
         result_dict = self.scrape_content(

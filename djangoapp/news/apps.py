@@ -38,4 +38,4 @@ class NewsConfig(AppConfig):
         except (KeyError, TypeError, AttributeError) as e:
             print("Error in initialisation: ", e)
             print("The app starts normally, but there may be some problems.")
-        print("Initilisation finished.")
+        print("Initialisation finished.")

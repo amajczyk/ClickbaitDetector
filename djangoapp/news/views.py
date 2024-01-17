@@ -251,7 +251,8 @@ def update_session_variables(
             # This situation means that there are no more urls on the current page,
             # so we need to go to the next page
             request.session[site_category]["page"] += 1
-            page_part = f"{scraper.site_variables_dict[site]['page_suffix']}"
+            number = request.session[site_category]["page"]  # pylint: disable=unused-variable
+            page_part = eval(f"f'{scraper.site_variables_dict[site]['page_suffix']}'")  # pylint: disable=eval-used
             urls = scraper.scrape_article_urls(
                 f"{scraper.site_variables_dict[site]['topics'][selected_category]}{page_part}"
             )

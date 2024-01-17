@@ -59,7 +59,7 @@ class VertexAI:
         "safety",
     ]
 
-    def __init__(
+    def __init__( # pylint: disable=too-many-arguments
             self,
             cloud_setup: CloudSetup = CloudSetup(),
             model_name: ModelName = ModelName.GEMINI,
