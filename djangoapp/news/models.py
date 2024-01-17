@@ -1,3 +1,4 @@
+"""Models for the clickbait detector app."""
 import datetime
 
 from django.db import models
@@ -7,11 +8,13 @@ from django.core.exceptions import ValidationError
 
 
 def validate_date_is_not_future(value):
+    """Validate that the date is not in the future."""
     if value is not None and value > timezone.now() + datetime.timedelta(days=1):
         raise ValidationError("The date cannot be more than 1 day in the future.")
 
 
 class Article(models.Model):
+    """Model for the articles."""
     title = models.CharField(max_length=256)
     content_summary = models.TextField()
     scraped_date = models.DateTimeField(
@@ -41,9 +44,11 @@ class Article(models.Model):
     # 3 - not clickbait 3/3 or 2/2
 
     def __str__(self):
-        return self.title
+        return str(self.title)
 
+    # pylint: disable=too-few-public-methods
     class Meta:
+        """Metaclass for the Article model."""
         constraints = [
             models.CheckConstraint(
                 check=Q(clickbait_decision_NLP__in=[-1, 0, 1]),
@@ -54,11 +59,10 @@ class Article(models.Model):
                 name="valid_decision_LLM",
             ),
         ]
-
-    def __str__(self):
-        return self.title
+    # pylint: enable=too-few-public-methods
 
     def was_scraped_today(self):
+        """Return True if the article was scraped today."""
         now = timezone.now()
         return now - datetime.timedelta(days=1) <= self.scraped_date <= now
 
