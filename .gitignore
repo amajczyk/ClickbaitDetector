@@ -179,3 +179,5 @@ modelling/fake_news/*
 
 djangoapp/news/scripts/model_loader2.py
 djangoapp/news/vertex/cloud/vertex_connection2.py
+modelling/model_testing/llm_results*.csv
+
