@@ -23,10 +23,10 @@
                 
             <div class="p-1 flex-grow-1 text-center">
                     <span class="mt-1">
-                        NLP clickbait probability: {{ article.clickbait_probability_NLP |multiply:"100"|floatformat:1 }}% ➜
+                        NLP clickbait probability: {{ article.clickbait_probability_nlp |multiply:"100"|floatformat:1 }}% ➜
                     </span>
                     
-                    {% if article.clickbait_decision_NLP == 0 %}
+                    {% if article.clickbait_decision_nlp == 0 %}
                     {% include 'news/svg/sure_not_clickbait.svg' %}
                     {% else %}
                     {% include 'news/svg/sure_clickbait.svg' %}
@@ -41,14 +41,14 @@
 
                     <span class="mt-1">
                 
-                LLM clickbait probability: {{ article.clickbait_probability_LLM|multiply:"100"|floatformat:1 }}% ➜
+                LLM clickbait probability: {{ article.clickbait_probability_llm|multiply:"100"|floatformat:1 }}% ➜
             </span>
 
 
                 
 
                 
-                {% if article.clickbait_decision_LLM == 0 %}
+                {% if article.clickbait_decision_llm == 0 %}
                 {% include 'news/svg/sure_not_clickbait.svg' %}
                 {% else %}
                 {% include 'news/svg/sure_clickbait.svg' %}
@@ -62,9 +62,9 @@
 
 
                 <span class="mt-1 ">VertexAI decision:</span>
-                {% if article.clickbait_decision_VERTEX == 0 %}
+                {% if article.clickbait_decision_vertex == 0 %}
                 {% include 'news/svg/sure_not_clickbait.svg' %}
-                {% elif article.clickbait_decision_VERTEX == 1 %}
+                {% elif article.clickbait_decision_vertex == 1 %}
                 {% include 'news/svg/sure_clickbait.svg' %}
                 {% else %}
                 {% include 'news/svg/undecided.svg' %}

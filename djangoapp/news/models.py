@@ -25,15 +25,15 @@ class Article(models.Model):
     category = models.CharField(max_length=64, null=True, blank=True)
     subcategory = models.CharField(max_length=64, null=True, blank=True)
 
-    clickbait_decision_NLP = models.SmallIntegerField(
+    clickbait_decision_nlp = models.SmallIntegerField(
         default=-1
     )  # classic mlp model decision
-    clickbait_probability_NLP = models.FloatField(
+    clickbait_probability_nlp = models.FloatField(
         default=-1
     )  # classic mlp model decision
-    clickbait_decision_LLM = models.SmallIntegerField(default=-1)  # LLM model decision
-    clickbait_probability_LLM = models.FloatField(default=-1)  # LLM model decision
-    clickbait_decision_VERTEX = models.SmallIntegerField(
+    clickbait_decision_llm = models.SmallIntegerField(default=-1)  # LLM model decision
+    clickbait_probability_llm = models.FloatField(default=-1)  # LLM model decision
+    clickbait_decision_vertex = models.SmallIntegerField(
         default=-1
     )  # VERTEX AI model decision
 
@@ -51,12 +51,12 @@ class Article(models.Model):
         """Metaclass for the Article model."""
         constraints = [
             models.CheckConstraint(
-                check=Q(clickbait_decision_NLP__in=[-1, 0, 1]),
-                name="valid_decision_NLP",
+                check=Q(clickbait_decision_nlp__in=[-1, 0, 1]),
+                name="valid_decision_nlp",
             ),
             models.CheckConstraint(
-                check=Q(clickbait_decision_LLM__in=[-1, 0, 1]),
-                name="valid_decision_LLM",
+                check=Q(clickbait_decision_llm__in=[-1, 0, 1]),
+                name="valid_decision_llm",
             ),
         ]
     # pylint: enable=too-few-public-methods

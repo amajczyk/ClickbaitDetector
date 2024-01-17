@@ -86,7 +86,8 @@ def classify_vertex(title: str, vertex: VertexAI, summary: str = None):
         else:
             clickbait_decision_vertex = vertex.run(title=title)
         return int(clickbait_decision_vertex)
-    except Exception:  # pylint: disable=broad-except
+    except Exception as e:  # pylint: disable=broad-except
+        print(e)
         return -1
 
 
@@ -141,9 +142,11 @@ def process_article(
         content_summary = summarizer(
             scraped_data["content"], max_length=200, min_length=40, do_sample=False
         )[0]["summary_text"].replace(" .", ".")
+        print("summary created")
         vertex = VertexAI()
+        print("vertex created")
         clickbait_decision_vertex = classify_vertex(title, vertex, content_summary)
-
+        print("vertex classified")
         clickbait_decision_final = make_final_decision(
             clickbait_decision_nlp,
             clickbait_decision_llm,
@@ -182,7 +185,7 @@ def get_articles(
     This function is used to get the articles from the selected sites and categories.
     """
 
-    scraper, nlp, llm, summarizer, vertex = get_model_loader_attributes()
+    scraper, nlp, llm, summarizer, _ = get_model_loader_attributes()
 
     if not selected_sites or not selected_category:
         # Get the session variables, from the scrape_articles view
@@ -202,7 +205,6 @@ def get_articles(
         nlp=nlp,
         llm=llm,
         summarizer=summarizer,
-        vertex=vertex,
         selected_category=selected_category,
     )
     with concurrent.futures.ThreadPoolExecutor(max_workers=9) as executor:
