@@ -216,21 +216,22 @@ class ArticleModelTests(TestCase):
 
 
 class VertexAIMock(VertexAI):
+    """Mock the VertexAI class."""
     def init_connection(self):
         pass
 
     def load_model(self):
         pass
 
-    def predict(self, title: Optional[str] = None, summary: Optional[str] = None):
+    def predict(self, title: Optional[str] = None):
         if title:
             return "1" if title.strip() == "My Clickbait Title" else "0"
-        elif self.title:
+        if self.title:
             return "1" if self.title.strip() == "My Clickbait Title" else "0"
         return "0"
 
     @patch("google.auth.load_credentials_from_dict")
-    def load_config(self, mock_load_credentials_from_dict):
+    def load_config(self, mock_load_credentials_from_dict):  # pylint: disable=arguments-differ
         try:
             return_value = Config(
                 refresh_token="test_refresh_token",
@@ -246,13 +247,18 @@ class VertexAIMock(VertexAI):
             self.credentials, self.project_id = mock_load_credentials_from_dict(
                 asdict(return_value)
             )
-        except FileNotFoundError or KeyError:
+        except (FileNotFoundError, KeyError):
             self.credentials, self.project_id = default()
 
 
 class TestVertexAI(TestCase):
-    def test_init(self):
+    """Test the VertexAI class."""
+
+    def setUp(self):
+        """Set up the test."""
         self.vertex_ai = VertexAIMock()
+
+    def test_init(self):
         """Test initializing VertexAI object."""
         self.assertEqual(self.vertex_ai.project_id, None)
         self.assertEqual(self.vertex_ai.location, None)
@@ -265,15 +271,17 @@ class TestVertexAI(TestCase):
         self.assertEqual(self.vertex_ai.title, "This is the Most Clickbait Title Ever!")
         self.assertEqual(
             self.vertex_ai.prompt,
-            "Is this title a clickbait: 'PLACE_FOR_TITLE'? Summary of the article: 'PLACE_FOR_SUMMARY'. Return 1 if yes, 0 if no.",
+            "Is this title a clickbait: 'PLACE_FOR_TITLE'? Summary of the article:"
+            " 'PLACE_FOR_SUMMARY'. Return 1 if yes, 0 if no.",
         )
         self.assertIsNone(self.vertex_ai.my_chat_model)
 
     @patch("google.auth.load_credentials_from_dict")
     def test_load_config(self, mock_load_credentials_from_dict):
+        """Test loading config from file."""
         mock_load_credentials_from_dict.return_value = (None, None)
         self.vertex_ai = VertexAIMock()
-        self.vertex_ai.load_config()
+        self.vertex_ai.load_config()  # pylint: disable=no-value-for-parameter
         self.assertEqual(self.vertex_ai.credentials.refresh_token, "test_refresh_token")
         self.assertEqual(self.vertex_ai.credentials.client_id, "test_client_id")
         self.assertEqual(self.vertex_ai.credentials.client_secret, "test_client_secret")
@@ -283,12 +291,14 @@ class TestVertexAI(TestCase):
         self.assertEqual(self.vertex_ai.credentials.type, "test_type")
 
     def test_predict(self):
+        """Test the predict() method."""
         self.vertex_ai = VertexAIMock()
         result = self.vertex_ai.predict("My Clickbait Title")
         assert bool(result) is True
 
     @patch("google.auth.load_credentials_from_dict")
     def test_run_clickbait(self, mock_load_credentials_from_dict):
+        """Test the run() method on clickbait case."""
         mock_load_credentials_from_dict.return_value = (None, None)
         with patch(
             "news.vertex.cloud.vertex_connection.VertexAI.predict"
@@ -304,6 +314,7 @@ class TestVertexAI(TestCase):
 
     @patch("google.auth.load_credentials_from_dict")
     def test_run_not_clickbait(self, mock_load_credentials_from_dict):
+        """Test the run() method on non-clickbait case."""
         mock_load_credentials_from_dict.return_value = (None, None)
         with patch(
             "news.vertex.cloud.vertex_connection.VertexAI.predict"

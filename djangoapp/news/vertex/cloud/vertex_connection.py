@@ -29,7 +29,8 @@ TITLE_PLACEHOLDER = "PLACE_FOR_TITLE"
 SUMMARY_PLACEHOLDER = "PLACE_FOR_SUMMARY"
 
 
-class VertexAI:
+class VertexAI:  # pylint: disable=too-many-instance-attributes
+    """Vertex AI class."""
     __slots__ = [
         "project_id",
         "location",
@@ -45,7 +46,7 @@ class VertexAI:
         "safety",
     ]
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-arguments
         self,
         project_id: Optional[str] = None,
         location: Optional[str] = None,
@@ -56,8 +57,8 @@ class VertexAI:
         service_account: Optional[str] = None,
         model_name: ModelName = ModelName.GEMINI,
         title: str = "This is the Most Clickbait Title Ever!",
-        prompt: str = f"Is this title a clickbait: 'PLACE_FOR_TITLE'? Summary of the article: "
-        f"'PLACE_FOR_SUMMARY'. Return 1 if yes, 0 if no.",
+        prompt: str = "Is this title a clickbait: 'PLACE_FOR_TITLE'? Summary of the article: "
+        "'PLACE_FOR_SUMMARY'. Return 1 if yes, 0 if no.",
         safety: bool = False,
     ):
         self.my_chat_model = None
@@ -88,6 +89,7 @@ class VertexAI:
         self.init_connection()
 
     def init_connection(self):
+        """Initialize Vertex AI connection."""
         aiplatform.init(
             project=self.project_id,
             location=self.location,
@@ -99,25 +101,29 @@ class VertexAI:
         )
 
     def load_config(self):
+        """Load Vertex AI configuration."""
         try:
             self.credentials, self.project_id = load_credentials_from_dict(
                 asdict(load_config_from_file())
             )
-        except FileNotFoundError or KeyError:
+        except (FileNotFoundError, KeyError):
             self.credentials, self.project_id = default()
 
     def load_model(self):
+        """Load Vertex AI model."""
         if self.model_name == ModelName.GEMINI:
             self.my_chat_model = gen.GenerativeModel(self.model_name.value)
             return
         self.my_chat_model = TextGenerationModel.from_pretrained(self.model_name.value)
 
     def predict(self):
+        """Predict the clickbait score."""
         if self.model_name == ModelName.GEMINI:
             return self.predict_gemini()
         return self.my_chat_model.predict(self.prompt).text
 
     def predict_gemini(self):
+        """Predict the clickbait score using Gemini."""
         return self.my_chat_model.generate_content(
             self.prompt,
             generation_config={"temperature": 0.3},
@@ -125,9 +131,11 @@ class VertexAI:
         ).text
 
     def run(self, title, summary=None):
+        """Run the model."""
         if summary:
             self.title = title
-            self.prompt = f"Is this title a clickbait: '{title}'? Summary of the article: '{summary}'. Return 1 if yes, 0 if no."
+            self.prompt = (f"Is this title a clickbait: '{title}'?"
+                           f"Summary of the article: '{summary}'. Return 1 if yes, 0 if no.")
         else:
             self.title = title
             self.prompt = (
@@ -136,15 +144,17 @@ class VertexAI:
         self.load_config()
         self.load_model()
         prediction = self.predict()
-        return_value = False if prediction.strip() == "0" else True
+        return_value = prediction.strip() != "0"
         return return_value
 
 
 def runner(vertex_ai: VertexAI, title: str):
+    """Run the model in a thread."""
     vertex_ai.run(title=title)
 
 
 def main():
+    """Main function."""
     titles = [
         "You have to see this!",
         "Presidential election results",
