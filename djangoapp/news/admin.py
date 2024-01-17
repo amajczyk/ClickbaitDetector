@@ -1,3 +1,4 @@
+"""Admin configuration for the articles app."""
 from django.contrib import admin
 
 from .models import Article
