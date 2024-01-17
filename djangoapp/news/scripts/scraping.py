@@ -116,7 +116,7 @@ class Scraper:
         ) or included_patterns_match_condition
 
     @staticmethod
-    def scrape_content(
+    def scrape_content(  # pylint: disable=too-many-locals
         url: str,
         paragraph_tag: str,
         title_tag: str,
