@@ -2,12 +2,6 @@ $(document).ready(function(){
 // Intercept form submission
 $("#urlForm").submit(function(event){
 
-    if (!this.checkValidity()) {
-        // If the form is not valid, let the browser handle the validation message
-        alert('Not supported')
-        return;
-    }
-
     event.preventDefault(); // Prevent the form from submitting the traditional way
     
     
@@ -24,7 +18,6 @@ $("#urlForm").submit(function(event){
         }
     });
 
-    $("#detailsSection").html('');
 
 });
 });
