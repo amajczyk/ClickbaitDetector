@@ -75,7 +75,7 @@ class NLP:  # pylint: disable=too-many-instance-attributes
             w2v_path = os.path.join(
                 settings.BASE_DIR,
                 "news",
-                "word2vec_models",
+                "predictive_models",
                 self.model_settings["model_path"],
             )
 
