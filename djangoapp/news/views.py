@@ -504,8 +504,3 @@ def browse_articles(request: HttpRequest):
     articles = Article.objects.order_by("-scraped_date")[:10]
     context = {"form": form, "latest_article_list": articles}
     return render(request, "news/browse.html", context=context)
-
-
-
-
-
