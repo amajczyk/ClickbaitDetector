@@ -20,24 +20,24 @@ class SiteSelectionForm(forms.Form):
     abcnews = forms.BooleanField(required=False, initial=True, label="ABC News")
     clickbait_tolerance = forms.ChoiceField(
         choices=[
-            ("0", "3/3"),
-            ("1", "2/3"),
-            ("2", "1/3"),
-            ("3", "0"),
+            ("0", "Only non-clickbaits"),
+            ("1", "Likely non-clickbaits"),
+            ("2", "Possibly clickbaits"),
+            ("3", "All"),
         ],
         required=False,
         initial="3",
     )
     category = forms.ChoiceField(
         choices=[
-            ("main", "Front Page"),
-            ("General", "General"),
+            ("Front Page", "Front Page"),
+            ("World", "World"),
             ("Politics", "Politics"),
             ("Sports", "Sports"),
             ("Health", "Health"),
             ("Technology", "Technology"),
         ],
-        initial="main",
+        initial="Front Page",
         required=False,
     )
 
@@ -56,17 +56,17 @@ class SearchArticlesForm(forms.Form):
     abcnews = forms.BooleanField(required=False, initial=True, label="ABC News")
     clickbait_tolerance = forms.ChoiceField(
         choices=[
-            ("0", "3/3"),
-            ("1", "2/3"),
-            ("2", "1/3"),
-            ("3", "0"),
+            ("0", "Only non-clickbaits"),
+            ("1", "Likely non-clickbaits"),
+            ("2", "Possibly clickbaits"),
+            ("3", "All"),
         ],
         required=False,
         initial="3",
     )
 
-    main = forms.BooleanField(required=False, initial=False, label="Front Page")
-    General = forms.BooleanField(required=False, initial=False, label="General")
+    front_page = forms.BooleanField(required=False, initial=False, label="Front Page")
+    World = forms.BooleanField(required=False, initial=False, label="World")
     Politics = forms.BooleanField(required=False, initial=False, label="Politics")
     Sports = forms.BooleanField(required=False, initial=False, label="Sports")
     Health = forms.BooleanField(required=False, initial=False, label="Health")

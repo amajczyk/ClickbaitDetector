@@ -22,14 +22,16 @@ from .models import Article
 from .forms import URLForm, SiteSelectionForm, SearchArticlesForm
 
 
-
 # for type hinting
 
 
-
-
 class NoMoreUrlsException(Exception):
-    """Custom exception for when there are no more urls to scrape."""
+    """
+    This exception is raised when there are not more urls to scrape.
+    If this exception is raised, the user should be notified to change the scraped category.
+    """
+    def __init__(self, message="There are no more urls to scrape from this category."):
+        super().__init__(message)
 
 
 #############################################
@@ -91,28 +93,6 @@ def classify_vertex(title: str, vertex: VertexAI, summary: str = None):
         return -1
 
 
-def make_final_decision(
-    clickbait_decision_nlp: int,
-    clickbait_decision_llm: int,
-    clickbait_decision_vertex: int,
-) -> int:
-    """Returns the final decision made by the 3 models."""
-    if clickbait_decision_vertex != -1:
-        return int(
-            clickbait_decision_nlp + clickbait_decision_llm + clickbait_decision_vertex
-        )
-
-    decisions = [clickbait_decision_nlp, clickbait_decision_llm]
-    sum_ = sum(decisions)
-    if sum_ == 0:
-        return 0
-    if sum_ == 1:
-        return 2
-    if sum_ == 2:
-        return 3
-    return -1
-
-
 # pylint: disable=too-many-arguments
 # pylint: disable=too-many-locals
 def process_article(
@@ -142,16 +122,9 @@ def process_article(
         content_summary = summarizer(
             scraped_data["content"], max_length=200, min_length=40, do_sample=False
         )[0]["summary_text"].replace(" .", ".")
-        print("summary created")
         vertex = VertexAI()
-        print("vertex created")
         clickbait_decision_vertex = classify_vertex(title, vertex, content_summary)
-        print("vertex classified")
-        clickbait_decision_final = make_final_decision(
-            clickbait_decision_nlp,
-            clickbait_decision_llm,
-            clickbait_decision_vertex,
-        )
+
         article = Article(
             title=title,
             url_from=url,
@@ -163,13 +136,15 @@ def process_article(
             clickbait_decision_llm=clickbait_decision_llm,
             clickbait_probability_llm=clickbait_probability_llm,
             clickbait_decision_vertex=clickbait_decision_vertex,
-            clickbait_decision_final=clickbait_decision_final,
         )
+        article.make_final_decision()
         article.save()
         return article
     except Exception as e:  # pylint: disable=broad-except
         print(e)
         return None
+
+
 # pylint: enable=too-many-arguments
 # pylint: enable=too-many-locals
 
@@ -210,7 +185,8 @@ def get_articles(
     with concurrent.futures.ThreadPoolExecutor(max_workers=9) as executor:
         articles = list(executor.map(process_article_partial, urls))
         articles = [
-            el for el in articles
+            el
+            for el in articles
             if el is not None and el.clickbait_decision_final <= clickbait_tolerance
         ]
     return articles
@@ -233,7 +209,7 @@ def update_session_variables(
 
     print(
         f"{site_category}, articles: {start} - {end},",
-        f"page: {request.session[site_category]['page']}"
+        f"page: {request.session[site_category]['page']}",
     )
 
     while start <= end:
@@ -243,9 +219,9 @@ def update_session_variables(
             )
         except IndexError:
             if (
-                    selected_category == "main"
-                    or site == "abcnews"
-                    or site_category == "cbsnews_Sports"
+                selected_category == "Front Page"
+                or site == "abcnews"
+                or site_category == "cbsnews_Sports"
             ):
                 # main sites and abcnews don't have pagination
                 break
@@ -253,8 +229,9 @@ def update_session_variables(
             # This situation means that there are no more urls on the current page,
             # so we need to go to the next page
             request.session[site_category]["page"] += 1
-            number = request.session[site_category]["page"]  # pylint: disable=unused-variable
-            page_part = eval(f"f'{scraper.site_variables_dict[site]['page_suffix']}'")  # pylint: disable=eval-used
+            page_suffix = scraper.site_variables_dict[site]["page_suffix"]
+            page = request.session[site_category]["page"]
+            page_part = f"{page_suffix}{page}"
             urls = scraper.scrape_article_urls(
                 f"{scraper.site_variables_dict[site]['topics'][selected_category]}{page_part}"
             )
@@ -285,9 +262,7 @@ def get_next_urls(request: HttpRequest, sites: List[str] = None) -> List[str]:
 
     urls = [item for sublist in zip(*site_url_lists) for item in sublist]
     if not urls:
-        raise NoMoreUrlsException(
-            "There are no more urls to scrape from this category."
-        )
+        raise NoMoreUrlsException()
     return urls
 
 
@@ -300,7 +275,7 @@ def scrape_urls(
     stores them in session variables.
     """
     selected_category = request.session["selected_category"]
-    if selected_category == "main":
+    if selected_category == "Front Page":
         hrefs_to_find_urls = scraper.site_variables_dict[site][selected_category]
     else:
         hrefs_to_find_urls = scraper.site_variables_dict[site]["topics"][
@@ -327,6 +302,94 @@ def scrape_urls(
     else:
         update_session_variables(request, site, selected_category, scraper)
 
+
+
+
+def create_sites_list(form:SearchArticlesForm):
+    """
+    Used in browse_articles view.
+    Returns a list of the selected sites from the form.
+    """
+    thesun = form.cleaned_data["thesun"]
+    cbsnews = form.cleaned_data["cbsnews"]
+    abcnews = form.cleaned_data["abcnews"]
+    source_sites = []
+    if thesun:
+        source_sites.append("The Sun UK")
+    if cbsnews:
+        source_sites.append("CBS News")
+    if abcnews:
+        source_sites.append("ABC News")
+
+    return source_sites
+
+
+def create_categories_list(form:SearchArticlesForm) -> Optional[List[str]]:
+    """
+    Used in browse_articles view.
+    Returns a list of the selected categories from the form.
+    """
+    front_page = form.cleaned_data["front_page"]
+    world = form.cleaned_data["World"]
+    politics = form.cleaned_data["Politics"]
+    sports = form.cleaned_data["Sports"]
+    health = form.cleaned_data["Health"]
+    technology = form.cleaned_data["Technology"]
+    if any([front_page, world, politics, sports, health, technology]):
+        categories = []
+        if front_page:
+            categories.append("Front Page")
+        if world:
+            categories.append("World")
+        if politics:
+            categories.append("Politics")
+        if sports:
+            categories.append("Sports")
+        if health:
+            categories.append("Health")
+        if technology:
+            categories.append("Technology")
+        return categories
+    return None
+
+
+def filter_articles_post(form:SearchArticlesForm, request: HttpRequest):
+    """
+    Used in browse_articles view.
+    This function is used to filter the articles in the database.
+    """
+    search_query = form.cleaned_data["search_query"]
+    date_scraped_from = form.cleaned_data["date_scraped_from"]
+    date_scraped_to = form.cleaned_data["date_scraped_to"] + datetime.timedelta(days=1)
+    clickbait_tolerance = int(form.cleaned_data["clickbait_tolerance"])
+
+    query = Q()
+
+    # Add conditions based on form fields
+    if search_query:
+        query &= Q(title__icontains=search_query) | Q(
+            content_summary__icontains=search_query
+        )
+
+    query &= Q(clickbait_decision_final__lte=clickbait_tolerance)
+
+    query &= Q(scraped_date__gte=date_scraped_from) & Q(
+        scraped_date__lte=date_scraped_to
+    )
+
+    source_sites = create_sites_list(form)
+
+    if source_sites:
+        query &= Q(source_site__in=source_sites)
+
+    categories = create_categories_list(form)
+    if categories:
+        query &= Q(category__in=categories)
+
+    articles = Article.objects.filter(query).order_by("-scraped_date")
+    context = {"form": form, "latest_article_list": articles}
+
+    return render(request, "news/browse.html", context=context)
 
 #############################################
 #                 VIEWS                     #
@@ -357,9 +420,7 @@ def check_url(request: HttpRequest):
             # Access the loaded models
             scraper, nlp, llm, summarizer, _ = get_model_loader_attributes()
 
-            article = process_article(
-                url, scraper, nlp, llm, summarizer, "UNKNOWN"
-            )
+            article = process_article(url, scraper, nlp, llm, summarizer, "UNKNOWN")
 
             html_content = render_to_string(
                 "news/article_info.html", {"article": article}
@@ -381,7 +442,7 @@ def scrape_articles(request: HttpRequest):
     if request.method == "POST":
         form = SiteSelectionForm(request.POST)
         if form.is_valid():
-            request.session['articles_html'] = ""
+            request.session["articles_html"] = ""
             # Process the form data, and remember them in the session
             selected_sites = [
                 key
@@ -395,20 +456,24 @@ def scrape_articles(request: HttpRequest):
             request.session["selected_category"] = selected_category
             request.session["clickbait_tolerance"] = clickbait_tolerance
 
-            articles = get_articles(request, selected_sites, selected_category, clickbait_tolerance)
+            articles = get_articles(
+                request, selected_sites, selected_category, clickbait_tolerance
+            )
 
             articles_html = render_to_string(
                 "news/list_articles.html", {"latest_article_list": articles}
             )
-            request.session['articles_html'] += articles_html
+            request.session["articles_html"] += articles_html
             return JsonResponse({"articles_html": articles_html})
     else:
         form = SiteSelectionForm()
-    if request.session.get('articles_html', None):
-        articles_html = request.session['articles_html']
+    if request.session.get("articles_html", None):
+        articles_html = request.session["articles_html"]
     else:
         articles_html = ""
-    return render(request, "news/index.html", {"form": form, "articles_html": articles_html})
+    return render(
+        request, "news/index.html", {"form": form, "articles_html": articles_html}
+    )
 
 
 def load_more_articles(request: HttpRequest) -> JsonResponse:
@@ -421,12 +486,12 @@ def load_more_articles(request: HttpRequest) -> JsonResponse:
     articles_html = render_to_string(
         "news/list_articles.html", {"latest_article_list": articles}
     )
-    request.session['articles_html'] += articles_html
+    request.session["articles_html"] += articles_html
     request.session.save()
     return JsonResponse({"articles_html": articles_html})
 
 
-def browse_articles(request):
+def browse_articles(request: HttpRequest):
     """
     This view used to browse the articles in the database.
     """
@@ -441,84 +506,6 @@ def browse_articles(request):
     return render(request, "news/browse.html", context=context)
 
 
-def filter_articles_post(form, request):
-    """This function is used to filter the articles in the database."""
-    search_query = form.cleaned_data["search_query"]
-    date_scraped_from = form.cleaned_data["date_scraped_from"]
-    date_scraped_to = form.cleaned_data[
-                          "date_scraped_to"
-                      ] + datetime.timedelta(days=1)
-    clickbait_tolerance = int(form.cleaned_data["clickbait_tolerance"])
-
-    # Use the form data as needed to filter the articles from the database
-
-    query = Q()
-
-    # Add conditions based on form fields
-    if search_query:
-        query &= Q(title__icontains=search_query) | Q(
-            content_summary__icontains=search_query
-        )
-
-    query &= Q(clickbait_decision_final__lte=clickbait_tolerance)
-
-    query &= Q(scraped_date__gte=date_scraped_from) & Q(
-        scraped_date__lte=date_scraped_to
-    )
-
-    source_sites = create_sites_list(form)
-
-    if source_sites:
-        query &= Q(source_site__in=source_sites)
-
-    categories = create_categories_list(form)
-    if categories:
-        query &= Q(category__in=categories)
-
-    articles = Article.objects.filter(query).order_by("-scraped_date")
-    context = {"form": form, "latest_article_list": articles}
-
-    return render(request, "news/browse.html", context=context)
 
 
-def create_sites_list(form):
-    """Returns a list of the selected sites from the form."""
-    thesun = form.cleaned_data["thesun"]
-    cbsnews = form.cleaned_data["cbsnews"]
-    abcnews = form.cleaned_data["abcnews"]
-    source_sites = []
-    if thesun:
-        source_sites.append("The Sun UK")
-    if cbsnews:
-        source_sites.append("CBS News")
-    if abcnews:
-        source_sites.append("ABC News")
 
-    return source_sites
-
-
-def create_categories_list(form):
-    """Returns a list of the selected categories from the form."""
-    # categories:
-    main = form.cleaned_data["main"]
-    general = form.cleaned_data["General"]
-    politics = form.cleaned_data["Politics"]
-    sports = form.cleaned_data["Sports"]
-    health = form.cleaned_data["Health"]
-    technology = form.cleaned_data["Technology"]
-    if any([main, general, politics, sports, health, technology]):
-        categories = []
-        if main:
-            categories.append("main")
-        if general:
-            categories.append("General")
-        if politics:
-            categories.append("Politics")
-        if sports:
-            categories.append("Sports")
-        if health:
-            categories.append("Health")
-        if technology:
-            categories.append("Technology")
-        return categories
-    return None

@@ -7,23 +7,47 @@ from bs4 import BeautifulSoup
 
 
 class NotSupportedWebsiteException(Exception):
-    """Exception for not supported websites."""
+    """
+    Exception for not supported websites.
+    It should be raised when the user passes an URL that is not supported by our app.
+    """
+    def __init__(self, message="The website from the provided URL is not supported."):
+        super().__init__(message)
 
 
 class Scraper:
-    """Scraper class."""
+    """
+    This class encompasses all the scraping functionality.
+    The main functionalities are done by:
+    - scrape_article_urls: getting the urls of the articles from the main page 
+                            or some topic page of a news outlet website    
+    - scrape_content: scraping the title and content of an article from its url
+
+    There are also some helper functions:
+    - get_site_variables_dict: loading the config of the news outlet websites
+    - discern_website_from_url: discerning the website from the article url
+                                this is done by checking the url against the
+                                patterns defined in the config
+    """
     def __init__(self, path_to_site_variables: str):
         self.site_variables_dict = self.get_site_variables_dict(path_to_site_variables)
 
     @staticmethod
     def get_site_variables_dict(path: str) -> dict:
-        """Read json file."""
+        """
+        Read JSON file config and return it as a dictionary.
+        The JSON file contains the config for the news outlet websites.
+        """
         with open(path, "r", encoding="utf-8") as f:
             site_variables_dict = json.load(f)
         return site_variables_dict
 
+
     def scrape_article_urls(self, main_url: str) -> list[str]:
-        """Scrape article urls."""
+        """
+        Get the list of article urls from the main page 
+        or some topic page of a news outlet website.
+        """
         response = requests.get(main_url, timeout=5)
         try:
             response.raise_for_status()
@@ -67,7 +91,12 @@ class Scraper:
         return matching_hrefs
 
     def discern_website_from_url(self, url: str) -> dict:
-        """Discern website from url."""
+        """
+        Discern website from an url.
+        This is done by checking the url against the patterns defined in the config.
+        If the url matches a pattern, the website is discerned.
+        Otherwise, an exception is raised.
+        """
         if url.startswith("https://www.cbssports.com"):
             return self.site_variables_dict["cbsnews"]
 
@@ -81,11 +110,7 @@ class Scraper:
             None,
         )
         if not site_variables:
-            raise NotSupportedWebsiteException(
-                f"""Scraping for this website is not supported.
-                Supported websites are: {', '.join(self.site_variables_dict.keys())}
-                """
-            )
+            raise NotSupportedWebsiteException()
         return site_variables
 
     @staticmethod
@@ -116,34 +141,24 @@ class Scraper:
         ) or included_patterns_match_condition
 
     @staticmethod
-    def scrape_content(  # pylint: disable=too-many-locals
+    def scrape_content(
         url: str,
         paragraph_tag: str,
         title_tag: str,
-        subtitle_tag: str = None,
         exclude=None,
     ) -> dict[str, str]:
         """Scrape content."""
         if exclude is None:
             exclude = []
         response = requests.get(url, timeout=5)
-        try:
-            response.raise_for_status()
-        except requests.exceptions.HTTPError as e:
-            raise Exception(  # pylint: disable=broad-exception-raised
-                f"HTTP request failed with status code {response.status_code}"
-            ) from e
+        response.raise_for_status()
 
         soup = BeautifulSoup(response.text, "html.parser")
         title = soup.find(title_tag).text
-        subtitle = soup.find(subtitle_tag).text if subtitle_tag else None
 
-        content = ""
-        content_list = []
+        content = []
         paragraphs = soup.find_all(paragraph_tag)
         for paragraph in paragraphs:
-            wrapper_elements_class = paragraph.find_parent(class_=exclude)
-            wrapper_elements_id = paragraph.find_parent(id=exclude)
 
             element_class = paragraph.get("class", None)
             common_class = {}
@@ -156,40 +171,29 @@ class Scraper:
                 common_id = set(element_id).intersection(exclude)
 
             if (
-                wrapper_elements_class
-                or wrapper_elements_id
+                paragraph.find_parent(class_=exclude)
+                or paragraph.find_parent(id=exclude)
                 or common_class
                 or common_id
             ):
                 continue
 
-            content_list.append(paragraph.text.strip())
-            content = " ".join(content_list)
+            content.append(paragraph.text.strip())
+        content = " ".join(content)
 
         special_chars_trans = str.maketrans(
             {"\n": " ", "\xa0": " ", "\t": " ", "'": "'"}
         )
 
-        result = {
+        return {
             "title": title.translate(special_chars_trans).strip() if title else None,
-            "subtitle": subtitle.translate(special_chars_trans).strip()
-            if subtitle
-            else None,
             "content": content.translate(special_chars_trans).strip()
             if content
             else None,
         }
 
-        return result
-
     def scrape(self, url: str):
         """Scrape content."""
-        if not url.startswith("http://") and not url.startswith("https://"):
-            raise NotSupportedWebsiteException(
-                f"""Scraping for this website is not supported.
-                Supported websites are: {', '.join(self.site_variables_dict.keys())}
-                """
-            )
         site_dict = self.discern_website_from_url(url)
         result_dict = self.scrape_content(
             url,

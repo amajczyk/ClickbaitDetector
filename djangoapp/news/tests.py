@@ -5,7 +5,7 @@ from dataclasses import asdict
 from typing import Optional
 from unittest.mock import patch
 
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 from django.test import TestCase
 from django.utils import timezone
 
@@ -44,8 +44,6 @@ class TestScraper(TestCase):
         config_path = os.path.join(
             settings.BASE_DIR, "news", "config", "site_variables_dict"
         )
-        print("Testing news app...")
-        print("Time now: ", timezone.now())
         self.scraper = Scraper(config_path)
 
     def test_get_site_variables_dict(self):
@@ -64,17 +62,17 @@ class TestScraper(TestCase):
         """
         # Test scraping urls from the main website
         result = self.scraper.scrape_article_urls(
-            self.scraper.site_variables_dict["thesun"]["main"]
+            self.scraper.site_variables_dict["thesun"]["Front Page"]
         )
         self.assertGreater(len(result), 0)
 
         result = self.scraper.scrape_article_urls(
-            self.scraper.site_variables_dict["cbsnews"]["main"]
+            self.scraper.site_variables_dict["cbsnews"]["Front Page"]
         )
         self.assertGreater(len(result), 0)
 
         result = self.scraper.scrape_article_urls(
-            self.scraper.site_variables_dict["abcnews"]["main"]
+            self.scraper.site_variables_dict["abcnews"]["Front Page"]
         )
         self.assertGreater(len(result), 0)
 
@@ -148,9 +146,7 @@ class ArticleModelTests(TestCase):
     def test_default_values(self):
         """Test that default values are set for clickbait_decision fields.
         """
-        new_article = Article(
-            title="Test Article", content_summary="Summary"
-        )
+        new_article = Article()
         self.assertEqual(new_article.clickbait_decision_nlp, -1)
         self.assertEqual(new_article.clickbait_decision_llm, -1)
         self.assertEqual(new_article.clickbait_decision_vertex, -1)
@@ -181,8 +177,6 @@ class ArticleModelTests(TestCase):
         valid_decisions = [-1, 0, 1]
         for decision in valid_decisions:
             article = Article(
-                title="Test Article",
-                content_summary="Summary",
                 clickbait_decision_nlp=decision,
                 clickbait_decision_llm=decision,
             )
@@ -197,8 +191,6 @@ class ArticleModelTests(TestCase):
         decision = -2
         with self.assertRaises(IntegrityError):
             article = Article(
-                title="Test Article",
-                content_summary="Summary",
                 clickbait_decision_nlp=decision,
                 clickbait_decision_llm=decision,
                 clickbait_decision_vertex=decision,
@@ -213,6 +205,79 @@ class ArticleModelTests(TestCase):
         with self.assertRaises(IntegrityError):
             article = Article(clickbait_decision_nlp=42)  # An invalid value
             article.save()
+
+    def test_probability_constraints(self):
+        """
+        Test that the model raises IntegrityError for invalid probability values.
+        Also test that the model allows valid probability values.
+        """
+        # Attempt to save a record with an invalid values
+
+        # Test lower bound
+        with transaction.atomic():
+            with self.assertRaises(IntegrityError):
+                article = Article(clickbait_probability_nlp=-0.1)  # An invalid value
+                article.save()
+        # Test upper bound
+        with transaction.atomic():
+            with self.assertRaises(IntegrityError):
+                article = Article(clickbait_probability_nlp=1.1)  # An invalid value
+                article.save()
+        # Test lower bound
+        with transaction.atomic():
+            with self.assertRaises(IntegrityError):
+                article = Article(clickbait_probability_llm=-0.1)  # An invalid value
+                article.save()
+        # Test upper bound
+        with transaction.atomic():
+            with self.assertRaises(IntegrityError):
+                article = Article(clickbait_probability_llm=1.1)  # An invalid value
+                article.save()
+
+        # Save with valid values
+        article = Article(clickbait_probability_nlp=0.5, clickbait_probability_llm=0.5)
+        article.save()
+        article = Article(clickbait_probability_nlp=0, clickbait_probability_llm=0)
+        article.save()
+        article = Article(clickbait_probability_nlp=1, clickbait_probability_llm=1)
+        article.save()
+
+
+    def test_make_final_decision(self):
+        """
+        Test the make_final_decision method.
+        """
+        article = Article(
+            clickbait_decision_nlp=1,
+            clickbait_decision_llm=0,
+            clickbait_decision_vertex=-1,
+        )
+        article.make_final_decision()
+        self.assertEqual(article.clickbait_decision_final, 1)
+
+        article = Article(
+            clickbait_decision_nlp=1,
+            clickbait_decision_llm=1,
+            clickbait_decision_vertex=-1,
+        )
+        article.make_final_decision()
+        self.assertEqual(article.clickbait_decision_final, 3)
+
+        article = Article(
+            clickbait_decision_nlp=0,
+            clickbait_decision_llm=0,
+            clickbait_decision_vertex=-1,
+        )
+        article.make_final_decision()
+        self.assertEqual(article.clickbait_decision_final, 0)
+
+        article = Article(
+            clickbait_decision_nlp=1,
+            clickbait_decision_llm=1,
+            clickbait_decision_vertex=1,
+        )
+        article.make_final_decision()
+        self.assertEqual(article.clickbait_decision_final, 3)
 
 
 class VertexAIMock(VertexAI):
