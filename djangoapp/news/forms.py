@@ -8,13 +8,16 @@ from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError
 
 
-class SupportedURLValidator(URLValidator):
-    def __call__(self,value):
+class SupportedURLValidator(URLValidator):  # pylint: disable=too-few-public-methods
+    """Validator for the URL input. Checks if the URL is supported."""
+
+    def __call__(self, value):
         super().__call__(value)
         if not ('abcnews' in value or 'cbsnews' in value or 'thesun' in value):
             raise ValidationError(
                 "The URL is not supported."
             )
+
 
 class URLForm(forms.Form):
     """Form for the URL input."""
