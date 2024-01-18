@@ -4,12 +4,25 @@ validate it. The forms are used in views.py.
 from datetime import timedelta
 from django import forms
 from django.utils import timezone
+from django.core.validators import URLValidator
+from django.core.exceptions import ValidationError
 
+
+class SupportedURLValidator(URLValidator):
+    def __call__(self,value):
+        super().__call__(value)
+        if not ('abcnews' in value or 'cbsnews' in value or 'thesun' in value):
+            raise ValidationError(
+                "The URL is not supported."
+            )
 
 class URLForm(forms.Form):
     """Form for the URL input."""
     url = forms.URLField(
-        label="", widget=forms.TextInput()
+        label="", widget=forms.TextInput(),
+        validators=[
+            SupportedURLValidator(),
+        ]
     )
 
 
