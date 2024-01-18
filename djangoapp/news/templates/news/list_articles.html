@@ -14,25 +14,34 @@
                 </div>
 
                 <div class="d-flex align-items-center">
-                    <span class="text-wrap text-center" style="font-size: x-small; width: 5rem;"> <b>{{article.source_site}}</b> {{ article.scraped_date|date:"d.m.Y H:i" }}</span>
+                    <span class="text-wrap text-center" style="font-size: x-small; width: 5rem;">
+                        <b>{{article.source_site}}</b> {{ article.scraped_date|date:"d.m.Y H:i" }}</span>
 
                     <div class="d-flex">
                         <a type="button" class="btn btn-outline-info p-0 px-2 m-2"
                             href="{% url 'news:detail' article.id %}"></button>
                             <i class="fa fa-info"></i>
                         </a>
-                        
+
                         <span class="mt-1">
-                        {% if article.clickbait_decision_final == 3 %}
-                        
-                            {% include 'news/svg/sure_clickbait.svg' %}
-                        {% elif article.clickbait_decision_final == 2 %}
-                            {% include 'news/svg/unsure_clickbait.svg' %}
-                        {% elif article.clickbait_decision_final == 1 %}
-                            {% include 'news/svg/unsure_not_clickbait.svg' %}
-                        {% else %}
-                            {% include 'news/svg/sure_not_clickbait.svg' %}
-                        {% endif %}
+                            {% if article.clickbait_decision_final == 3 %}
+                            <span tabindex="0" data-bs-toggle="tooltip" title="Definitely clickbait">
+                                {% include 'news/svg/sure_clickbait.svg' %}
+                            </span>
+                            {% elif article.clickbait_decision_final == 2 %}
+                            <span tabindex="0" data-bs-toggle="tooltip" title="Likely clickbait">
+                                {% include 'news/svg/unsure_clickbait.svg' %}
+                            </span>
+
+                            {% elif article.clickbait_decision_final == 1 %}
+                            <span tabindex="0" data-bs-toggle="tooltip" title="Likely non-clickbait">
+                                {% include 'news/svg/unsure_not_clickbait.svg' %}
+                            </span>
+                            {% else %}
+                            <span tabindex="0" data-bs-toggle="tooltip" title="Definitely non-clickbait">
+                                {% include 'news/svg/sure_not_clickbait.svg' %}
+                            </span>
+                            {% endif %}
                         </span>
 
 
@@ -60,4 +69,3 @@
 {% else %}
 <p></p>
 {% endif %}
-

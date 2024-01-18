@@ -1,21 +1,22 @@
 """
-summarizer model by Falconsai/text_summarization from huggingface - https://huggingface.co/Falconsai/text_summarization
+summarizer model by Falconsai/text_summarization from huggingface -
+https://huggingface.co/Falconsai/text_summarization
 Under Apache 2.0 License
 """
 
 import os
-import pickle
 from django.conf import settings
 from news.scripts.scraping import Scraper
-from transformers import pipeline
 from news.scripts.nlp import NLP
 from news.scripts.llm import LocalLLM
 from news.vertex.cloud.vertex_connection import VertexAI
+from transformers import pipeline
 
 from nltk.corpus import wordnet
 
 
 class Singleton(type):
+    """Singleton class."""
     _instances = {}
 
     def __call__(cls, *args, **kwargs):
@@ -24,7 +25,8 @@ class Singleton(type):
         return cls._instances[cls]
 
 
-class ModelLoader(metaclass=Singleton):
+class ModelLoader(metaclass=Singleton):  # pylint: disable=too-few-public-methods
+    """Model loader class."""
     def __init__(self):
         # load Scraper
         config_path = os.path.join(

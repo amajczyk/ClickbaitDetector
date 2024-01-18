@@ -1,8 +1,9 @@
+"""URLs for the news app."""
 from django.urls import path
 from . import views
 
 
-app_name = "news"
+app_name = "news"  # pylint: disable=invalid-name
 urlpatterns = [
     path("", views.scrape_articles, name="scrape_articles"),
     path("browse/", views.browse_articles, name="browse"),

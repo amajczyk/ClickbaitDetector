@@ -1,98 +1,128 @@
 {% block content %}
 {% load custom_filters %}
-    <div class="card">
-        <div class="card-body">
-            <h2 class="card-title">{{ article.title }}</h2>
-            <div class="m-0 p-0 d-flex justify-content-between align-items-center">
+<div class="card">
+    <div class="card-body">
+        <h2 class="card-title">{{ article.title }}</h2>
+        <div class="m-0 p-0 d-flex justify-content-between align-items-center">
 
             <div class="d-flex align-items-center">
-                <span class="card-subtitle me-2 text-muted"> <b>{{article.source_site}}</b> - {{ article.scraped_date|date:"d-m-Y H:i" }} </span>
-                {% if  article.category  and not article.category == "UNKNOWN" %}
-                <span class="badge rounded-pill bg-info text-dark">{{ article.category}}</span>
+                <span class="card-subtitle me-2 py-1text-muted"> <b>{{article.source_site}}</b>
+                    {% if article.category and not article.category == "UNKNOWN" %}
+                    <span class="badge rounded-pill bg-info text-dark">{{ article.category}}</span>
+                    <br>
+                    <span class="card-subtitle me-2 text-muted">
+                        <b> Date scraped: </b> {{ article.scraped_date|date:"d-m-Y H:i" }} </span>
+                </span>
                 {% endif %}
 
-                
-                
-            </div>
 
 
             </div>
-            <hr>  
 
-            <div class="d-flex justify-content-sm-start">
-                
+
+        </div>
+        <hr>
+
+        <div class="d-flex justify-content-sm-start">
+
             <div class="p-1 flex-grow-1 text-center">
-                    <span class="mt-1">
-                        NLP clickbait probability: {{ article.clickbait_probability_NLP |multiply:"100"|floatformat:1 }}% ➜
-                    </span>
-                    
-                    {% if article.clickbait_decision_NLP == 0 %}
+                <span class="mt-1">
+                    NLP clickbait probability: {{ article.clickbait_probability_nlp |multiply:"100"|floatformat:1 }}% ➜
+                </span>
+
+                {% if article.clickbait_decision_nlp == 0 %}
+                <span tabindex="0" data-bs-toggle="tooltip" title="Non-clickbait">
+
                     {% include 'news/svg/sure_not_clickbait.svg' %}
-                    {% else %}
-                    {% include 'news/svg/sure_clickbait.svg' %}
-                    {% endif %}
+                </span>
+                {% else %}
+                <span tabindex="0" data-bs-toggle="tooltip" title="Clickbait">
 
-                </div>
+                    {% include 'news/svg/sure_clickbait.svg' %}
+                </span>
+
+                {% endif %}
+
+            </div>
             <div class="vr"></div>
 
 
-                
+
             <div class="p-1 flex-grow-1 text-center">
 
-                    <span class="mt-1">
-                
-                LLM clickbait probability: {{ article.clickbait_probability_LLM|multiply:"100"|floatformat:1 }}% ➜
-            </span>
+                <span class="mt-1">
 
-
-                
-
-                
-                {% if article.clickbait_decision_LLM == 0 %}
-                {% include 'news/svg/sure_not_clickbait.svg' %}
+                    LLM decision ➜
+                </span>
+                {% if article.clickbait_decision_llm == 0 %}
+                <span tabindex="0" data-bs-toggle="tooltip" title="Non-clickbait">
+                    {% include 'news/svg/sure_not_clickbait.svg' %}
+                </span>
                 {% else %}
-                {% include 'news/svg/sure_clickbait.svg' %}
+                <span tabindex="0" data-bs-toggle="tooltip" title="Clickbait">
+                    {% include 'news/svg/sure_clickbait.svg' %}
+                </span>
                 {% endif %}
             </div>
 
             <div class="vr"></div>
-                
+
             <div class="p-1 flex-grow-1 text-center">
 
 
 
                 <span class="mt-1 ">VertexAI decision:</span>
-                {% if article.clickbait_decision_VERTEX == 0 %}
-                {% include 'news/svg/sure_not_clickbait.svg' %}
-                {% elif article.clickbait_decision_VERTEX == 1 %}
-                {% include 'news/svg/sure_clickbait.svg' %}
-                {% else %}
-                {% include 'news/svg/undecided.svg' %}
-                                {% endif %}
-            </div>
-                
-            <div class="vr"></div>
-            <div class="p-1 flex-grow-1 text-center bd-highlight">
+                {% if article.clickbait_decision_vertex == 0 %}
+                <span tabindex="0" data-bs-toggle="tooltip" title="Non-clickbait">
+                    {% include 'news/svg/sure_not_clickbait.svg' %}
+                </span>
+                {% elif article.clickbait_decision_vertex == 1 %}
+                <span tabindex="0" data-bs-toggle="tooltip" title="Clickbait">
+                    {% include 'news/svg/sure_clickbait.svg' %}
+                </span>
 
-                <span class="fw-bold fs-4 mt-2 px-2">FINAL:
-            </span>
-
-                {% if article.clickbait_decision_final == 3 %}
-                {% include 'news/svg/sure_clickbait.svg' %}
-                {% elif article.clickbait_decision_final == 2 %}
-                {% include 'news/svg/unsure_clickbait.svg' %}
-                {% elif article.clickbait_decision_final == 1 %}
-                {% include 'news/svg/unsure_not_clickbait.svg' %}
                 {% else %}
-                {% include 'news/svg/sure_not_clickbait.svg' %}
+                <span tabindex="0" data-bs-toggle="tooltip" title="No decision">
+                    {% include 'news/svg/undecided.svg' %}
+                </span>
+
                 {% endif %}
             </div>
 
+            <div class="vr"></div>
+            <div class="p-1 flex-grow-1 text-center">
+
+                <span class="fw-bold fs-5 mt-1 px-2">FINAL:
+
+
+                </span>
+
+                {% if article.clickbait_decision_final == 3 %}
+                <span tabindex="0" data-bs-toggle="tooltip" title="Definitely clickbait">
+                    {% include 'news/svg/sure_clickbait.svg' %}
+                </span>
+                {% elif article.clickbait_decision_final == 2 %}
+                <span tabindex="0" data-bs-toggle="tooltip" title="Likely clickbait">
+                    {% include 'news/svg/unsure_clickbait.svg' %}
+                </span>
+
+                {% elif article.clickbait_decision_final == 1 %}
+                <span tabindex="0" data-bs-toggle="tooltip" title="Likely non-clickbait">
+                    {% include 'news/svg/unsure_not_clickbait.svg' %}
+                </span>
+                {% else %}
+                <span tabindex="0" data-bs-toggle="tooltip" title="Definitely non-clickbait">
+                    {% include 'news/svg/sure_not_clickbait.svg' %}
+                </span>
+                {% endif %}
+
             </div>
-            <hr>  
-            <p class="card-text">{{ article.content_summary }}</p>
+
         </div>
+        <hr>
+        <p class="card-text">{{ article.content_summary }}</p>
     </div>
+</div>
 
 
 {% endblock %}

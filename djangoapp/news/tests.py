@@ -1,40 +1,27 @@
+"""Tests for the news app."""
 import datetime
 import os
 from dataclasses import asdict
 from typing import Optional
-import pickle
+from unittest.mock import patch
 
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 from django.test import TestCase
 from django.utils import timezone
-from django.urls import reverse
-from django.db import IntegrityError
-from django.core.exceptions import ValidationError
 
 from django.conf import settings
 
 from google.auth import default
 
-from .models import Article
-
-from unittest.mock import patch
 from news.vertex.cloud.vertex_connection import VertexAI, ModelName
 from news.vertex.configs.config import Config
-
-# python manage.py test news
-# https://docs.djangoproject.com/en/4.2/intro/tutorial05/
-
-print("Testing news app...")
-print("Time now: ", timezone.now())
-
-
-import unittest
-from unittest.mock import patch
 from news.scripts.scraping import Scraper
 from news.scripts.nlp import NLP
 from news.scripts.llm import LocalLLM
 
+from .models import Article
 
+# pylint: disable=line-too-long
 ABCNEWS_NOT_CLICKBAIT = "https://abcnews.go.com/Politics/joe-biden-apparent-winner-presidency/story?id=73981165"
 CBSNEWS_NOT_CLICKBAIT = "https://www.cbsnews.com/news/joe-biden-wins-2020-election-46th-president-united-states/"
 THESUN_NOT_CLICKBAIT = (
@@ -45,15 +32,24 @@ CLICKBAIT_TITLE = "10 Signs Your Partner Is Cheating - Don't Ignore #7!"
 NOT_CLICKBAIT_TITLE = "Hertz is selling Teslas for as little as $21,000, as it offloads the pricey EVs from its rental fleet"
 
 
+# pylint: enable=line-too-long
+
 class TestScraper(TestCase):
+    """Test the Scraper class."""
+
     def setUp(self):
         # Set up any necessary resources or configurations for tests
+        # python manage.py test news
+        # https://docs.djangoproject.com/en/4.2/intro/tutorial05/
         config_path = os.path.join(
             settings.BASE_DIR, "news", "config", "site_variables_dict"
         )
         self.scraper = Scraper(config_path)
 
     def test_get_site_variables_dict(self):
+        """Test that the site_variables_dict is a dictionary and contains the
+        expected keys.
+        """
         site_variables_dict = self.scraper.site_variables_dict
         self.assertIsInstance(site_variables_dict, dict)
         self.assertIn("cbsnews", site_variables_dict)
@@ -61,23 +57,29 @@ class TestScraper(TestCase):
         self.assertIn("abcnews", site_variables_dict)
 
     def test_scrape_article_urls(self):
+        """Test that the scrape_article_urls() method returns a list of
+        strings.
+        """
         # Test scraping urls from the main website
         result = self.scraper.scrape_article_urls(
-            self.scraper.site_variables_dict["thesun"]["main"]
+            self.scraper.site_variables_dict["thesun"]["Front Page"]
         )
         self.assertGreater(len(result), 0)
 
         result = self.scraper.scrape_article_urls(
-            self.scraper.site_variables_dict["cbsnews"]["main"]
+            self.scraper.site_variables_dict["cbsnews"]["Front Page"]
         )
         self.assertGreater(len(result), 0)
 
         result = self.scraper.scrape_article_urls(
-            self.scraper.site_variables_dict["abcnews"]["main"]
+            self.scraper.site_variables_dict["abcnews"]["Front Page"]
         )
         self.assertGreater(len(result), 0)
 
     def test_discern_website_from_url(self):
+        """Test that the discern_website_from_url() method returns a dictionary
+        with the expected keys.
+        """
         result = self.scraper.discern_website_from_url(ABCNEWS_NOT_CLICKBAIT)
         self.assertEqual(result["source_site"], "ABC News")
 
@@ -91,6 +93,9 @@ class TestScraper(TestCase):
         self.assertEqual(result["source_site"], "CBS News")
 
     def test_scrape(self):
+        """Test that the scrape() method returns a dictionary with the expected
+        keys.
+        """
         result = self.scraper.scrape(THESUN_NOT_CLICKBAIT)
 
         self.assertIsInstance(result, dict)
@@ -103,7 +108,13 @@ class TestScraper(TestCase):
 
 
 class NLPPredictorTests(TestCase):
+    """Test the NLP class."""
+
     def test_predict_on_text(self):
+        """Test that the predict_on_text() method returns a list of tuples
+        containing the predicted class and the probability of the predicted
+        class.
+        """
         # Test the model on a non-clickbait title
         nlp = NLP()
         result = nlp.predict_on_text(CLICKBAIT_TITLE)
@@ -114,28 +125,31 @@ class NLPPredictorTests(TestCase):
         self.assertLess(result[0][1], nlp.proba_cutoff)
 
 
-# class LLMPredictorTests(TestCase):
+class LLMPredictorTests(TestCase):
+    """Test the LocalLLM class."""
 
-#     def test_predict(self):
-#         llm = LocalLLM()
-#         result = llm.predict(CLICKBAIT_TITLE)
-#         self.assertEqual(result, 1)
+    def test_predict(self):
+        """Test that the predict() method returns a float."""
+        llm = LocalLLM()
+        result = llm.predict(CLICKBAIT_TITLE)
+        result = 1 if result > llm.proba_cutoff else 0
+        self.assertEqual(result, 1)
 
-#         result = llm.predict(NOT_CLICKBAIT_TITLE)
-#         self.assertEqual(result, 0)
+        result = llm.predict(NOT_CLICKBAIT_TITLE)
+        result = 1 if result > llm.proba_cutoff else 0
+        self.assertEqual(result, 0)
 
 
 class ArticleModelTests(TestCase):
+    """Test the Article model."""
+
     def test_default_values(self):
+        """Test that default values are set for clickbait_decision fields.
         """
-        Test that default values are set for clickbait_decision fields.
-        """
-        new_article = Article.objects.create(
-            title="Test Article", content_summary="Summary"
-        )
-        self.assertEqual(new_article.clickbait_decision_NLP, -1)
-        self.assertEqual(new_article.clickbait_decision_LLM, -1)
-        self.assertEqual(new_article.clickbait_decision_VERTEX, -1)
+        new_article = Article()
+        self.assertEqual(new_article.clickbait_decision_nlp, -1)
+        self.assertEqual(new_article.clickbait_decision_llm, -1)
+        self.assertEqual(new_article.clickbait_decision_vertex, -1)
         self.assertEqual(new_article.clickbait_decision_final, -1)
 
     def test_was_scraped_within_the_last_24h(self):
@@ -162,14 +176,12 @@ class ArticleModelTests(TestCase):
         """
         valid_decisions = [-1, 0, 1]
         for decision in valid_decisions:
-            article = Article.objects.create(
-                title="Test Article",
-                content_summary="Summary",
-                clickbait_decision_NLP=decision,
-                clickbait_decision_LLM=decision,
+            article = Article(
+                clickbait_decision_nlp=decision,
+                clickbait_decision_llm=decision,
             )
-            self.assertEqual(article.clickbait_decision_NLP, decision)
-            self.assertEqual(article.clickbait_decision_LLM, decision)
+            self.assertEqual(article.clickbait_decision_nlp, decision)
+            self.assertEqual(article.clickbait_decision_llm, decision)
 
     def test_invalid_decision_values(self):
         """
@@ -178,37 +190,113 @@ class ArticleModelTests(TestCase):
 
         decision = -2
         with self.assertRaises(IntegrityError):
-            Article.objects.create(
-                title="Test Article",
-                content_summary="Summary",
-                clickbait_decision_NLP=decision,
-                clickbait_decision_LLM=decision,
-                clickbait_decision_VERTEX=decision,
+            article = Article(
+                clickbait_decision_nlp=decision,
+                clickbait_decision_llm=decision,
+                clickbait_decision_vertex=decision,
                 clickbait_decision_final=decision,
             )
+            article.save()
 
     def test_decision_integer_constraint(self):
+        """Test that the model raises IntegrityError for invalid decision values.
+        """
         # Attempt to save a record with an invalid value
         with self.assertRaises(IntegrityError):
-            Article.objects.create(clickbait_decision_NLP=42)  # An invalid value
+            article = Article(clickbait_decision_nlp=42)  # An invalid value
+            article.save()
+
+    def test_probability_constraints(self):
+        """
+        Test that the model raises IntegrityError for invalid probability values.
+        Also test that the model allows valid probability values.
+        """
+        # Attempt to save a record with an invalid values
+
+        # Test lower bound
+        with transaction.atomic():
+            with self.assertRaises(IntegrityError):
+                article = Article(clickbait_probability_nlp=-0.1)  # An invalid value
+                article.save()
+        # Test upper bound
+        with transaction.atomic():
+            with self.assertRaises(IntegrityError):
+                article = Article(clickbait_probability_nlp=1.1)  # An invalid value
+                article.save()
+        # Test lower bound
+        with transaction.atomic():
+            with self.assertRaises(IntegrityError):
+                article = Article(clickbait_probability_llm=-0.1)  # An invalid value
+                article.save()
+        # Test upper bound
+        with transaction.atomic():
+            with self.assertRaises(IntegrityError):
+                article = Article(clickbait_probability_llm=1.1)  # An invalid value
+                article.save()
+
+        # Save with valid values
+        article = Article(clickbait_probability_nlp=0.5, clickbait_probability_llm=0.5)
+        article.save()
+        article = Article(clickbait_probability_nlp=0, clickbait_probability_llm=0)
+        article.save()
+        article = Article(clickbait_probability_nlp=1, clickbait_probability_llm=1)
+        article.save()
+
+
+    def test_make_final_decision(self):
+        """
+        Test the make_final_decision method.
+        """
+        article = Article(
+            clickbait_decision_nlp=1,
+            clickbait_decision_llm=0,
+            clickbait_decision_vertex=-1,
+        )
+        article.make_final_decision()
+        self.assertEqual(article.clickbait_decision_final, 1)
+
+        article = Article(
+            clickbait_decision_nlp=1,
+            clickbait_decision_llm=1,
+            clickbait_decision_vertex=-1,
+        )
+        article.make_final_decision()
+        self.assertEqual(article.clickbait_decision_final, 3)
+
+        article = Article(
+            clickbait_decision_nlp=0,
+            clickbait_decision_llm=0,
+            clickbait_decision_vertex=-1,
+        )
+        article.make_final_decision()
+        self.assertEqual(article.clickbait_decision_final, 0)
+
+        article = Article(
+            clickbait_decision_nlp=1,
+            clickbait_decision_llm=1,
+            clickbait_decision_vertex=1,
+        )
+        article.make_final_decision()
+        self.assertEqual(article.clickbait_decision_final, 3)
 
 
 class VertexAIMock(VertexAI):
+    """Mock the VertexAI class."""
     def init_connection(self):
         pass
 
     def load_model(self):
         pass
 
-    def predict(self, title: Optional[str] = None, summary: Optional[str] = None):
+    def predict(self, title: Optional[str] = None):
         if title:
             return "1" if title.strip() == "My Clickbait Title" else "0"
-        elif self.title:
+        if self.title:
             return "1" if self.title.strip() == "My Clickbait Title" else "0"
         return "0"
 
     @patch("google.auth.load_credentials_from_dict")
-    def load_config(self, mock_load_credentials_from_dict):
+    def load_config(self, mock_load_credentials_from_dict):  # pylint: disable=arguments-differ
         try:
             return_value = Config(
                 refresh_token="test_refresh_token",
@@ -224,13 +312,18 @@ class VertexAIMock(VertexAI):
             self.credentials, self.project_id = mock_load_credentials_from_dict(
                 asdict(return_value)
             )
-        except FileNotFoundError or KeyError:
+        except (FileNotFoundError, KeyError):
             self.credentials, self.project_id = default()
 
 
 class TestVertexAI(TestCase):
-    def test_init(self):
+    """Test the VertexAI class."""
+
+    def setUp(self):
+        """Set up the test."""
         self.vertex_ai = VertexAIMock()
+
+    def test_init(self):
         """Test initializing VertexAI object."""
         self.assertEqual(self.vertex_ai.project_id, None)
         self.assertEqual(self.vertex_ai.location, None)
@@ -243,15 +336,17 @@ class TestVertexAI(TestCase):
         self.assertEqual(self.vertex_ai.title, "This is the Most Clickbait Title Ever!")
         self.assertEqual(
             self.vertex_ai.prompt,
-            "Is this title a clickbait: 'PLACE_FOR_TITLE'? Summary of the article: 'PLACE_FOR_SUMMARY'. Return 1 if yes, 0 if no.",
+            "Is this title a clickbait: 'PLACE_FOR_TITLE'? Summary of the article:"
+            " 'PLACE_FOR_SUMMARY'. Return 1 if yes, 0 if no.",
         )
         self.assertIsNone(self.vertex_ai.my_chat_model)
 
     @patch("google.auth.load_credentials_from_dict")
     def test_load_config(self, mock_load_credentials_from_dict):
+        """Test loading config from file."""
         mock_load_credentials_from_dict.return_value = (None, None)
         self.vertex_ai = VertexAIMock()
-        self.vertex_ai.load_config()
+        self.vertex_ai.load_config()  # pylint: disable=no-value-for-parameter
         self.assertEqual(self.vertex_ai.credentials.refresh_token, "test_refresh_token")
         self.assertEqual(self.vertex_ai.credentials.client_id, "test_client_id")
         self.assertEqual(self.vertex_ai.credentials.client_secret, "test_client_secret")
@@ -261,12 +356,14 @@ class TestVertexAI(TestCase):
         self.assertEqual(self.vertex_ai.credentials.type, "test_type")
 
     def test_predict(self):
+        """Test the predict() method."""
         self.vertex_ai = VertexAIMock()
         result = self.vertex_ai.predict("My Clickbait Title")
         assert bool(result) is True
 
     @patch("google.auth.load_credentials_from_dict")
     def test_run_clickbait(self, mock_load_credentials_from_dict):
+        """Test the run() method on clickbait case."""
         mock_load_credentials_from_dict.return_value = (None, None)
         with patch(
             "news.vertex.cloud.vertex_connection.VertexAI.predict"
@@ -282,6 +379,7 @@ class TestVertexAI(TestCase):
 
     @patch("google.auth.load_credentials_from_dict")
     def test_run_not_clickbait(self, mock_load_credentials_from_dict):
+        """Test the run() method on non-clickbait case."""
         mock_load_credentials_from_dict.return_value = (None, None)
         with patch(
             "news.vertex.cloud.vertex_connection.VertexAI.predict"

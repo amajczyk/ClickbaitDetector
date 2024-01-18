@@ -1,8 +1,8 @@
 {
     "thesun": {
-        "main": "https://www.thesun.co.uk",
+        "Front Page": "https://www.thesun.co.uk",
         "topics": {
-            "General": "https://www.thesun.co.uk/news/worldnews/",
+            "World": "https://www.thesun.co.uk/news/worldnews/",
             "Sports": "https://www.thesun.co.uk/sport/",
             "Technology": "https://www.thesun.co.uk/tech/",
             "Health": "https://www.thesun.co.uk/health/",
@@ -18,7 +18,7 @@
                 "/\\w+/\\d+/.*"
             ]
         },
-        "page_suffix": "page/{number}/",
+        "page_suffix": "page/",
         "source_site": "The Sun UK",
         "paragraph_tag": "p",
         "title_tag": "h1",
@@ -29,9 +29,9 @@
         ]
     },
     "cbsnews": {
-        "main": "https://www.cbsnews.com",
+        "Front Page": "https://www.cbsnews.com",
         "topics": {
-            "General": "https://www.cbsnews.com/latest/world/",
+            "World": "https://www.cbsnews.com/latest/world/",
             "Sports": "https://www.cbssports.com/",
             "Technology": "https://www.cbsnews.com/latest/technology",
             "Health": "https://www.cbsnews.com/latest/healthwatch/",
@@ -47,7 +47,7 @@
             ]
         },
         "source_site": "CBS News",
-        "page_suffix": "{number}/",
+        "page_suffix": "",
         "paragraph_tag": "p",
         "title_tag": "h1",
         "exclude": [
@@ -57,9 +57,9 @@
         ]
     },
     "abcnews": {
-        "main": "https://abcnews.go.com",
+        "Front Page": "https://abcnews.go.com",
         "topics": {
-            "General": "https://abcnews.go.com/International",
+            "World": "https://abcnews.go.com/International",
             "Sports": "https://abcnews.go.com/Sports",
             "Technology": "https://abcnews.go.com/Technology",
             "Health": "https://abcnews.go.com/Health",
