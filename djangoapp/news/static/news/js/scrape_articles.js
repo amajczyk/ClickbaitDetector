@@ -12,9 +12,6 @@ $(document).ready(function(){
           $("#article-container").html(response.articles_html);
           $("#spinner").addClass('d-none');
           $('#load-more-btn').removeClass('d-none');
-        },
-        error: function(rs, e){
-          alert('No more articles to scrape for selected site(s) and category!');
         }
       });
     });
@@ -28,9 +25,5 @@ $(document).ready(function(){
           $("#spinner").addClass('d-none');
           $('#load-more-btn').removeClass('d-none');
         })
-        .catch(error => {
-          alert('No more articles to scrape for selected site(s) and category!')
-          console.error('Error fetching articles:', error);
-        });
     });
   });
