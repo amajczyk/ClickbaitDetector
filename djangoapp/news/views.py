@@ -185,7 +185,7 @@ def get_articles(
         articles = [
             el
             for el in articles
-            if el is not None 
+            if el is not None
         ]
     return articles
 

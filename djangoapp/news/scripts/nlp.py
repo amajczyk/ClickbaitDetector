@@ -37,7 +37,7 @@ class NLP:  # pylint: disable=too-many-instance-attributes
         self.w2v = w2v
         self.predictive_model = predictive_model
         self.scaler = scaler
-        self.proba_cutoff = 0.38823882388238823
+        self.proba_cutoff = 0.42164216421642164
         self.dropped_dims = self.get_dimensions_to_drop()
 
         self.stemmer = PorterStemmer()
