@@ -153,7 +153,6 @@ def get_articles(
     request: HttpRequest,
     selected_sites: List[str] = None,
     selected_category: str = None,
-    clickbait_tolerance: int = None,
     load_more=False,
 ) -> List[Article]:
     """
@@ -166,7 +165,6 @@ def get_articles(
         # Get the session variables, from the scrape_articles view
         selected_sites = request.session["selected_sites"]
         selected_category = request.session["selected_category"]
-        clickbait_tolerance = request.session["clickbait_tolerance"]
 
     for site in selected_sites:
         if load_more:
@@ -187,7 +185,7 @@ def get_articles(
         articles = [
             el
             for el in articles
-            if el is not None and el.clickbait_decision_final <= clickbait_tolerance
+            if el is not None 
         ]
     return articles
 
@@ -447,17 +445,15 @@ def scrape_articles(request: HttpRequest):
             selected_sites = [
                 key
                 for key, value in form.cleaned_data.items()
-                if value and key not in ["clickbait_tolerance", "category"]
+                if value and key != 'category'
             ]
             selected_category = form.cleaned_data["category"]
-            clickbait_tolerance = int(form.cleaned_data["clickbait_tolerance"])
 
             request.session["selected_sites"] = selected_sites
             request.session["selected_category"] = selected_category
-            request.session["clickbait_tolerance"] = clickbait_tolerance
 
             articles = get_articles(
-                request, selected_sites, selected_category, clickbait_tolerance
+                request, selected_sites, selected_category
             )
 
             articles_html = render_to_string(
@@ -466,6 +462,7 @@ def scrape_articles(request: HttpRequest):
             request.session["articles_html"] += articles_html
             return JsonResponse({"articles_html": articles_html})
     else:
+
         form = SiteSelectionForm()
     if request.session.get("articles_html", None):
         articles_html = request.session["articles_html"]

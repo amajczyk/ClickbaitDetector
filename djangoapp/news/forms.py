@@ -34,16 +34,6 @@ class SiteSelectionForm(forms.Form):
     thesun = forms.BooleanField(required=False, initial=True, label="The Sun")
     cbsnews = forms.BooleanField(required=False, initial=True, label="CBS News")
     abcnews = forms.BooleanField(required=False, initial=True, label="ABC News")
-    clickbait_tolerance = forms.ChoiceField(
-        choices=[
-            ("0", "Only non-clickbaits"),
-            ("1", "Likely non-clickbaits"),
-            ("2", "Possibly clickbaits"),
-            ("3", "All"),
-        ],
-        required=False,
-        initial="3",
-    )
     category = forms.ChoiceField(
         choices=[
             ("Front Page", "Front Page"),
