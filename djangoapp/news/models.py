@@ -22,12 +22,12 @@ class Article(models.Model):
     Data model for the Article object.
     The final clickbait decision can be one of the following:
     -1 - unknown - no decision made or something went wrong
-    0 - definitely clickbait, all models agree
-    1 - likely a clickbait one out of three models agree
-    2 - likely not a clickbait, 
+    0 - definitely not clickbait, all models agree
+    1 - likely not a clickbait one out of three models agree
+    2 - likely  a clickbait, 
         either two of three models agree or one of two models agree 
         (this is the case when vertex model is not used)
-    3 - definitely not a clickbait, all models agree
+    3 - definitely a clickbait, all models agree
 
     """
     title = models.CharField(max_length=256)
