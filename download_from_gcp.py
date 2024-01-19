@@ -16,18 +16,20 @@ storage_client = storage.Client()
 bucket = storage_client.bucket(bucket_name)
 
 for folder_path in folder_paths:
-    blobs = bucket.list_blobs(prefix="modelling/" + folder_path)
+    blobs = bucket.list_blobs(prefix=str(os.path.join("modelling", folder_path)))
+    
 
     for blob in blobs:
-        dir = blob.name.replace("/", "\\")
         # remove the last part of the path (the file name)
-        dir = "\\".join(dir.split("\\")[:-1])
+        dir = os.path.dirname(blob.name)
         dir = os.path.join(local_path, dir)
         print(dir)
 
+        savepath = blob.name
+
         os.makedirs(dir, exist_ok=True)
         blob.download_to_filename(
-            os.path.join(local_path, blob.name.replace("/", "\\"))
+            os.path.join(local_path, savepath)
 
         )
 

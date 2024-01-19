@@ -127,6 +127,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+.conda
 
 # Spyder project settings
 .spyderproject
@@ -161,12 +162,18 @@ cython_debug/
 
 # modelling
 modelling/**/word2vec_models/*
-!modelling/**/word2vec_models/word2vec_vs20_win8_sg1.model
+!modelling/**/word2vec_models/word2vec_vs50_win5_sg0.model
+!modelling/**/word2vec_models/word2vec_vs20_win4_sg1.model
+!modelling/**/word2vec_models/word2vec_vs100_win3_sg0.model
+
+
 modelling/**/catboost_info/*
 modelling/**/word2vec_selection/results/backup/*
 modelling/**/results/backup/*
 modelling/**/data/*
 modelling/**/predictive_models/*
+!modelling/all_datasets/predictive_models/*
+
 
 
 modelling/model_testing/llm_results.csv
@@ -181,3 +188,5 @@ djangoapp/news/scripts/model_loader2.py
 djangoapp/news/vertex/cloud/vertex_connection2.py
 modelling/model_testing/llm_results*.csv
 
+modelling/model_testing/nlp_results.csv
+modelling/model_testing/vertex_results copy.csv
