@@ -31,12 +31,12 @@
                 </span>
 
                 {% if article.clickbait_decision_nlp == 0 %}
-                <span tabindex="0" data-bs-toggle="tooltip" title="Non-clickbait">
+                <span tabindex="0" data-bs-toggle="tooltip" title="Non-clickbait, threshold=42.1%">
 
                     {% include 'news/svg/sure_not_clickbait.svg' %}
                 </span>
                 {% else %}
-                <span tabindex="0" data-bs-toggle="tooltip" title="Clickbait">
+                <span tabindex="0" data-bs-toggle="tooltip" title="Clickbait, threshold=42.1%">
 
                     {% include 'news/svg/sure_clickbait.svg' %}
                 </span>
