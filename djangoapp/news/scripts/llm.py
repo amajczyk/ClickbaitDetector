@@ -18,7 +18,7 @@ class LocalLLM:  # pylint: disable=too-few-public-methods
         model = "christinacdl/clickbait_binary_detection"
         self.tokenizer = AutoTokenizer.from_pretrained(model)
         self.model = AutoModelForSequenceClassification.from_pretrained(model)
-        self.proba_cutoff = 0.0031
+        self.proba_cutoff = 0.5
 
     def predict(self, text: str) -> float:
         """Predict."""
